@@ -1,0 +1,130 @@
+# ---- General OS/Tools -------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# Archives / dumps
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.bak
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# IDEs / Editors
+.vscode/
+.vscode-test/
+.idea/
+*.code-workspace
+
+# JetBrains Rider / IntelliJ
+*.iml
+*.ipr
+*.iws
+out/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Node package managers (global)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json#
+yarn.lock#
+pnpm-lock.yaml#
+
+# ----------------------------------------------------------------------
+# Unity (project lives under Unity/)
+Unity/[Ll]ibrary/
+Unity/[Tt]emp/
+Unity/[Oo]bj/
+Unity/[Bb]uild/
+Unity/[Bb]uilds/
+Unity/[Ll]ogs/
+Unity/[Uu]ser[Ss]ettings/
+Unity/[Mm]emoryCaptures/
+Unity/[Aa]ssets/AssetStoreTools*
+Unity/[Rr]ecords/
+Unity/[Pp]ackages/manifest.temp.json
+# Crash & profiler
+Unity/[Cc]rashReports/
+Unity/[Pp]rofileData*/
+# Collaborate / Plastic SCM leftovers
+Unity/.collab/
+Unity/.plastic/
+
+# Art pipelines often export here
+Unity/**/[Gg]enerated*/
+Unity/**/[Aa]uto[Gs]ave*/
+# Keep meta files & YAML assets; they’re text and should be versioned.
+
+# ----------------------------------------------------------------------
+# Unreal (project lives under Unreal/)
+# Binaries / Builds / Saved / Intermediate
+Unreal/**/Binaries/
+Unreal/**/Build/
+Unreal/**/DerivedDataCache/
+Unreal/**/Intermediate/
+Unreal/**/Saved/
+Unreal/**/.vs/
+# Project-specific autosaves & backups
+Unreal/**/Saved/*
+!Unreal/**/Saved/Config/WindowsEditor/*.ini
+
+# Unreal editor junk
+Unreal/**/*.VC.db
+Unreal/**/*.opendb
+Unreal/**/Saved/Autosaves/
+Unreal/**/Saved/Backup/
+
+# ----------------------------------------------------------------------
+# HTML5 (Node/JS/TS app lives under HTML5/)
+HTML5/node_modules/
+HTML5/.cache/
+HTML5/.parcel-cache/
+HTML5/.next/
+HTML5/.nuxt/
+HTML5/dist/
+HTML5/build/
+HTML5/.vite/
+HTML5/.eslintcache
+HTML5/coverage/
+HTML5/.turbo/
+HTML5/.vercel/
+HTML5/.svelte-kit/
+# env files (don’t commit secrets)
+HTML5/.env
+HTML5/.env.*
+!HTML5/.env.example
+
+# ----------------------------------------------------------------------
+# Global assets you might generate at repo root
+*.unitypackage
+*.apk
+*.aab
+*.ipa
+*.app
+*.dmg
+*.exe
+*.pdb
+*.ilk
