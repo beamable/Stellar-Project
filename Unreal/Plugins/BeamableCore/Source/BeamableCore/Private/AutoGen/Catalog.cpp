@@ -1,0 +1,33 @@
+
+#include "BeamableCore/Public/AutoGen/Catalog.h"
+#include "Serialization/BeamJsonUtils.h"
+#include "Misc/DefaultValueHelper.h"
+
+
+
+void UCatalog::BeamSerializeProperties(TUnrealJsonSerializer& Serializer) const
+{
+	UBeamJsonUtils::SerializeRawPrimitive(TEXT("version"), Version, Serializer);
+	UBeamJsonUtils::SerializeRawPrimitive(TEXT("created"), Created, Serializer);
+	UBeamJsonUtils::SerializeArray<UStore*>(TEXT("stores"), Stores, Serializer);
+	UBeamJsonUtils::SerializeArray<UOfferDefinition*>(TEXT("offerDefinitions"), OfferDefinitions, Serializer);
+}
+
+void UCatalog::BeamSerializeProperties(TUnrealPrettyJsonSerializer& Serializer) const
+{
+	UBeamJsonUtils::SerializeRawPrimitive(TEXT("version"), Version, Serializer);
+	UBeamJsonUtils::SerializeRawPrimitive(TEXT("created"), Created, Serializer);
+	UBeamJsonUtils::SerializeArray<UStore*>(TEXT("stores"), Stores, Serializer);
+	UBeamJsonUtils::SerializeArray<UOfferDefinition*>(TEXT("offerDefinitions"), OfferDefinitions, Serializer);		
+}
+
+void UCatalog::BeamDeserializeProperties(const TSharedPtr<FJsonObject>& Bag)
+{
+	UBeamJsonUtils::DeserializeRawPrimitive(TEXT("version"), Bag, Version);
+	UBeamJsonUtils::DeserializeRawPrimitive(TEXT("created"), Bag, Created);
+	UBeamJsonUtils::DeserializeArray<UStore*>(TEXT("stores"), Bag, Stores, OuterOwner);
+	UBeamJsonUtils::DeserializeArray<UOfferDefinition*>(TEXT("offerDefinitions"), Bag, OfferDefinitions, OuterOwner);
+}
+
+
+

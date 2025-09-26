@@ -1,0 +1,44 @@
+#include "BeamCliUnityDownloadNugetPackageCommand.h"
+
+#include "BeamLogging.h"
+#include "Serialization/JsonSerializerMacros.h"
+
+FString UBeamCliUnityDownloadNugetPackageCommand::GetCommand()
+{
+	return FString(TEXT("unity download-nuget-package"));
+}
+		
+bool UBeamCliUnityDownloadNugetPackageCommand::HandleStreamReceived(FBeamOperationHandle Op, FString ReceivedStreamType, int64 Timestamp, TSharedRef<FJsonObject> DataJson, bool isServer)
+{
+	
+	if(ReceivedStreamType.Equals(StreamType) && OnStreamOutput)
+	{
+		AsyncTask(ENamedThreads::GameThread, [this, DataJson, Timestamp, Op]
+		{
+			UBeamCliUnityDownloadNugetPackageStreamData* Data = NewObject<UBeamCliUnityDownloadNugetPackageStreamData>(this);
+			Data->OuterOwner = this;
+			Data->BeamDeserializeProperties(DataJson);
+
+			Stream.Add(Data);
+			Timestamps.Add(Timestamp);
+		
+		
+			OnStreamOutput(Stream, Timestamps, Op);
+		});
+		
+		return true;				
+	}
+	
+	return false;
+}
+
+void UBeamCliUnityDownloadNugetPackageCommand::HandleStreamCompleted(FBeamOperationHandle Op, int ResultCode, bool isServer)
+{
+	if (OnCompleted)
+	{
+		AsyncTask(ENamedThreads::GameThread, [this, ResultCode, Op]
+		{
+			OnCompleted(ResultCode, Op);
+		});
+	}
+}
