@@ -1,8 +1,10 @@
 {
   "dependencies": {
+    "com.beamable": "3.1.2",
+    "com.beamable.server": "3.1.2",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.unity.2d.animation": "12.0.2",
-    "com.unity.2d.aseprite": "2.0.1",
+    "com.unity.2d.aseprite": "2.0.2",
     "com.unity.2d.enhancers": "1.0.0",
     "com.unity.2d.psdimporter": "11.0.1",
     "com.unity.2d.sprite": "1.0.0",
@@ -51,5 +53,14 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  }
+  },
+  "scopedRegistries": [
+    {
+      "name": "Beamable",
+      "url": "https://nexus.beamable.com/nexus/content/repositories/unity-all",
+      "scopes": [
+        "com.beamable"
+      ]
+    }
+  ]
 }
