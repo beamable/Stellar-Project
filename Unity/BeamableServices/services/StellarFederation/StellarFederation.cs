@@ -6,6 +6,7 @@ using Beamable.Common.Api.Inventory;
 using Beamable.Server;
 using Beamable.StellarFederation.Endpoints;
 using Beamable.StellarFederation.Extensions;
+using Beamable.StellarFederation.Features.Accounts;
 using StellarFederationCommon;
 
 namespace Beamable.StellarFederation
@@ -33,12 +34,55 @@ namespace Beamable.StellarFederation
 				{
 					throw new ConfigurationException($"{nameof(Configuration.StellarRpc)} is not defined in realm config. Please apply the configuration and restart the service to make it operational.");
 				}
+
+				//Generate Realm account
+				await initializer.Provider.GetService<AccountsService>().GetOrCreateRealmAccount();
 			}
 			catch (Exception ex)
 			{
 				BeamableLogger.LogException(ex);
 				BeamableLogger.LogError("Service initialization failed. Fix the issues before using the service.");
 			}
+		}
+
+		[AdminOnlyCallable]
+		public async Promise<string> GetRealmAccount()
+		{
+			var account = await Provider.GetService<AccountsService>()
+				.GetRealmAccount();
+			return account?.Address ?? "";
+		}
+
+		[AdminOnlyCallable]
+		public async Promise<string> GenerateRealmAccount()
+		{
+			var account = await Provider.GetService<AccountsService>()
+				.GetOrCreateRealmAccount();
+			return account.Address;
+		}
+
+		[AdminOnlyCallable]
+		public async Promise<string> ImportRealmAccount(string privateKey)
+		{
+			var account = await Provider.GetService<AccountsService>()
+				.GetOrImportRealmAccount(privateKey);
+			return account.Address;
+		}
+
+		[AdminOnlyCallable]
+		public async Promise<string> ImportAccount(string id, string privateKey)
+		{
+			var account = await Provider.GetService<AccountsService>()
+				.ImportAccount(id, privateKey);
+			return account.Address;
+		}
+
+		[AdminOnlyCallable]
+		public async Promise<string> GetAccount(string id)
+		{
+			var account = await Provider.GetService<AccountsService>()
+				.GetAccount(id);
+			return account?.PrivateKey ?? "";
 		}
 
 		async Promise<FederatedAuthenticationResponse> IFederatedLogin<StellarWeb3Identity>.Authenticate(string token, string challenge, string solution)

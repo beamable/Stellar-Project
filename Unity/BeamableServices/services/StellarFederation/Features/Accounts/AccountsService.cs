@@ -8,7 +8,7 @@ using Beamable.StellarFederation.Caching;
 using Beamable.StellarFederation.Features.Accounts.Models;
 using Beamable.StellarFederation.Features.Accounts.Storage;
 using Beamable.StellarFederation.Features.Accounts.Storage.Models;
-using Beamable.StellarFederation.Features.StellarApi.Models;
+using Beamable.StellarFederation.Features.Stellar;
 
 namespace Beamable.StellarFederation.Features.Accounts;
 
@@ -19,14 +19,16 @@ public class AccountsService : IService
     private readonly Configuration _configuration;
     private readonly AccountsApi _accountsApi;
     private readonly IBeamableRequester _beamableRequester;
+    private readonly StellarService _stellarService;
     private Account _cachedRealmAccount;
 
-    public AccountsService(VaultCollection vaultCollection, Configuration configuration, AccountsApi accountsApi, IBeamableRequester beamableRequester)
+    public AccountsService(VaultCollection vaultCollection, Configuration configuration, AccountsApi accountsApi, IBeamableRequester beamableRequester, StellarService stellarService)
     {
         _vaultCollection = vaultCollection;
         _configuration = configuration;
         _accountsApi = accountsApi;
         _beamableRequester = beamableRequester;
+        _stellarService = stellarService;
     }
 
     public async Task<Account> GetOrCreateAccount(string accountName)
@@ -141,24 +143,22 @@ public class AccountsService : IService
 
     private async Task<Account?> CreateAccount(string accountName)
     {
-        //var keys = await SuiApiService.CreateWallet();
-        var keys = new CreateWalletResponse();
+        var keys = _stellarService.CreateWallet();
         var privateKeyEncrypted = EncryptionService.Encrypt(keys.PrivateKey, _configuration.RealmSecret);
         var newAccount = new Account(accountName, keys.Address, keys.PrivateKey);
 
-        return await _vaultCollection.TryInsertVault(new Vault(accountName, newAccount.Address, privateKeyEncrypted, keys.PublicKey))
+        return await _vaultCollection.TryInsertVault(new Vault(accountName, newAccount.Address, privateKeyEncrypted))
             ? newAccount
             : null;
     }
 
     private async Task<Account?> CreateAccount(string accountName, string privateKey)
     {
-        //var keys = await SuiApiService.ImportPrivateKey(privateKey);
-        var keys = new CreateWalletResponse();
+        var keys = _stellarService.ImportWallet(privateKey);
         var privateKeyEncrypted = EncryptionService.Encrypt(keys.PrivateKey, _configuration.RealmSecret);
         var newAccount = new Account(accountName, keys.Address, keys.PrivateKey);
 
-        return await _vaultCollection.TryInsertVault(new Vault(accountName, newAccount.Address, privateKeyEncrypted, keys.PublicKey))
+        return await _vaultCollection.TryInsertVault(new Vault(accountName, newAccount.Address, privateKeyEncrypted))
             ? newAccount
             : null;
     }
