@@ -12,7 +12,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace>Farm</RootNamespace>
-    <ProjectGuid>{417eb007-6de0-8119-d623-051b51e3d493}</ProjectGuid>
+    <ProjectGuid>{03938ccd-4b40-8dfb-6b9b-21988d5cac0a}</ProjectGuid>
     <ProjectTypeGuids>{E097FAD1-6243-4DAD-9C02-E9B9EFC3FFC1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -44,8 +44,8 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.2.4f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.2.4f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.2.4f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
-    <Analyzer Include="C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\PackageCache\com.unity.ai.inference@4ac711cab9a3\Runtime\Core\SourceGenerator\SourceGenerators.dll" />
-    <Analyzer Include="C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\PackageCache\com.unity.dt.app-ui@7b87c8225c06\Runtime\SourceGenerators\netstandard2.0\EnumToLowerCase.dll" />
+    <Analyzer Include="C:\Beamable\Repos\Stellar-Project\Unity\Library\PackageCache\com.unity.ai.inference@4ac711cab9a3\Runtime\Core\SourceGenerator\SourceGenerators.dll" />
+    <Analyzer Include="C:\Beamable\Repos\Stellar-Project\Unity\Library\PackageCache\com.unity.dt.app-ui@7b87c8225c06\Runtime\SourceGenerators\netstandard2.0\EnumToLowerCase.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Game\Scripts\Planting\PlantingGridController.cs" />
@@ -469,25 +469,25 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.2.4f1\Editor\Data\Managed\UnityEngine\UnityEditor.XRModule.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\PackageCache\com.unity.collections@d49facba0036\Unity.Collections.LowLevel.ILSupport\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\PackageCache\com.unity.collections@d49facba0036\Unity.Collections.LowLevel.ILSupport\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\PackageCache\com.unity.ext.nunit@031a54704bff\net40\unity-custom\nunit.framework.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\PackageCache\com.unity.ext.nunit@031a54704bff\net40\unity-custom\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Hashing">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\PackageCache\com.unity.collections@d49facba0036\Unity.Collections.Tests\System.IO.Hashing\System.IO.Hashing.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\PackageCache\com.unity.collections@d49facba0036\Unity.Collections.Tests\System.IO.Hashing\System.IO.Hashing.dll</HintPath>
     </Reference>
     <Reference Include="DOTween">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Assets\Plugins\Demigiant\DOTween\DOTween.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Assets\Plugins\Demigiant\DOTween\DOTween.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\PackageCache\com.unity.collections@d49facba0036\Unity.Collections.Tests\System.Runtime.CompilerServices.Unsafe\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\PackageCache\com.unity.collections@d49facba0036\Unity.Collections.Tests\System.Runtime.CompilerServices.Unsafe\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\PackageCache\com.unity.nuget.newtonsoft-json@74deb55db2a0\Runtime\Newtonsoft.Json.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\PackageCache\com.unity.nuget.newtonsoft-json@74deb55db2a0\Runtime\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\PackageCache\com.unity.nuget.mono-cecil@d78732e851eb\Mono.Cecil.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\PackageCache\com.unity.nuget.mono-cecil@d78732e851eb\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.2.4f1\Editor\Data\NetStandard\ref\2.1.0\netstandard.dll</HintPath>
@@ -856,246 +856,246 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.2.4f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Xml.Serialization.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Common.Path.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Common.Path.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Common.Path.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Sprite.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Sprite.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Sprite.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InternalAPIEngineBridge.001">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.InternalAPIEngineBridge.001.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.InternalAPIEngineBridge.001.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="PsdPlugin">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\PsdPlugin.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\PsdPlugin.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.ShaderLibrary">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Core.ShaderLibrary.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Core.ShaderLibrary.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.IK.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.IK.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.IK.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Animation.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Animation.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Animation.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Enhancers.Editor.AIBridge">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Enhancers.Editor.AIBridge.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Enhancers.Editor.AIBridge.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InternalAPIEditorBridge.001">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.InternalAPIEditorBridge.001.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.InternalAPIEditorBridge.001.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Splines.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Splines.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Splines.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Editor.dll</HintPath>
     </Reference>
     <Reference Include="PPv2URPConverters">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\PPv2URPConverters.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\PPv2URPConverters.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Common.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Common.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Common.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Animation.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Animation.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Animation.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Runtime.Shared">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Runtime.Shared.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Runtime.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.2D.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.2D.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.2D.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Searcher.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.PlasticSCM.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.PlasticSCM.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.PlasticSCM.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Burst.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Burst.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Burst.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Mathematics.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Mathematics.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Mathematics.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Cinemachine.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Cinemachine.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Cinemachine.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InferenceEngine.ONNX.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.InferenceEngine.ONNX.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.InferenceEngine.ONNX.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Aseprite.Common">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Aseprite.Common.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Aseprite.Common.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Cinemachine">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Cinemachine.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Cinemachine.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Rendering.LightTransport.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Rendering.LightTransport.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Rendering.LightTransport.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InferenceEngine.MacBLAS">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.InferenceEngine.MacBLAS.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.InferenceEngine.MacBLAS.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Rider.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.AI.Assistant.Bridge.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.AI.Assistant.Bridge.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.AI.Assistant.Bridge.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Aseprite.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Aseprite.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Aseprite.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Psdimporter.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Psdimporter.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Psdimporter.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InferenceEngine.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.InferenceEngine.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.InferenceEngine.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.TextMeshPro.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Tilemap.Extras">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Tilemap.Extras.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Tilemap.Extras.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.IK.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.IK.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.IK.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.SpriteShape.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.SpriteShape.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.SpriteShape.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="UniTask.TextMeshPro">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\UniTask.TextMeshPro.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\UniTask.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="Unity.VisualStudio.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.VisualStudio.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.VisualStudio.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Tilemap.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Tilemap.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Tilemap.Editor.dll</HintPath>
     </Reference>
     <Reference Include="UniTask.DOTween">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\UniTask.DOTween.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\UniTask.DOTween.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Common.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Common.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Common.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Collections">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Collections.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Collections.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InputSystem.ForUI">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.InputSystem.ForUI.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.InputSystem.ForUI.dll</HintPath>
     </Reference>
     <Reference Include="Unity.AI.Assistant.Agent.Dynamic.Extension.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.AI.Assistant.Agent.Dynamic.Extension.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.AI.Assistant.Agent.Dynamic.Extension.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.GPUDriven.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.GPUDriven.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.GPUDriven.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Tilemap.Extras.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Tilemap.Extras.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Tilemap.Extras.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.AppUI.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.AppUI.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.AppUI.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Mathematics">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Mathematics.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Serialization">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Serialization.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Serialization.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Shaders">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Shaders.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Shaders.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Burst">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Burst.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Burst.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.AI.Assistant.AvatarHelper.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.AI.Assistant.AvatarHelper.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.AI.Assistant.AvatarHelper.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Rendering.LightTransport.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Rendering.LightTransport.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Rendering.LightTransport.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Config.Runtime">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Config.Runtime.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Config.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.AppUI">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.AppUI.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.AppUI.dll</HintPath>
     </Reference>
     <Reference Include="UniTask.Linq">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\UniTask.Linq.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\UniTask.Linq.dll</HintPath>
     </Reference>
     <Reference Include="Unity.AppUI.Navigation.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.AppUI.Navigation.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.AppUI.Navigation.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipeline.Universal.ShaderLibrary">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipeline.Universal.ShaderLibrary.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipeline.Universal.ShaderLibrary.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Collections.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Collections.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Collections.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Serialization.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Serialization.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Serialization.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.ShaderGraph.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.ShaderGraph.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.ShaderGraph.Editor.dll</HintPath>
     </Reference>
     <Reference Include="UniTask.Addressables">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\UniTask.Addressables.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\UniTask.Addressables.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Sprite.AIIntegration.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Sprite.AIIntegration.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Sprite.AIIntegration.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Editor.Shared">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.Shared.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.SpriteShape.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.SpriteShape.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.SpriteShape.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InferenceEngine.iOSBLAS">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.InferenceEngine.iOSBLAS.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.InferenceEngine.iOSBLAS.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InputSystem">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.InputSystem.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.InputSystem.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Enhancers.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.2D.Enhancers.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.2D.Enhancers.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Settings.Editor">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Settings.Editor.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Settings.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Splines">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.Splines.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.Splines.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor.UI">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
     </Reference>
     <Reference Include="UniTask">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\UniTask.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\UniTask.dll</HintPath>
     </Reference>
     <Reference Include="Unity.AppUI.Redux">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.AppUI.Redux.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.AppUI.Redux.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InferenceEngine">
-      <HintPath>C:\Beamable\Repos\Unity-FarmingDemo\Farming Demo\Library\ScriptAssemblies\Unity.InferenceEngine.dll</HintPath>
+      <HintPath>C:\Beamable\Repos\Stellar-Project\Unity\Library\ScriptAssemblies\Unity.InferenceEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
-      <Project>{d0b501eb-9d9a-62cf-56e0-93d9d63927ce}</Project>
+      <Project>{09b46226-3263-561e-d797-c9025c53bdd6}</Project>
       <Name>Assembly-CSharp-firstpass</Name>
     </ProjectReference>
   </ItemGroup>
