@@ -1,5 +1,28 @@
-﻿ARG BEAM_DOTNET_VERSION="8.0-alpine"
+﻿ARG BEAM_DOTNET_VERSION="8.0-noble"
 FROM mcr.microsoft.com/dotnet/runtime:${BEAM_DOTNET_VERSION}
+
+# Install required native dependencies:
+# - libicu74 → globalization support for .NET
+# - libc6, libstdc++6, libgcc-s1 → core runtime libraries
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libicu74 \
+        libc6 \
+        libstdc++6 \
+        libgcc-s1 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Build libsodium from source
+# - libsodium23 → crypto backend for NSec (used by Stellar SDK)
+# Note: we build from source because the version in apt repos is often out of date and Stellar SDK requeries = 1.0.20
+ARG LIBSODIUM_VERSION="1.0.20"
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential curl \
+    && curl -sS https://download.libsodium.org/libsodium/releases/libsodium-${LIBSODIUM_VERSION}.tar.gz | tar xz \
+    && cd libsodium-${LIBSODIUM_VERSION} && ./configure && \
+    make && make install \
+    && ldconfig \
+    && cd .. && rm -rf libsodium-${LIBSODIUM_VERSION}
+
 
 # These args are provided by the Beam CLI
 

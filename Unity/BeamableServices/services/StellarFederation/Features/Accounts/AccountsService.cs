@@ -136,7 +136,7 @@ public class AccountsService : IService
                 return null;
             }
 
-            var privateKey = EncryptionService.Decrypt(vault.PrivateKey, _configuration.RealmSecret);
+            var privateKey = EncryptionService.Decrypt(vault.SecretSeed, _configuration.RealmSecret);
             return new Account(vault.Name, vault.Address, privateKey);
         }, TimeSpan.FromDays(1));
     }
@@ -144,19 +144,19 @@ public class AccountsService : IService
     private async Task<Account?> CreateAccount(string accountName)
     {
         var keys = _stellarService.CreateWallet();
-        var privateKeyEncrypted = EncryptionService.Encrypt(keys.PrivateKey, _configuration.RealmSecret);
-        var newAccount = new Account(accountName, keys.Address, keys.PrivateKey);
+        var privateKeyEncrypted = EncryptionService.Encrypt(keys.SecretSeed, _configuration.RealmSecret);
+        var newAccount = new Account(accountName, keys.Address, keys.SecretSeed);
 
         return await _vaultCollection.TryInsertVault(new Vault(accountName, newAccount.Address, privateKeyEncrypted))
             ? newAccount
             : null;
     }
 
-    private async Task<Account?> CreateAccount(string accountName, string privateKey)
+    private async Task<Account?> CreateAccount(string accountName, string secretSeed)
     {
-        var keys = _stellarService.ImportWallet(privateKey);
-        var privateKeyEncrypted = EncryptionService.Encrypt(keys.PrivateKey, _configuration.RealmSecret);
-        var newAccount = new Account(accountName, keys.Address, keys.PrivateKey);
+        var keys = _stellarService.ImportWallet(secretSeed);
+        var privateKeyEncrypted = EncryptionService.Encrypt(keys.SecretSeed, _configuration.RealmSecret);
+        var newAccount = new Account(accountName, keys.Address, keys.SecretSeed);
 
         return await _vaultCollection.TryInsertVault(new Vault(accountName, newAccount.Address, privateKeyEncrypted))
             ? newAccount

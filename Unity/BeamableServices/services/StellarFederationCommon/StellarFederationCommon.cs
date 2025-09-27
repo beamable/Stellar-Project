@@ -11,7 +11,7 @@ namespace StellarFederationCommon
 	/// <summary>
 	/// SuiWeb3ExternalIdentity definition
 	/// </summary>
-	[FederationId(StellarFederationSettings.StellarIdentityName)]
+	[FederationId(StellarFederationSettings.StellarExternalIdentityName)]
 	public class StellarWeb3ExternalIdentity : IFederationId {}
 
 

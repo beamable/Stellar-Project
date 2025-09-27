@@ -7,6 +7,7 @@ using Beamable.Server;
 using Beamable.StellarFederation.Endpoints;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
+using Beamable.StellarFederation.Features.Stellar;
 using StellarFederationCommon;
 
 namespace Beamable.StellarFederation
@@ -61,45 +62,23 @@ namespace Beamable.StellarFederation
 			return account.Address;
 		}
 
-		[AdminOnlyCallable]
-		public async Promise<string> ImportRealmAccount(string privateKey)
-		{
-			var account = await Provider.GetService<AccountsService>()
-				.GetOrImportRealmAccount(privateKey);
-			return account.Address;
-		}
-
-		[AdminOnlyCallable]
-		public async Promise<string> ImportAccount(string id, string privateKey)
-		{
-			var account = await Provider.GetService<AccountsService>()
-				.ImportAccount(id, privateKey);
-			return account.Address;
-		}
-
-		[AdminOnlyCallable]
-		public async Promise<string> GetAccount(string id)
-		{
-			var account = await Provider.GetService<AccountsService>()
-				.GetAccount(id);
-			return account?.PrivateKey ?? "";
-		}
-
 		async Promise<FederatedAuthenticationResponse> IFederatedLogin<StellarWeb3Identity>.Authenticate(string token, string challenge, string solution)
 		{
 			return await Provider.GetService<AuthenticateEndpoint>()
 				.Authenticate(token, challenge, solution);
 		}
 
-		Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3Identity>.GetInventoryState(string id)
+		async Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3Identity>.GetInventoryState(string id)
 		{
-			throw new NotImplementedException();
+			return await Provider.GetService<GetInventoryStateEndpoint>()
+				.GetInventoryState(id);
 		}
 
-		Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3Identity>.StartInventoryTransaction(string id, string transaction, Dictionary<string, long> currencies, List<FederatedItemCreateRequest> newItems, List<FederatedItemDeleteRequest> deleteItems,
+		async Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3Identity>.StartInventoryTransaction(string id, string transaction, Dictionary<string, long> currencies, List<FederatedItemCreateRequest> newItems, List<FederatedItemDeleteRequest> deleteItems,
 			List<FederatedItemUpdateRequest> updateItems)
 		{
-			throw new NotImplementedException();
+			return await Provider.GetService<StartInventoryTransactionEndpoint>()
+				.StartInventoryTransaction(id, transaction, currencies, newItems, deleteItems, updateItems);
 		}
 	}
 }
