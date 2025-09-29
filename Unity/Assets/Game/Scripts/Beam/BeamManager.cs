@@ -81,7 +81,8 @@ namespace Farm.Beam
             }
 
             IsReady = true;
-            Debug.Log($"{BeamContext}");
+
+            await UniTask.WaitForSeconds(3f, cancellationToken: ct); //await for all logic to finish
             OnInitialized?.Invoke();
         }
 

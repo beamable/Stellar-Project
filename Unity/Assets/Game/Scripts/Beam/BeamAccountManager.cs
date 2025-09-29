@@ -9,9 +9,10 @@ namespace Farm.Beam
 {
     public class BeamAccountManager : BeamManagerBase
     {
-        #region Unity Calls
         
         public PlayerAccount CurrentAccount { get; private set; }
+
+        #region Init
 
         public override async UniTask InitAsync(CancellationToken ct)
         {
@@ -26,7 +27,7 @@ namespace Farm.Beam
             await UniTask.Yield();
         }
 
-        public async UniTask UpdateCurrentAccount(PlayerAccount account = null)
+        private async UniTask UpdateCurrentAccount(PlayerAccount account = null)
         {
             await _beamContext.Accounts.OnReady;
             CurrentAccount = account ?? _beamContext.Accounts.Current;
@@ -39,7 +40,7 @@ namespace Farm.Beam
             await UpdateCurrentAccount(newAccount);
         }
 
-        public async UniTask SetAlias(string alias, PlayerAccount account = null)
+        private async UniTask SetAlias(string alias, PlayerAccount account = null)
         {
             var ac = CurrentAccount ?? account;
             await _beamContext.Accounts.SetAlias(alias);
@@ -53,10 +54,23 @@ namespace Farm.Beam
             await _beamContext.Accounts.AddExternalIdentity<StellarWeb3Identity, StellarFederationClient>("",
                 (AsyncChallengeHandler) null, newAccount);
             await SwitchAccount(newAccount);
-            
         }
         
         #endregion
+
+        public (bool, string) HasStellarId()
+        {
+            if(CurrentAccount == null || CurrentAccount.ExternalIdentities.Length < 1) return (false, "");
+
+            foreach (var identity in CurrentAccount.ExternalIdentities)
+            {
+                if(identity.providerNamespace == StellarFederationSettings.StellarIdentityName)
+                    return (true, identity.userId);
+            }
+
+            return (false, "");
+        }
+        
         
     }
 }

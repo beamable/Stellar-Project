@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using Farm.Managers;
 using UnityEngine;
@@ -13,6 +14,13 @@ namespace Farm.UI
         [Header("Animation Settings")]
         [SerializeField] private float scaleFactor = 1.15f;
         [SerializeField] private float scaleDuration = 0.25f;
+
+        private float _startingScale = 1f;
+
+        private void OnEnable()
+        {
+            _startingScale = transform.localScale.x;
+        }
 
         public void AddListener(UnityAction onClick)
         {
@@ -38,12 +46,14 @@ namespace Farm.UI
         
         public void OnPointerEnter()
         {
+            if(!button.interactable) return;
             transform.DOScale(scaleFactor, scaleDuration).SetEase(Ease.OutBack);
         }
         
         public void OnPointerExit()
         {
-            transform.DOScale(1f, scaleDuration).SetEase(Ease.OutBack);
+            if(!button.interactable) return;
+            transform.DOScale(_startingScale, scaleDuration).SetEase(Ease.OutBack);
         }
 
         #endregion
