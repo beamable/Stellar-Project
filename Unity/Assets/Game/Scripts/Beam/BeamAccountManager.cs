@@ -1,0 +1,76 @@
+using System.Threading;
+using Beamable.Player;
+using Beamable.Server.Clients;
+using Cysharp.Threading.Tasks;
+using StellarFederationCommon;
+using UnityEngine;
+
+namespace Farm.Beam
+{
+    public class BeamAccountManager : BeamManagerBase
+    {
+        
+        public PlayerAccount CurrentAccount { get; private set; }
+
+        #region Init
+
+        public override async UniTask InitAsync(CancellationToken ct)
+        {
+            await base.InitAsync(ct);
+            await _beamContext.Accounts.OnReady;
+            await UpdateCurrentAccount();
+        }
+
+        public override async UniTask ResetAsync(CancellationToken ct)
+        {
+            await base.ResetAsync(ct);
+            await UniTask.Yield();
+        }
+
+        private async UniTask UpdateCurrentAccount(PlayerAccount account = null)
+        {
+            await _beamContext.Accounts.OnReady;
+            CurrentAccount = account ?? _beamContext.Accounts.Current;
+        }
+
+        public async UniTask SwitchAccount(PlayerAccount newAccount)
+        {
+            await _beamContext.Accounts.SwitchToAccount(newAccount);
+            await _beamContext.Accounts.AddDeviceId(newAccount);
+            await UpdateCurrentAccount(newAccount);
+        }
+
+        private async UniTask SetAlias(string alias, PlayerAccount account = null)
+        {
+            var ac = CurrentAccount ?? account;
+            await _beamContext.Accounts.SetAlias(alias);
+            await UpdateCurrentAccount(ac);
+        }
+
+        public async UniTask CreateNewAccount(string alia = "")
+        {
+            var newAccount = await _beamContext.Accounts.CreateNewAccount();
+            await SetAlias(alia, newAccount);
+            await _beamContext.Accounts.AddExternalIdentity<StellarWeb3Identity, StellarFederationClient>("",
+                (AsyncChallengeHandler) null, newAccount);
+            await SwitchAccount(newAccount);
+        }
+        
+        #endregion
+
+        public (bool, string) HasStellarId()
+        {
+            if(CurrentAccount == null || CurrentAccount.ExternalIdentities.Length < 1) return (false, "");
+
+            foreach (var identity in CurrentAccount.ExternalIdentities)
+            {
+                if(identity.providerNamespace == StellarFederationSettings.StellarIdentityName)
+                    return (true, identity.userId);
+            }
+
+            return (false, "");
+        }
+        
+        
+    }
+}
