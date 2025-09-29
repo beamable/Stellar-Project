@@ -38,6 +38,7 @@ public class Configuration : IService
     /// </summary>
 
     public ValueTask<string> StellarRpc => GetValue(nameof(StellarRpc), "");
+    public ValueTask<string> StellarFaucet => GetValue(nameof(StellarFaucet), "");
     public ValueTask<int> AuthenticationChallengeTtlSec => GetValue(nameof(AuthenticationChallengeTtlSec), 600);
 
     private async ValueTask<T> GetValue<T>(string key, T defaultValue) where T : IConvertible
