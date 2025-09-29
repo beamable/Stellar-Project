@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Beamable;
+using Beamable.Server.Clients;
 using Cysharp.Threading.Tasks;
 using Farm.Managers;
 using UnityEngine;
@@ -10,25 +11,38 @@ namespace Farm.Beam
 {
     public class BeamManager : MonoSingleton<BeamManager>
     {
+        #region Variables
+
         [Header("Managers (init in this exact order)")]
-        [SerializeField] private List<MonoBehaviour> beamManagers = new();
+        [SerializeField] private List<BeamManagerBase> beamManagers = new();
         
         private CancellationTokenSource _cts;
         private readonly List<IBeamManager> _managers = new();
         
         public static bool IsReady { get; private set; }
         public static BeamContext BeamContext { get; private set; }
+        public static StellarFederationClient StellarClient { get; private set; }
         public IReadOnlyList<IBeamManager> Managers => _managers;
         
-        public event Action Initialized;
-        public event Action ResetStarted;
-        public event Action ResetCompleted;
+        public event Action OnInitialized;
+        public event Action OnResetStarted;
+        public event Action OnResetCompleted;
+
+        #endregion
+
+        #region Managers
+
+        public BeamAccountManager AccountManager { get; private set; }
+
+        #endregion
 
         protected override void OnInitOnce()
         {
             base.OnInitOnce();
             DontDestroyOnLoad(this);
             RebuildManagerCacheFromList();
+
+            AccountManager = GetComponentInChildren<BeamAccountManager>();
         }
 
         protected override void OnAfterInitialized()
@@ -43,8 +57,8 @@ namespace Farm.Beam
             foreach (var manager in beamManagers)
             {
                 if (manager == null) continue;
-                if (manager is IBeamManager gm) _managers.Add(gm);
-                else Debug.LogError($"'{manager.name}' does not implement IGameManager.");
+                _managers.Add(manager);
+                Debug.Log($"Adding manager '{manager.name}' to cache.");
             }
         }
         
@@ -63,15 +77,17 @@ namespace Farm.Beam
             {
                 ct.ThrowIfCancellationRequested();
                 await m.InitAsync(ct);
+                Debug.Log($"Manager '{m.GetType().Name}' initialized.");
             }
 
             IsReady = true;
-            Initialized?.Invoke();
+            Debug.Log($"{BeamContext}");
+            OnInitialized?.Invoke();
         }
 
         public async UniTask ResetAllAsync(CancellationToken externalCt = default)
         {
-            ResetStarted?.Invoke();
+            OnResetStarted?.Invoke();
 
             _cts?.Cancel();
             using var localCts = CancellationTokenSource.CreateLinkedTokenSource(externalCt);
@@ -86,7 +102,7 @@ namespace Farm.Beam
             }
 
             IsReady = false;
-            ResetCompleted?.Invoke();
+            OnResetCompleted?.Invoke();
         }
 
         public async UniTask ReinitializeAsync(CancellationToken ct = default)
@@ -99,7 +115,7 @@ namespace Farm.Beam
         {
             BeamContext ??= BeamContext.Default;
             await BeamContext.OnReady;
-            //TODO: Add StellarClient 
+            StellarClient ??= BeamContext.Microservices.StellarFederation();
         }
     }
 }

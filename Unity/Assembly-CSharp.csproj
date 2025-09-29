@@ -71,6 +71,7 @@
     <Compile Include="Assets\Game\Scripts\Beam\IBeamManager.cs" />
     <Compile Include="Assets\Game\Scripts\Planting\PlantingBlock.cs" />
     <Compile Include="Assets\Game\Scripts\Managers\AudioManager.cs" />
+    <Compile Include="Assets\Game\Scripts\MainMenu\UiAccountController.cs" />
     <Compile Include="Assets\Game\Input\InputSystem_Actions.cs" />
     <Compile Include="Assets\Game\Scripts\Player\PlayerAnimation.cs" />
     <Compile Include="Assets\Game\Scripts\UI\Fader.cs" />
