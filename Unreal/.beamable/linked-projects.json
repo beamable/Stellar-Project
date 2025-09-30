@@ -1,0 +1,16 @@
+{
+  "unityProjectsPaths": [],
+  "unrealProjectsPaths": [
+    {
+      "CoreProjectName": "Unreal2dDungeonMicroserviceClients",
+      "BlueprintNodesProjectName": "Unreal2dDungeonMicroserviceClientsBp",
+      "Path": "",
+      "SourceFilesPath": "Plugins/Unreal2dDungeonMicroserviceClients/",
+      "MsCoreHeaderPath": "Source/Unreal2dDungeonMicroserviceClients/Public/",
+      "MsCoreCppPath": "Source/Unreal2dDungeonMicroserviceClients/Private/",
+      "MsBlueprintNodesHeaderPath": "Source/Unreal2dDungeonMicroserviceClientsBp/Public/",
+      "MsBlueprintNodesCppPath": "Source/Unreal2dDungeonMicroserviceClientsBp/Private/",
+      "BeamableBackendGenerationPassFile": "Plugins/BeamableCore/Source/BeamableCore_GenerationPass.json"
+    }
+  ]
+}
