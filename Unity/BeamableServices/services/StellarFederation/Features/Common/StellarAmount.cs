@@ -80,6 +80,11 @@ public readonly record struct StellarAmount
         return new StellarAmount(checked(a.TotalUnits + b.TotalUnits), a.Decimals);
     }
 
+    public static StellarAmount operator +(StellarAmount a, long b)
+    {
+        return new StellarAmount(checked(a.TotalUnits + b), a.Decimals);
+    }
+
     public static StellarAmount operator -(StellarAmount a, StellarAmount b)
     {
         EnsureMatchingDecimals(a, b);

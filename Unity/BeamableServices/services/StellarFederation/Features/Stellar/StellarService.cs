@@ -5,8 +5,11 @@ using Beamable.Common;
 using Beamable.StellarFederation.Features.Common;
 using Beamable.StellarFederation.Features.HttpService;
 using Beamable.StellarFederation.Features.Stellar.Models;
+using StellarDotnetSdk;
 using StellarDotnetSdk.Accounts;
-using StellarDotnetSdk.Assets;
+using StellarDotnetSdk.LedgerEntries;
+using StellarDotnetSdk.Soroban;
+using LedgerKey = StellarDotnetSdk.LedgerKeys.LedgerKey;
 
 namespace Beamable.StellarFederation.Features.Stellar;
 
@@ -16,8 +19,7 @@ public class StellarService : IService
     private readonly Configuration _configuration;
     private readonly HttpClientService _httpClientService;
 
-    private readonly AssetTypeNative _nativeAsset = new();
-    private StellarDotnetSdk.Server? _server;
+    private SorobanServer? _rpcServer;
 
     public StellarService(Configuration configuration, HttpClientService httpClientService)
     {
@@ -25,10 +27,22 @@ public class StellarService : IService
         _httpClientService = httpClientService;
     }
 
-    private async ValueTask<StellarDotnetSdk.Server> ServerInstance()
+    private async ValueTask<SorobanServer> RpcInstance()
     {
-        _server ??= new StellarDotnetSdk.Server(await _configuration.StellarRpc);
-        return _server;
+        await SetNetwork();
+        _rpcServer ??= new SorobanServer(await _configuration.StellarRpc);
+        return _rpcServer;
+    }
+
+    private async ValueTask SetNetwork()
+    {
+        if (Network.Current is null || (Network.IsPublicNetwork(Network.Current) && await _configuration.StellarNetwork == StellarSettings.TestNetwork))
+        {
+            if (await _configuration.StellarNetwork == StellarSettings.TestNetwork)
+                Network.UseTestNetwork();
+            else
+                Network.UsePublicNetwork();
+        }
     }
 
     public CreateWalletResponse CreateWallet()
@@ -84,14 +98,16 @@ public class StellarService : IService
         {
             try
             {
-                var serverInstance = await ServerInstance();
-                var account = await serverInstance.Accounts.Account(wallet);
-                foreach (var balance in account.Balances)
+                var serverInstance = await RpcInstance();
+                var accountKey = LedgerKey.Account(KeyPair.FromAccountId(wallet));
+                var response = await serverInstance.GetLedgerEntry(accountKey);
+
+                if (response.LedgerEntries is not { Length: > 0 }) return result;
+
+                foreach (var entry in response.LedgerEntries)
                 {
-                    if (balance?.Asset?.Equals(_nativeAsset) ?? false)
-                    {
-                        result += StellarAmount.Parse(balance.BalanceString);
-                    }
+                    var entryAccount = (LedgerEntryAccount)entry;
+                    result += entryAccount.Balance;
                 }
                 return result;
             }
