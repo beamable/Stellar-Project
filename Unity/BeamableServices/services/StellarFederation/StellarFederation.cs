@@ -7,8 +7,9 @@ using Beamable.Server;
 using Beamable.StellarFederation.Endpoints;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
-using Beamable.StellarFederation.Features.Stellar;
+using Beamable.StellarFederation.Features.ExternalAuth;
 using StellarFederationCommon;
+using StellarFederationCommon.Models.Response;
 
 namespace Beamable.StellarFederation
 {
@@ -79,6 +80,24 @@ namespace Beamable.StellarFederation
 		{
 			return await Provider.GetService<StartInventoryTransactionEndpoint>()
 				.StartInventoryTransaction(id, transaction, currencies, newItems, deleteItems, updateItems);
+		}
+
+		[ClientCallable]
+		public async Promise<ConfigurationResponse> StellarConfiguration()
+		{
+			var configuration = Provider.GetService<Configuration>();
+			return new ConfigurationResponse
+			{
+				network = await configuration.StellarNetwork,
+				walletConnectBridgeUrl = await configuration.WalletConnectBridgeUrl,
+				walletConnectProjectId = await configuration.WalletConnectProjectId
+			};
+		}
+
+		[Callable]
+		public async Promise ExternalSignature()
+		{
+			await Provider.GetService<ExternalAuthService>().ProcessCallback(Context.Body);
 		}
 	}
 }
