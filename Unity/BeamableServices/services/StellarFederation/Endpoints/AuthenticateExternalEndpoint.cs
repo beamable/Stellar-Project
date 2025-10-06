@@ -4,6 +4,8 @@ using Beamable.Server;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
 using Beamable.StellarFederation.Features.Accounts.Exceptions;
+using Beamable.StellarFederation.Features.ExternalAuth;
+using Beamable.StellarFederation.Features.ExternalAuth.Storage.Models;
 using Beamable.StellarFederation.Features.Stellar;
 using StellarFederationCommon;
 
@@ -14,12 +16,16 @@ public class AuthenticateExternalEndpoint : IEndpoint
     private readonly Configuration _configuration;
     private readonly RequestContext _requestContext;
     private readonly StellarService _stellarService;
+    private readonly AccountsService _accountsService;
+    private readonly ExternalAuthService _externalAuthService;
 
-    public AuthenticateExternalEndpoint(Configuration configuration, RequestContext requestContext, StellarService stellarService)
+    public AuthenticateExternalEndpoint(Configuration configuration, RequestContext requestContext, StellarService stellarService, AccountsService accountsService, ExternalAuthService externalAuthService)
     {
         _configuration = configuration;
         _requestContext = requestContext;
         _stellarService = stellarService;
+        _accountsService = accountsService;
+        _externalAuthService = externalAuthService;
     }
 
     public async Promise<FederatedAuthenticationResponse> Authenticate(string token, string challenge, string solution)
@@ -44,10 +50,12 @@ public class AuthenticateExternalEndpoint : IEndpoint
             throw new UnauthorizedException("Please provide an external token");
         }
 
+        var realmAccount = await _accountsService.GetOrCreateRealmAccount();
+
         // Challenge-based authentication
         if (!string.IsNullOrEmpty(challenge) && !string.IsNullOrEmpty(solution))
         {
-            if (_stellarService.IsSignatureValid(token, challenge, solution))
+            if (await _stellarService.IsSignTransactionValid(realmAccount, token, solution))
                 // User identity is confirmed
                 return new FederatedAuthenticationResponse
                 {
@@ -61,10 +69,13 @@ public class AuthenticateExternalEndpoint : IEndpoint
             throw new UnauthorizedException("Invalid signature");
         }
 
+        var message = await _stellarService.CreateSignTransaction(realmAccount, token);
+        await _externalAuthService.Upsert(new ExternalAuth(token, _requestContext.UserId, message, DateTime.UtcNow.AddSeconds(await _configuration.AuthenticationChallengeTtlSec)));
+
         // Generate a challenge
         return new FederatedAuthenticationResponse
         {
-            challenge = $"Please sign this random message to authenticate: {Guid.NewGuid()}",
+            challenge = message,
             challenge_ttl = await _configuration.AuthenticationChallengeTtlSec
         };
     }
