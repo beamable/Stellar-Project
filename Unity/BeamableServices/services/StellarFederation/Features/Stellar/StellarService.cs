@@ -1,12 +1,30 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Beamable.Common;
+using Beamable.StellarFederation.Features.Accounts.Exceptions;
 using Beamable.StellarFederation.Features.Common;
 using Beamable.StellarFederation.Features.HttpService;
 using Beamable.StellarFederation.Features.Stellar.Models;
+using Chaos.NaCl;
+using StellarDotnetSdk;
 using StellarDotnetSdk.Accounts;
 using StellarDotnetSdk.Assets;
+using StellarDotnetSdk.LedgerEntries;
+using StellarDotnetSdk.Memos;
+using StellarDotnetSdk.Operations;
+using StellarDotnetSdk.Soroban;
+using StellarDotnetSdk.Transactions;
+using StellarDotnetSdk.Xdr;
+using FeeBumpTransaction = StellarDotnetSdk.Transactions.FeeBumpTransaction;
+using LedgerKey = StellarDotnetSdk.LedgerKeys.LedgerKey;
+using PublicKey = NSec.Cryptography.PublicKey;
+using Signer = StellarDotnetSdk.Xdr.Signer;
+using TimeBounds = StellarDotnetSdk.Transactions.TimeBounds;
+using Transaction = StellarDotnetSdk.Transactions.Transaction;
 
 namespace Beamable.StellarFederation.Features.Stellar;
 
@@ -16,8 +34,7 @@ public class StellarService : IService
     private readonly Configuration _configuration;
     private readonly HttpClientService _httpClientService;
 
-    private readonly AssetTypeNative _nativeAsset = new();
-    private StellarDotnetSdk.Server? _server;
+    private SorobanServer? _rpcServer;
 
     public StellarService(Configuration configuration, HttpClientService httpClientService)
     {
@@ -25,10 +42,22 @@ public class StellarService : IService
         _httpClientService = httpClientService;
     }
 
-    private async ValueTask<StellarDotnetSdk.Server> ServerInstance()
+    private async ValueTask<SorobanServer> RpcInstance()
     {
-        _server ??= new StellarDotnetSdk.Server(await _configuration.StellarRpc);
-        return _server;
+        await SetNetwork();
+        _rpcServer ??= new SorobanServer(await _configuration.StellarRpc);
+        return _rpcServer;
+    }
+
+    private async ValueTask SetNetwork()
+    {
+        if (Network.Current is null || (Network.IsPublicNetwork(Network.Current) && await _configuration.StellarNetwork == StellarSettings.TestNetwork))
+        {
+            if (await _configuration.StellarNetwork == StellarSettings.TestNetwork)
+                Network.UseTestNetwork();
+            else
+                Network.UsePublicNetwork();
+        }
     }
 
     public CreateWalletResponse CreateWallet()
@@ -84,14 +113,16 @@ public class StellarService : IService
         {
             try
             {
-                var serverInstance = await ServerInstance();
-                var account = await serverInstance.Accounts.Account(wallet);
-                foreach (var balance in account.Balances)
+                var serverInstance = await RpcInstance();
+                var accountKey = LedgerKey.Account(KeyPair.FromAccountId(wallet));
+                var response = await serverInstance.GetLedgerEntry(accountKey);
+
+                if (response.LedgerEntries is not { Length: > 0 }) return result;
+
+                foreach (var entry in response.LedgerEntries)
                 {
-                    if (balance?.Asset?.Equals(_nativeAsset) ?? false)
-                    {
-                        result += StellarAmount.Parse(balance.BalanceString);
-                    }
+                    var entryAccount = (LedgerEntryAccount)entry;
+                    result += entryAccount.Balance;
                 }
                 return result;
             }
@@ -100,6 +131,65 @@ public class StellarService : IService
                 BeamableLogger.LogError("Balance request failed for wallet: {wallet} with error: {error}", wallet,
                     ex.Message);
                 return StellarAmount.NativeZero;
+            }
+        }
+    }
+
+    public async Task<string> CreateSignTransaction(Beamable.StellarFederation.Features.Accounts.Models.Account realAccount, string wallet)
+    {
+        using (new Measure(nameof(CreateSignTransaction)))
+        {
+            try
+            {
+                await RpcInstance();
+                var dummyAccount = new Account(realAccount.Address, 0);
+                var serverKeypair = KeyPair.FromSecretSeed(realAccount.SecretSeed);
+                var userKeypair = KeyPair.FromAccountId(wallet);
+                var authOperation = new ManageDataOperation("auth-challenge", "Sign to prove ownership", userKeypair);
+                var transaction = new TransactionBuilder(dummyAccount)
+                    .AddOperation(authOperation)
+                    .SetFee(100)
+                    .AddMemo(new MemoText("auth-challenge"))
+                    .AddTimeBounds(new TimeBounds(DateTime.UtcNow, DateTime.UtcNow.AddMinutes(5)))
+                    .Build();
+                transaction.Sign(serverKeypair);
+                return transaction.ToEnvelopeXdrBase64();
+            }
+            catch (Exception ex)
+            {
+                BeamableLogger.LogError("Failed creating sign transaction for wallet: {wallet} with error: {error}", wallet,
+                    ex.Message);
+                throw new AuthenticateException("Failed creating sign transaction");
+            }
+        }
+    }
+
+
+    public async Task<bool> IsSignTransactionValid(Beamable.StellarFederation.Features.Accounts.Models.Account realAccount, string wallet, string solution)
+    {
+        using (new Measure(nameof(IsSignTransactionValid)))
+        {
+            try
+            {
+                await RpcInstance();
+                var userKeyPair = KeyPair.FromAccountId(wallet);
+                var serverKeyPair = KeyPair.FromSecretSeed(realAccount.SecretSeed);
+
+                var tx = Transaction.FromEnvelopeXdr(solution);
+
+                var txHash = tx.Hash(Network.Current!);
+
+                // Verify server and user signatures against this hash
+                var serverValid = tx.Signatures.Any(sig => serverKeyPair.Verify(txHash, sig.Signature.InnerValue));
+                var userValid   = tx.Signatures.Any(sig => userKeyPair.Verify(txHash, sig.Signature.InnerValue));
+
+                return serverValid && userValid;
+            }
+            catch (Exception ex)
+            {
+                BeamableLogger.LogError("Failed to verify sign transaction for wallet: {wallet} with error: {error}", wallet,
+                    ex.Message);
+                throw new AuthenticateException("Failed to verify sign transaction");
             }
         }
     }

@@ -17,4 +17,7 @@ public static class StringExtensions
     public static long ToLong(this string value)
         => long.TryParse(value, out var result) ? result : 0;
 
+    public static string FromBase64(this string base64)
+        => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64));
+
 }
