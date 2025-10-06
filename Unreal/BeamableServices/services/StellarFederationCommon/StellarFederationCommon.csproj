@@ -2,6 +2,7 @@
 
     <PropertyGroup Label="Dotnet Settings">
         <TargetFramework>netstandard2.1</TargetFramework>
+        <GenerateClientCode>true</GenerateClientCode>
     </PropertyGroup>
 
     <PropertyGroup Label="Beamable Settings">

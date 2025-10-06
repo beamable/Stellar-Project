@@ -4,6 +4,7 @@
         <!-- All Microservices must have the value, "service" -->
         <BeamProjectType>service</BeamProjectType>
         <Nullable>enable</Nullable>
+        <GenerateClientCode>true</GenerateClientCode>
     </PropertyGroup>
 
     <!-- These are special Beamable parameters that we use to keep the beamable packages in-sync to the CLI version your project is using. -->
