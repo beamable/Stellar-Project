@@ -1236,6 +1236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22ffe103e5954e84be956bd756f86f14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Farm.Game.Scripts.MainMenu.MainMenuUiController
+  playGamePanel: {fileID: 701958452}
   farmSceneName: Farm_Level
 --- !u!1001 &624663422
 PrefabInstance:
