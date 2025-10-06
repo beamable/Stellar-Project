@@ -7,7 +7,6 @@ using Beamable.Server;
 using Beamable.StellarFederation.Endpoints;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
-using Beamable.StellarFederation.Features.ExternalAuth;
 using StellarFederationCommon;
 using StellarFederationCommon.Models.Response;
 
@@ -92,12 +91,6 @@ namespace Beamable.StellarFederation
 				walletConnectBridgeUrl = await configuration.WalletConnectBridgeUrl,
 				walletConnectProjectId = await configuration.WalletConnectProjectId
 			};
-		}
-
-		[Callable]
-		public async Promise ExternalSignature()
-		{
-			await Provider.GetService<ExternalAuthService>().ProcessCallback(Context.Body);
 		}
 	}
 }

@@ -20,28 +20,39 @@ public class ExternalAuthCollection(IStorageObjectConnectionProvider storageObje
                 new CreateIndexOptions
                 {
                     ExpireAfter = TimeSpan.Zero
-                })
+                }),
+            new CreateIndexModel<Models.ExternalAuth>(Builders<Models.ExternalAuth>.IndexKeys
+                .Ascending(x => x.Address)
+                .Ascending(x => x.Message))
         ]);
         return _collection;
     }
 
-    public async Task<Models.ExternalAuth?> Get(string message)
+    public async Task<Models.ExternalAuth?> Get(string address)
     {
         var collection = await Get();
-        return await collection.Find(x => x.Message == message).FirstOrDefaultAsync();
+        return await collection.Find(x => x.Address == address).FirstOrDefaultAsync();
     }
 
-    public async Task<bool> TryInsert(Models.ExternalAuth vault)
+    public async Task<Models.ExternalAuth?> Get(string address, string message)
+    {
+        var collection = await Get();
+        return await collection.Find(x => x.Address == address && x.Message == message).FirstOrDefaultAsync();
+    }
+
+    public async Task Upsert(Models.ExternalAuth vault)
     {
         var collection = await Get();
         try
         {
-            await collection.InsertOneAsync(vault);
-            return true;
+            var filter = Builders<Models.ExternalAuth>.Filter.Eq(x => x.Address, vault.Address);
+            var options = new ReplaceOptions { IsUpsert = true };
+            await collection.ReplaceOneAsync(filter, vault, options);
         }
-        catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        catch (Exception)
         {
-            return false;
+            // ignored
         }
     }
+
 }

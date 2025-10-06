@@ -27,8 +27,10 @@ namespace SuiFederationCommon.Models.Notifications
 
             return context switch
             {
-                nameof(PlayerNotificationContext.ExternalAuth) =>
-                    jsonObject.ToObject<ExternalAuthNotification>(serializer),
+                nameof(PlayerNotificationContext.ExternalAuthSignature) =>
+                    jsonObject.ToObject<ExternalAuthSignatureNotification>(serializer),
+                nameof(PlayerNotificationContext.ExternalAuthAddress) =>
+                    jsonObject.ToObject<ExternalAuthAddressNotification>(serializer),
 
                 _ => throw new NotSupportedException($"Context '{context}' is not supported.")
             };

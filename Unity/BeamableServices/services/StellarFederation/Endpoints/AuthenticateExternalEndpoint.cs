@@ -70,7 +70,7 @@ public class AuthenticateExternalEndpoint : IEndpoint
         }
 
         var message = await _stellarService.CreateSignTransaction(realmAccount, token);
-        await _externalAuthService.Insert(new ExternalAuth(message, _requestContext.UserId, DateTime.UtcNow.AddSeconds(await _configuration.AuthenticationChallengeTtlSec)));
+        await _externalAuthService.Upsert(new ExternalAuth(token, _requestContext.UserId, message, DateTime.UtcNow.AddSeconds(await _configuration.AuthenticationChallengeTtlSec)));
 
         // Generate a challenge
         return new FederatedAuthenticationResponse

@@ -6,8 +6,12 @@ namespace SuiFederationCommon.Models.Notifications
     public class PlayerNotificationContext
     {
         /// <summary>
-        /// Inventory transaction context for player notifications.
+        /// Context for external authentication address notifications.
         /// </summary>
-        public const string ExternalAuth = "external-auth";
+        public const string ExternalAuthAddress = "external-auth-address";
+        /// <summary>
+        /// Context for external authentication signature notifications.
+        /// </summary>
+        public const string ExternalAuthSignature = "external-auth-signature";
     }
 }

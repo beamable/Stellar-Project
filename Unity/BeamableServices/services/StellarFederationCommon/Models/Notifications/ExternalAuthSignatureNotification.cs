@@ -3,12 +3,12 @@ namespace SuiFederationCommon.Models.Notifications
     /// <summary>
     /// ExternalAuthNotification
     /// </summary>
-    public class ExternalAuthNotification : IPlayerNotification
+    public class ExternalAuthSignatureNotification : IPlayerNotification
     {
         /// <summary>
         /// Context
         /// </summary>
-        public string Context { get; } = PlayerNotificationContext.ExternalAuth;
+        public string Context { get; } = PlayerNotificationContext.ExternalAuthSignature;
         /// <summary>
         /// Value of the transaction.
         /// </summary>

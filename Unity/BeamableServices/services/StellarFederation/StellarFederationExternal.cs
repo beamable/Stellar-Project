@@ -3,6 +3,7 @@ using Beamable.Common;
 using Beamable.Common.Api.Inventory;
 using Beamable.Server;
 using Beamable.StellarFederation.Endpoints;
+using Beamable.StellarFederation.Features.ExternalAuth;
 using StellarFederationCommon;
 
 namespace Beamable.StellarFederation;
@@ -25,5 +26,17 @@ public partial class StellarFederation : IFederatedInventory<StellarWeb3External
         List<FederatedItemUpdateRequest> updateItems)
     {
         return new Promise<FederatedInventoryProxyState>();
+    }
+
+    [Callable]
+    public async Promise ExternalAddress()
+    {
+        await Provider.GetService<ExternalAuthService>().ProcessAddressCallback(Context.Body);
+    }
+
+    [Callable]
+    public async Promise ExternalSignature()
+    {
+        await Provider.GetService<ExternalAuthService>().ProcessSignatureCallback(Context.Body);
     }
 }
