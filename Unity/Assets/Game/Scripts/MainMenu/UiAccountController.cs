@@ -55,7 +55,8 @@ namespace Farm.MainMenu
 
         private void OnDisable()
         {
-            BeamManager.Instance.OnInitialized -= Init;
+            if(BeamManager.Instance != null)
+                BeamManager.Instance.OnInitialized -= Init;
             usernameInput.onValueChanged.RemoveAllListeners();
             openPortalButton.RemoveAllListeners();
             externalWalletController.DeInit();
