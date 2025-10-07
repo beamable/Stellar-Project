@@ -64,7 +64,7 @@ namespace Farm.UI
             transform.DOScale(_startingScale, scaleDuration).SetEase(Ease.OutBack);
         }
 
-        public void UpdateText(bool toDefault = false, string newText = "")
+        public void SetText(bool toDefault = false, string newText = "")
         {
             buttonText.text = toDefault ? _defaultText : newText;
         }

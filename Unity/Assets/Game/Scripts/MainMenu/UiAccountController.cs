@@ -48,7 +48,6 @@ namespace Farm.MainMenu
             beamButton.AddListener(CreateNewAccount);
             usernameInput.onValueChanged.AddListener(SetUserName);
             openPortalButton.AddListener(OpenUserPortal);
-            externalWalletController.Init();
         }
 
         private void OnDisable()
@@ -56,6 +55,7 @@ namespace Farm.MainMenu
             BeamManager.Instance.OnInitialized -= Init;
             usernameInput.onValueChanged.RemoveAllListeners();
             openPortalButton.RemoveAllListeners();
+            externalWalletController.DeInit();
         }
 
         private void Init()
@@ -72,6 +72,8 @@ namespace Farm.MainMenu
                 accountInfoWindow.SetActive(true);
                 SetupAccountPanelInfo(hasStellarId.Item2);
             }
+            
+            externalWalletController.Init();
         }
 
         #endregion
