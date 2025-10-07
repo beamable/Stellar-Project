@@ -490,7 +490,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Farm.MainMenu.UiAccountController
   beamLoadingText: {fileID: 327328315}
   usernameInput: {fileID: 955222048}
-  beamButton: {fileID: 780449573}
+  createAccountButton: {fileID: 780449573}
   newAccountWindow: {fileID: 1069256420}
   externalWalletController: {fileID: 929259017}
   accountInfoWindow: {fileID: 929259015}
@@ -8535,11 +8535,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 6
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
@@ -8548,7 +8548,7 @@ PrefabInstance:
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1069256420}
+      objectReference: {fileID: 175443030}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
@@ -8563,7 +8563,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: SetActive
+      value: OnSwitchToNewAccount
       objectReference: {fileID: 0}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
@@ -8571,7 +8571,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: UnityEngine.GameObject, UnityEngine
+      value: Farm.MainMenu.UiAccountController, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
@@ -8579,7 +8579,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_BoolArgument
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 554764772364901576, guid: 2492ca2b4da6014489d02a999a083c45, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
@@ -9200,7 +9200,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1069256421
 RectTransform:
   m_ObjectHideFlags: 0

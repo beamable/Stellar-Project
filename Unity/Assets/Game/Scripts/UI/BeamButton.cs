@@ -28,6 +28,7 @@ namespace Farm.UI
         private void OnEnable()
         {
             _startingScale = transform.localScale.x;
+            if(string.IsNullOrEmpty(buttonText.text)) _defaultText = buttonText.text;
         }
 
         public void AddListener(UnityAction onClick)
@@ -66,6 +67,7 @@ namespace Farm.UI
 
         public void SetText(bool toDefault = false, string newText = "")
         {
+            if(toDefault && string.IsNullOrEmpty(_defaultText)) _defaultText = buttonText.text; 
             buttonText.text = toDefault ? _defaultText : newText;
         }
 
