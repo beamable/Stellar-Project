@@ -6,6 +6,12 @@ using UnityEngine;
 
 namespace StellarFederationCommon.FederationContent
 {
+    
+    /// <summary>
+    /// CropType
+    /// </summary>
+    public enum CropType{ Carrot, Tomato, Pumpkin}
+    
     /// <summary>
     /// CropItem NFT
     /// </summary>
@@ -28,20 +34,31 @@ namespace StellarFederationCommon.FederationContent
             };
         }
 
-        [SerializeField] private readonly string _name = "";
-        [SerializeField] private readonly string _description = "";
-        [SerializeField] private readonly string _image = "";
-        [SerializeField] private readonly SerializableDictionaryStringToString _customProperties = new SerializableDictionaryStringToString();
+        [SerializeField] private string name = "";
+        [SerializeField] private string description = "";
+        [SerializeField] private string _image = "";
+        [SerializeField] private SerializableDictionaryStringToString customProperties = new SerializableDictionaryStringToString();
 
+        [Header("Crop Details")] 
+        [SerializeField] private int startingSeedAmount;
+        [SerializeField] private int yield;
+        [SerializeField] private int sellingValue;
+        [SerializeField] private CropType cropType;
+        
+        [Header("Crop Sprites")]
+        [SerializeField] private Sprite cropIcon;
+        [SerializeField] private Sprite seedSprite;
+        [SerializeField] private Sprite cropPlantedSprite, cropWateredSprite, cropGrowingSprite, cropRipeSprite;
+        
         /// <summary>
         /// Token name
         /// </summary>
-        public string Name => _name;
+        public string Name => name;
 
         /// <summary>
         /// Token description
         /// </summary>
-        public string Description => _description;
+        public string Description => description;
 
         /// <summary>
         /// Token image
@@ -51,7 +68,52 @@ namespace StellarFederationCommon.FederationContent
         /// <summary>
         /// Token custom properties
         /// </summary>
-        public SerializableDictionaryStringToString CustomProperties => _customProperties;
+        public SerializableDictionaryStringToString CustomProperties => customProperties;
+ 
+        /// <summary>
+        /// Starting seed amount
+        /// </summary>
+        public int StartingSeedAmount => startingSeedAmount;
+
+        /// <summary>
+        /// Yield
+        /// </summary>
+        public int Yield => yield;
+        
+        /// <summary>
+        /// Selling Value
+        /// </summary>
+        public int SellingValue => sellingValue;
+        
+        /// <summary>
+        /// Crop Type
+        /// </summary>
+        public CropType Type => cropType;
+        
+        /// <summary>
+        /// Crop icon
+        /// </summary>
+        public Sprite CropIcon => cropIcon;
+        /// <summary>
+        /// Seed sprite
+        /// </summary>
+        public Sprite SeedSprite => seedSprite;
+        /// <summary>
+        /// CropPlantedSprite
+        /// </summary>
+        public Sprite CropPlantedSprite => cropPlantedSprite;
+        /// <summary>
+        /// CropWateredSprite
+        /// </summary>
+        public Sprite CropWateredSprite => cropWateredSprite;
+        /// <summary>
+        /// CropGrowingSprite
+        /// </summary>
+        public Sprite CropGrowingSprite => cropGrowingSprite;
+        /// <summary>
+        /// CropRipeSprite
+        /// </summary>
+        public Sprite CropRipeSprite => cropRipeSprite;
     }
 
     /// <summary>

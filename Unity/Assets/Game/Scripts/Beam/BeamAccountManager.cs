@@ -58,13 +58,13 @@ namespace Farm.Beam
         
         #endregion
 
-        public (bool, string) HasStellarId()
+        public (bool, string) HasStellarId(string stellarIdentity)
         {
             if(CurrentAccount == null || CurrentAccount.ExternalIdentities.Length < 1) return (false, "");
 
             foreach (var identity in CurrentAccount.ExternalIdentities)
             {
-                if(identity.providerNamespace == StellarFederationSettings.StellarIdentityName)
+                if(identity.providerNamespace == stellarIdentity)
                     return (true, identity.userId);
             }
 

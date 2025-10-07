@@ -55,6 +55,36 @@ namespace Beamable.Server.Clients
             System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
             return this.Request<string>("StellarFederation", "GenerateRealmAccount", serializedFields);
         }
+        
+        /// <summary>
+        /// Call the StellarConfiguration method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.StellarConfiguration"/>
+        /// </summary>
+        public Beamable.Common.Promise<StellarFederationCommon.Models.Response.ConfigurationResponse> StellarConfiguration()
+        {
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            return this.Request<StellarFederationCommon.Models.Response.ConfigurationResponse>("StellarFederation", "StellarConfiguration", serializedFields);
+        }
+        
+        /// <summary>
+        /// Call the ExternalAddress method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.ExternalAddress"/>
+        /// </summary>
+        public Beamable.Common.Promise<Beamable.Common.Unit> ExternalAddress()
+        {
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "ExternalAddress", serializedFields);
+        }
+        
+        /// <summary>
+        /// Call the ExternalSignature method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.ExternalSignature"/>
+        /// </summary>
+        public Beamable.Common.Promise<Beamable.Common.Unit> ExternalSignature()
+        {
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "ExternalSignature", serializedFields);
+        }
     }
     
     internal sealed class MicroserviceParametersStellarFederationClient

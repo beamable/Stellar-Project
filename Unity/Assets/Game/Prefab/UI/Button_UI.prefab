@@ -198,6 +198,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Farm.UI.BeamButton
   button: {fileID: 554764772364901576}
+  buttonText: {fileID: 9004380331420076295}
   scaleFactor: 1.15
   scaleDuration: 0.25
 --- !u!1 &796728956933810643
