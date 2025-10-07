@@ -2,7 +2,9 @@ using System;
 using Beamable.Editor.Inspectors;
 using Cysharp.Threading.Tasks;
 using Farm.Beam;
+using Farm.Game.Scripts.Stellar;
 using Farm.UI;
+using StellarFederationCommon;
 using TMPro;
 using UnityEngine;
 
@@ -15,6 +17,7 @@ namespace Farm.MainMenu
         [SerializeField] private TMP_InputField usernameInput;
         [SerializeField] private BeamButton beamButton;
         [SerializeField] private GameObject newAccountWindow;
+        [SerializeField] private StellarExternalWalletController externalWalletController;
         
         [Header("Account Info")]
         [SerializeField] private GameObject accountInfoWindow;
@@ -45,6 +48,7 @@ namespace Farm.MainMenu
             beamButton.AddListener(CreateNewAccount);
             usernameInput.onValueChanged.AddListener(SetUserName);
             openPortalButton.AddListener(OpenUserPortal);
+            externalWalletController.Init();
         }
 
         private void OnDisable()
@@ -57,8 +61,8 @@ namespace Farm.MainMenu
         private void Init()
         {
             beamLoadingText.gameObject.SetActive(false);
-            var hasStellarId = BeamManager.Instance.AccountManager.HasStellarId();
-            if (!hasStellarId.Item1)
+            var hasStellarId = BeamManager.Instance.AccountManager.HasStellarId(StellarFederationSettings.StellarIdentityName);
+            if (!hasStellarId.Item1) //no stellar wallet attached
             {
                 newAccountWindow.SetActive(true);
             }
