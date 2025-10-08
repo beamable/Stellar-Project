@@ -6,13 +6,10 @@ if (typeof window !== 'undefined') {
 import {
   StellarWalletsKit,
   WalletNetwork,
-  FreighterModule
+  FreighterModule,
+  FREIGHTER_ID
 } from '@creit.tech/stellar-wallets-kit';
 
-import {
-  WalletConnectAllowedMethods,
-  WalletConnectModule
-} from '@creit.tech/stellar-wallets-kit/modules/walletconnect.module';
 
 // DOM elements
 const connectBtn = document.getElementById('connect-btn') as HTMLButtonElement;
@@ -24,31 +21,22 @@ const publicKeyEl = document.getElementById('public-key') as HTMLParagraphElemen
 const urlParams = new URLSearchParams(window.location.search);
 const messageToSign = urlParams.get('message');
 const network = urlParams.get('network');
-const projectId = urlParams.get('projectId');
 const cid = urlParams.get('cid');
 const pid = urlParams.get('pid');
 const gamerTag = urlParams.get('gamerTag');
-const requiredParamsMissing = !network || !cid || !pid || !projectId || !gamerTag;
+const requiredParamsMissing = !network || !cid || !pid || !gamerTag;
 
 (async function main() {
   if (requiredParamsMissing) {
     disableAll();
     return;
   }
-
-  const walletConnect = new WalletConnectModule({
-    url: 'www.beamable.com',
-    projectId,
-    method: WalletConnectAllowedMethods.SIGN,
-    description: `Stellar Wallet Connect Example Dapp`,
-    name: 'Stellar Wallet Connect',
-    icons: ['A LOGO/ICON TO SHOW TO YOUR USERS'],
-    network: selectedNetwork()
-  });
+  
 
   const kit = new StellarWalletsKit({
     network: selectedNetwork(),
-    modules: [new FreighterModule(), walletConnect]
+    selectedWalletId: FREIGHTER_ID,
+    modules: [new FreighterModule()]
   });
 
   await restoreWalletSession(kit);
@@ -88,7 +76,7 @@ async function restoreWalletSession(kit: StellarWalletsKit) {
   updateUi(savedAddress);
   if (messageToSign && walletId) {
     kit.setWallet(walletId);
-    await signTransaction(kit, messageToSign);
+    await signMessage(kit, messageToSign);
   }
 }
 
@@ -97,7 +85,7 @@ function updateUi(publicKey: string | null) {
   if (publicKey) {
     // Wallet is connected
     walletInfo.classList.remove('hidden');
-    statusText.classList.add('hidden');
+    statusText.innerHTML = 'Connected.<br>Please go back to the game.';
     connectBtn.classList.add('hidden');
     disconnectBtn.classList.remove('hidden');
 
@@ -137,6 +125,22 @@ async function signTransaction(kit: StellarWalletsKit, message: string) {
   }
 }
 
+async function signMessage(kit: StellarWalletsKit, message: string) {
+  try {
+    const publicKey = await kit.getAddress();
+    const { signedMessage } = await kit.signMessage(message, {
+        address: publicKey.address,
+        networkPassphrase: selectedNetwork()
+    });
+    await postSignature(publicKey.address, message, signedMessage);
+    statusText.innerHTML = 'Message signed successfully.<br>Please go back to the game.';
+    
+  } catch (error) {
+    console.error('Signing error:', error);
+    statusText.textContent = 'Failed to sign message';
+  }
+}
+
 function setupEventListeners(kit: StellarWalletsKit) {
   connectBtn.addEventListener('click', async () => {
     try {
@@ -154,7 +158,7 @@ function setupEventListeners(kit: StellarWalletsKit) {
 
           
           if (address) await postAddress(address);
-          if (messageToSign) await signTransaction(kit, messageToSign);
+          if (messageToSign) await signMessage(kit, messageToSign);
         },
         onClosed: () => updateUi(null)
       });

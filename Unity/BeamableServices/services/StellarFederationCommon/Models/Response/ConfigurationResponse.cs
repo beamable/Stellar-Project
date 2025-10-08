@@ -13,10 +13,6 @@ namespace StellarFederationCommon.Models.Response
         /// </summary>
         public string network;
         /// <summary>
-        /// Wallet Connect Project ID
-        /// </summary>
-        public string walletConnectProjectId;
-        /// <summary>
         /// Wallet Connect Bridge URL
         /// </summary>
         public string walletConnectBridgeUrl;

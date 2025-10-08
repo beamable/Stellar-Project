@@ -15,7 +15,6 @@ public partial class StellarFederation : IFederatedInventory<StellarWeb3External
         return await Provider.GetService<AuthenticateExternalEndpoint>()
             .Authenticate(token, challenge, solution);
     }
-
     async Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3ExternalIdentity>.GetInventoryState(string id)
     {
         return await Provider.GetService<GetInventoryStateEndpoint>()
