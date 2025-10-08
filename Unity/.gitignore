@@ -99,8 +99,9 @@ obj/
 
 node_modules/
 js/
-node_modules/
 
 # Visual Studio
 .vs/
 *.csproj.user
+
+!BeamableServices/services/StellarFederation/Tools/stellar.zip

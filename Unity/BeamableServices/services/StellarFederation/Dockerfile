@@ -23,6 +23,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
     && ldconfig \
     && cd .. && rm -rf libsodium-${LIBSODIUM_VERSION}
 
+# Additional dependencies for Stellar CLI
+RUN apt-get update && apt-get install -y \
+    libdbus-1-3 \
+    unzip \
+ && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN apt-get update && apt-get install -y rustc cargo
 
 # These args are provided by the Beam CLI
 
@@ -52,6 +60,11 @@ COPY $BEAM_SUPPORT_SRC_PATH .
 
 # copy specific application code
 COPY $BEAM_APP_SRC_PATH .
+
+# Extranct Stellar CLI
+ENV STELLAR_PATH="/usr/local/bin/stellar"
+RUN unzip -o Tools/stellar.zip -d /usr/local/bin/
+RUN chmod +x ${STELLAR_PATH}
 
 # ensure that the application is runnable
 RUN chmod +x $BEAM_APP_DEST

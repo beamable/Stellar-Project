@@ -35,4 +35,10 @@
       <ProjectReference Include="..\StellarFederationStorage\StellarFederationStorage.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Tools\stellar.zip">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
