@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Farm.Beam;
 using Farm.Managers;
 using Farm.UI;
 using UnityEngine;

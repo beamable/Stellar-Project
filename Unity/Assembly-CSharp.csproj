@@ -59,6 +59,7 @@
     <Compile Include="Assets\Game\Scripts\Beam\BeamAccountManager.cs" />
     <Compile Include="Assets\Game\Scripts\Time\TimeManager.cs" />
     <Compile Include="Assets\Game\Scripts\Managers\GameManager.cs" />
+    <Compile Include="Assets\Game\Scripts\Beam\BeamContentManager.cs" />
     <Compile Include="Assets\Game\Scripts\MainMenu\MainMenuUiController.cs" />
     <Compile Include="Assets\Game\Scripts\Managers\CropManager.cs" />
     <Compile Include="Assets\Game\Scripts\UI\BeamButton.cs" />

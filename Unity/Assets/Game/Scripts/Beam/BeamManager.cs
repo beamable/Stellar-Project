@@ -33,6 +33,7 @@ namespace Farm.Beam
         #region Managers
 
         public BeamAccountManager AccountManager { get; private set; }
+        public BeamContentManager ContentManager { get; private set; }
 
         #endregion
 
@@ -43,6 +44,7 @@ namespace Farm.Beam
             RebuildManagerCacheFromList();
 
             AccountManager = GetComponentInChildren<BeamAccountManager>();
+            ContentManager = GetComponentInChildren<BeamContentManager>();
         }
 
         protected override void OnAfterInitialized()

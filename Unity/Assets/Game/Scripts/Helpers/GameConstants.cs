@@ -13,5 +13,10 @@ namespace Farm.Helpers
 
         public const string MusicVolumeParam = "MusicVolume";
         public const string SfxVolumeParam = "SfxVolume";
+        
+        //Custom Properties
+        public const string SellingPriceProperty = "SellingPrice";
+        public const string DataSourceProperty = "DataSource";
+        public const string YieldHeldProperty = "YieldHeld";
     }
 }

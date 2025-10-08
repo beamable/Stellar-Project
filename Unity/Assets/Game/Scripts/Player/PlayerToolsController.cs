@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Farm.Beam;
 using Farm.Helpers;
 using Farm.Input;
 using Farm.Managers;

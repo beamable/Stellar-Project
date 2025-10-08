@@ -1,3 +1,4 @@
+using Farm.Beam;
 using Farm.Helpers;
 using Farm.Managers;
 using UnityEngine;

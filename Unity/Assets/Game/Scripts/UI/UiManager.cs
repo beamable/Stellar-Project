@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Farm.Beam;
 using Farm.Input;
 using Farm.Managers;
 using Farm.Player;

@@ -1,19 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Farm.Beam;
 using Farm.Helpers;
-using Farm.Managers;
 using Farm.UI;
 using UnityEngine;
 
 namespace Farm.Managers
 {
-    [System.Serializable]
-    public class PlantInfo
-    {
-        public int seedsToPlant;
-        public int yieldAmount;
-        public CropsData cropData;
-    }
+    
     
     public class CropManager : MonoSingleton<CropManager>
     {
@@ -28,19 +22,21 @@ namespace Farm.Managers
         {
             base.OnAfterInitialized();
             
-            CropsList = new List<PlantInfo>();
-            CropsDictionary = new Dictionary<GameConstants.CropType, PlantInfo>();
-            
-            foreach (var data in plantsData)
-            {
-                var plant = new PlantInfo
-                {
-                    seedsToPlant = data.startingSeedsAmount,
-                    cropData = data
-                };
-                CropsDictionary.Add(data.cropType, plant);
-                CropsList.Add(plant);
-            }
+            // CropsList = new List<PlantInfo>();
+            // CropsDictionary = new Dictionary<GameConstants.CropType, PlantInfo>();
+            //
+            // foreach (var data in plantsData)
+            // {
+            //     var plant = new PlantInfo
+            //     {
+            //         seedsToPlant = data.startingSeedsAmount,
+            //         cropData = data
+            //     };
+            //     CropsDictionary.Add(data.cropType, plant);
+            //     CropsList.Add(plant);
+            // }
+            CropsList = BeamManager.Instance.ContentManager.Crops;
+            CropsDictionary = BeamManager.Instance.ContentManager.CropsDictionary;
             
             UiManager.Instance.PopulateInventory(CropsList);
         }
