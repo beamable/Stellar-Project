@@ -26,6 +26,7 @@ namespace Farm.Game.Scripts.Stellar
         [SerializeField] private BeamButton attachButton;
 
         private string _attachUrl = "";
+        private string _walletAddressToken = "";
         private ConfigurationResponse _config;
         private ChallengeSolution _challengeSolution;
 
@@ -66,14 +67,23 @@ namespace Farm.Game.Scripts.Stellar
             //if (notification is not ExternalAuthAddressNotification addressNotification) return;
             if (notification is not IDictionary<string, object> dict) return;
             if (!dict.TryGetValue("Value", out var valueObj)) return;
-            var value = valueObj.ToString();
+            _walletAddressToken = valueObj.ToString();
             _challengeSolution = new ChallengeSolution();
-            var response = await BeamManager.BeamContext.Api.AuthService.AttachIdentity(value,
-                StellarFederationSettings.MicroserviceName,
-                StellarFederationSettings.StellarExternalIdentityName);
-            _challengeSolution.challenge_token = response.challenge_token;
-            var signUrl = ParseChallengeToEncodedMessage(response.challenge_token);
-            Application.OpenURL(signUrl);
+            try
+            {
+                var response = await BeamManager.BeamContext.Api.AuthService.AttachIdentity(_walletAddressToken,
+                    StellarFederationSettings.MicroserviceName,
+                    StellarFederationSettings.StellarExternalIdentityName);
+                _challengeSolution.challenge_token = response.challenge_token;
+                var signUrl = ParseChallengeToEncodedMessage(response.challenge_token);
+                Application.OpenURL(signUrl);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Address notification error: {e.Message}");
+                attachButton.SetText(true);
+                attachButton.SetInteractable(true);
+            }
         }
         
         private async void OnSignatureNotification(object notification)
@@ -81,13 +91,15 @@ namespace Farm.Game.Scripts.Stellar
             if (notification is not IDictionary<string, object> dict) return;
             if (!dict.TryGetValue("Value", out var valueObj)) return;
             var value = valueObj.ToString();
+            attachButton.SetText(false, "Signing...");
             _challengeSolution.solution = value;
             var playerAccount = BeamManager.Instance.AccountManager.CurrentAccount;
             try
             {
-                await BeamManager.BeamContext.Api.AuthService.AttachIdentity(_challengeSolution.challenge_token,
+                await BeamManager.BeamContext.Api.AuthService.AttachIdentity(_walletAddressToken,
                     StellarFederationSettings.MicroserviceName,
-                    StellarFederationSettings.StellarExternalIdentityName);
+                    StellarFederationSettings.StellarExternalIdentityName, 
+                    _challengeSolution);
                 await BeamManager.Instance.AccountManager.SwitchAccount(playerAccount);
 
                 iDContainer.SetActive(true);
@@ -100,6 +112,8 @@ namespace Farm.Game.Scripts.Stellar
             catch (Exception e)
             {
                 Debug.Log($"Signature notification error: {e.Message}");
+                attachButton.SetText(true);
+                attachButton.SetInteractable(true);
             }
         }
         
