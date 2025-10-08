@@ -88,8 +88,7 @@ namespace Beamable.StellarFederation
 			return new ConfigurationResponse
 			{
 				network = await configuration.StellarNetwork,
-				walletConnectBridgeUrl = await configuration.WalletConnectBridgeUrl,
-				walletConnectProjectId = await configuration.WalletConnectProjectId
+				walletConnectBridgeUrl = await configuration.WalletConnectBridgeUrl
 			};
 		}
 	}
