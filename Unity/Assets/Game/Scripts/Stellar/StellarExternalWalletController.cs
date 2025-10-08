@@ -148,7 +148,7 @@ namespace Farm.Game.Scripts.Stellar
             var cid = BeamManager.BeamContext.Cid;
             var pid = BeamManager.BeamContext.Pid;
             var configUrl =
-                $"{_config.walletConnectBridgeUrl}/?network={_config.network}&projectId={_config.walletConnectProjectId}&cid={cid}&pid={pid}&gamerTag={gamerTag}";
+                $"{_config.walletConnectBridgeUrl}/?network={_config.network}&cid={cid}&pid={pid}&gamerTag={gamerTag}";
             //walletConnectBridgeUrl/?network=testnet&projectId=walletConnectProjectId&cid=cid&pid=pid&gamerTag=gamerTag&message=urlEncodedMessage
             _attachUrl  = "https://" + configUrl;
             return _attachUrl;
