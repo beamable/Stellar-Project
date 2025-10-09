@@ -82,9 +82,8 @@ namespace Farm.Beam
                 Debug.Log($"Manager '{m.GetType().Name}' initialized.");
             }
 
+            await UniTask.WaitForSeconds(1f, cancellationToken: ct); //await for all logic to finish
             IsReady = true;
-
-            await UniTask.WaitForSeconds(3f, cancellationToken: ct); //await for all logic to finish
             OnInitialized?.Invoke();
         }
 

@@ -33,9 +33,16 @@ namespace Farm.MainMenu
 
         private void Start()
         {
-            beamLoadingText.gameObject.SetActive(true);
-            newAccountWindow.SetActive(false);
-            accountInfoWindow.SetActive(false);
+            if (BeamManager.IsReady)
+            {
+                Init();
+            }
+            else
+            {
+                beamLoadingText.gameObject.SetActive(true);
+                newAccountWindow.SetActive(false);
+                accountInfoWindow.SetActive(false);
+            }
         }
 
         private void Update()

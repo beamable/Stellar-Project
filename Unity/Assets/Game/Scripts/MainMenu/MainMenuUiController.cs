@@ -19,7 +19,7 @@ namespace Farm.Game.Scripts.MainMenu
         {
             DOTween.Init();
             AudioManager.Instance.PlayTitleMusic();
-            playGamePanel.SetActive(false);
+            playGamePanel.SetActive(BeamManager.IsReady);
         }
 
         private void OnEnable()
