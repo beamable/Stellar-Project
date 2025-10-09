@@ -1,12 +1,4 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Test.h"
-
-Test::Test()
-{
-}
-
-Test::~Test()
-{
-}
+#include "Unreal2dDungeon/Public/BeamOAuthNotifications.h"
