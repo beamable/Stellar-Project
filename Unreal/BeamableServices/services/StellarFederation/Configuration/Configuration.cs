@@ -44,6 +44,7 @@ public class Configuration : IService
     public ValueTask<string> StellarNetwork => GetValue(nameof(StellarNetwork), StellarSettings.TestNetwork);
     public ValueTask<string> StellarFaucet => GetValue(nameof(StellarFaucet), "https://friendbot.stellar.org/");
     public ValueTask<int> AuthenticationChallengeTtlSec => GetValue(nameof(AuthenticationChallengeTtlSec), 600);
+    public ValueTask<string> WalletConnectBridgeUrl => GetValue(nameof(WalletConnectBridgeUrl), "");
 
     private async ValueTask<T> GetValue<T>(string key, T defaultValue) where T : IConvertible
     {

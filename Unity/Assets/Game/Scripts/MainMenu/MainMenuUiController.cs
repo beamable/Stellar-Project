@@ -29,7 +29,8 @@ namespace Farm.Game.Scripts.MainMenu
         
         private void OnDisable()
         {
-            BeamManager.Instance.OnInitialized -= Init;
+            if(BeamManager.Instance != null)
+                BeamManager.Instance.OnInitialized -= Init;
         }
         
         private void Init()

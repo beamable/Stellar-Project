@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,20 +8,14 @@ using Beamable.StellarFederation.Features.Accounts.Exceptions;
 using Beamable.StellarFederation.Features.Common;
 using Beamable.StellarFederation.Features.HttpService;
 using Beamable.StellarFederation.Features.Stellar.Models;
-using Chaos.NaCl;
 using StellarDotnetSdk;
 using StellarDotnetSdk.Accounts;
-using StellarDotnetSdk.Assets;
 using StellarDotnetSdk.LedgerEntries;
 using StellarDotnetSdk.Memos;
 using StellarDotnetSdk.Operations;
 using StellarDotnetSdk.Soroban;
 using StellarDotnetSdk.Transactions;
-using StellarDotnetSdk.Xdr;
-using FeeBumpTransaction = StellarDotnetSdk.Transactions.FeeBumpTransaction;
 using LedgerKey = StellarDotnetSdk.LedgerKeys.LedgerKey;
-using PublicKey = NSec.Cryptography.PublicKey;
-using Signer = StellarDotnetSdk.Xdr.Signer;
 using TimeBounds = StellarDotnetSdk.Transactions.TimeBounds;
 using Transaction = StellarDotnetSdk.Transactions.Transaction;
 
@@ -72,22 +65,20 @@ public class StellarService : IService
         return new CreateWalletResponse(keypair.Address, keypair.AccountId, keypair.SecretSeed!);
     }
 
-    public bool IsSignatureValid(string wallet, string message, string signature)
+    public bool IsSignatureValid(string wallet, string message, string signature, string messagePrefix = "")
     {
-        var keypair = KeyPair.FromAccountId(wallet);
-        return keypair.Verify(
-            Encoding.UTF8.GetBytes(message),
-            Convert.FromBase64String(signature)
-        );
-    }
-
-    public string Sign(string secretSeed, string message)
-    {
-        var keypair = KeyPair.FromSecretSeed(secretSeed);
-        var signature = keypair.Sign(
-            Encoding.UTF8.GetBytes(message)
-        );
-        return Convert.ToBase64String(signature);
+        try
+        {
+            var preimageBytes = Encoding.UTF8.GetBytes($"{messagePrefix}{message}");
+            var digest = SHA256.HashData(preimageBytes);
+            var sigBytes = Convert.FromBase64String(signature);
+            var kp = KeyPair.FromAccountId(wallet);
+            return kp.Verify(digest, sigBytes);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public async Task TryRequestFaucet(string wallet)
@@ -178,8 +169,6 @@ public class StellarService : IService
                 var tx = Transaction.FromEnvelopeXdr(solution);
 
                 var txHash = tx.Hash(Network.Current!);
-
-                // Verify server and user signatures against this hash
                 var serverValid = tx.Signatures.Any(sig => serverKeyPair.Verify(txHash, sig.Signature.InnerValue));
                 var userValid   = tx.Signatures.Any(sig => userKeyPair.Verify(txHash, sig.Signature.InnerValue));
 

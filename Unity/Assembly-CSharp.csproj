@@ -80,6 +80,7 @@
     <Compile Include="Assets\Game\Scripts\Player\PlayerToolsController.cs" />
     <Compile Include="Assets\Game\Scripts\UI\PauseMenuController.cs" />
     <Compile Include="Assets\Game\Scripts\Planting\CropsData.cs" />
+    <Compile Include="Assets\Game\Scripts\Stellar\StellarExternalWalletController.cs" />
     <Compile Include="Assets\Game\Scripts\UI\PlantUiCard.cs" />
     <Compile Include="Assets\Game\Scripts\Managers\MonoSingleton.cs" />
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />

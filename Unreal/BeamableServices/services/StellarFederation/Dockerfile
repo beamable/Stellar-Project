@@ -1,28 +1,35 @@
-﻿ARG BEAM_DOTNET_VERSION="8.0-noble"
-FROM mcr.microsoft.com/dotnet/runtime:${BEAM_DOTNET_VERSION}
-
-# Install required native dependencies:
-# - libicu74 → globalization support for .NET
-# - libc6, libstdc++6, libgcc-s1 → core runtime libraries
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libicu74 \
-        libc6 \
-        libstdc++6 \
-        libgcc-s1 && \
-    rm -rf /var/lib/apt/lists/*
+﻿# --- Stage 1: Build libsodium ---
+ARG BEAM_DOTNET_VERSION="8.0-noble"
+ARG LIBSODIUM_VERSION="1.0.20"
+FROM mcr.microsoft.com/dotnet/runtime:${BEAM_DOTNET_VERSION} AS libsodium-builder
 
 # Build libsodium from source
 # - libsodium23 → crypto backend for NSec (used by Stellar SDK)
 # Note: we build from source because the version in apt repos is often out of date and Stellar SDK requeries = 1.0.20
-ARG LIBSODIUM_VERSION="1.0.20"
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential curl \
-    && curl -sS https://download.libsodium.org/libsodium/releases/libsodium-${LIBSODIUM_VERSION}.tar.gz | tar xz \
-    && cd libsodium-${LIBSODIUM_VERSION} && ./configure && \
-    make && make install \
-    && ldconfig \
-    && cd .. && rm -rf libsodium-${LIBSODIUM_VERSION}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential curl ca-certificates && \
+    curl -sSL https://download.libsodium.org/libsodium/releases/libsodium-${LIBSODIUM_VERSION}.tar.gz \
+        | tar xz && \
+    cd libsodium-${LIBSODIUM_VERSION} && \
+    ./configure && make && make install && \
+    cd .. && rm -rf libsodium-${LIBSODIUM_VERSION} && \
+    apt-get purge -y --auto-remove build-essential curl && \
+    rm -rf /var/lib/apt/lists/*
 
+# --- Stage 2: Runtime ---
+FROM mcr.microsoft.com/dotnet/runtime:${BEAM_DOTNET_VERSION}
+COPY --from=libsodium-builder /usr/local/lib/libsodium* /usr/local/lib/
+COPY --from=libsodium-builder /usr/local/include/sodium.h /usr/local/include/
+COPY --from=libsodium-builder /usr/local/include/sodium /usr/local/include/sodium
+RUN ldconfig
+
+# Additional dependencies for Stellar CLI and
+# Install required native dependencies:
+# - libicu74 → globalization support for .NET
+# - libc6, libstdc++6, libgcc-s1 → core runtime libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libicu74 libc6 libstdc++6 libgcc-s1 libdbus-1-3 unzip rustc cargo && \
+    rm -rf /var/lib/apt/lists/*
 
 # These args are provided by the Beam CLI
 
@@ -52,6 +59,11 @@ COPY $BEAM_SUPPORT_SRC_PATH .
 
 # copy specific application code
 COPY $BEAM_APP_SRC_PATH .
+
+# Extranct Stellar CLI
+ENV STELLAR_PATH="/usr/local/bin/stellar"
+RUN unzip -o Tools/stellar.zip -d /usr/local/bin/
+RUN chmod +x ${STELLAR_PATH}
 
 # ensure that the application is runnable
 RUN chmod +x $BEAM_APP_DEST
