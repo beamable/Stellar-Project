@@ -4,13 +4,35 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+#include "GenericPlatform/GenericPlatformHttp.h"
 #include "StellarController.generated.h"
 
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class UNREAL2DDUNGEON_API UStellarController : public UObject
 {
 	GENERATED_BODY()
+
+public:
+	/**
+	 * This will be useful to get the identity info
+	 * for backend calls
+	 */
+	UFUNCTION(BlueprintPure, Category = "Stellar")
+	static void GetStellarSettings(FString& MicroserviceId, FString& FederationId,
+	                               FString& StellarExternalId, FString& AddressChannel, FString& SignatureChannel)
+	{
+		MicroserviceId = TEXT("StellarFederation");
+		FederationId = TEXT("StellarIdentity");
+		StellarExternalId = TEXT("StellarExternalIdentity");
+		AddressChannel = TEXT("external-auth-address");
+		SignatureChannel = TEXT("external-auth-signature");
+	}
+
+	/** Percent-encodes (URL encodes) the given string. */
+	UFUNCTION(BlueprintPure, Category = "Utilities|URL")
+	static FString UrlEncode(const FString& Unencoded);
 };
