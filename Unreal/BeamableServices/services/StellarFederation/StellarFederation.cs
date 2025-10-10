@@ -81,7 +81,7 @@ namespace Beamable.StellarFederation
 			return await Provider.GetService<StartInventoryTransactionEndpoint>()
 				.StartInventoryTransaction(id, transaction, currencies, newItems, deleteItems, updateItems);
 		}
-		
+
 		[ClientCallable]
 		public async Promise<ConfigurationResponse> StellarConfiguration()
 		{
