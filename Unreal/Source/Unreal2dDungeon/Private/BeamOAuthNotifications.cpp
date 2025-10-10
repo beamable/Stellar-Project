@@ -1,5 +1,4 @@
 #include "Unreal2dDungeon/Public/BeamOAuthNotifications.h"
-
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Runtime/BeamRuntime.h"
