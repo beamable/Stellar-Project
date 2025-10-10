@@ -55,6 +55,8 @@ struct FNotifBinding
 	FUserSlot       Slot;
 	FString         Key;
 	FDelegateHandle Handle;
+	FOnCustomNotification Delegate;
+
 };
 
 /** Blueprint multicast users actually subscribe to. */
@@ -88,6 +90,23 @@ public:
 	UFUNCTION(BlueprintPure, Category="Beam|Notifications",
 		meta=(WorldContext="WorldContextObject", DisplayName="Get OAuth Notifications Subsystem"))
 	static UBeamOAuthNotifications* Get(UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintCallable, Category="Beam|Notifications", meta=(DefaultToSelf="ContextObject"))
+	int32 UnsubscribeAll(UObject* ContextObject)
+	{
+		int32 Count = 0;
+		TArray<int64> Tokens;
+		Bindings.GetKeys(Tokens);
+
+		for (const int64 Token : Tokens)
+		{
+			if (UnsubscribeByToken(Token, ContextObject))
+			{
+				++Count;
+			}
+		}
+		return Count;
+	}
 
 private:
 	/** Monotonic token generator and storage for per-subscription handles. */

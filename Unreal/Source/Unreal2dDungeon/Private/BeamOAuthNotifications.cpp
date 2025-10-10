@@ -23,10 +23,12 @@ int64 UBeamOAuthNotifications::SubscribeToNotification(FUserSlot Slot, const FSt
 {
 	if (UBeamRuntime* Runtime = UBeamRuntime::GetSelf(ContextObject))
 	{
-		// Forward runtime messages into our Blueprint multicast.
-		FOnCustomNotification LocalHandler;
+		FNotifBinding NewBinding;
+		NewBinding.Slot = Slot;
+		NewBinding.Key  = Key;
+
 		TWeakObjectPtr<UBeamOAuthNotifications> WeakThis(this);
-		LocalHandler.BindLambda([WeakThis](const FOAuthNotificationMessage& Msg)
+		NewBinding.Delegate.BindLambda([WeakThis](const FOAuthNotificationMessage& Msg)
 		{
 			if (WeakThis.IsValid())
 			{
@@ -34,13 +36,14 @@ int64 UBeamOAuthNotifications::SubscribeToNotification(FUserSlot Slot, const FSt
 			}
 		});
 
-		const FDelegateHandle Handle =
-			Runtime->SubscribeToCustomNotification<FOnCustomNotification, FOAuthNotificationMessage>(Slot, Key, LocalHandler);
+		NewBinding.Handle =
+			Runtime->SubscribeToCustomNotification<FOnCustomNotification, FOAuthNotificationMessage>(
+				NewBinding.Slot, NewBinding.Key, NewBinding.Delegate);
 
-		if (Handle.IsValid())
+		if (NewBinding.Handle.IsValid())
 		{
 			const int64 Token = NextToken++;
-			Bindings.Add(Token, FNotifBinding{Slot, Key, Handle});
+			Bindings.Add(Token, MoveTemp(NewBinding));
 			return Token;
 		}
 	}
@@ -51,23 +54,25 @@ int64 UBeamOAuthNotifications::SubscribeToNotification(FUserSlot Slot, const FSt
 
 bool UBeamOAuthNotifications::UnsubscribeByToken(const int64 Token, UObject* ContextObject)
 {
-	FNotifBinding Binding;
-	if (!Bindings.RemoveAndCopyValue(Token, Binding))
+	if (FNotifBinding* Binding = Bindings.Find(Token))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UnsubscribeByToken: token %lld not found."), Token);
+		if (UBeamRuntime* Runtime = UBeamRuntime::GetSelf(ContextObject))
+		{
+			const bool bOk = Runtime->UnsubscribeToCustomNotification(Binding->Slot, Binding->Key, Binding->Handle);
+			if (!bOk)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Unsubscribe failed (Key=%s)."), *Binding->Key);
+				return false;
+			}
+			Bindings.Remove(Token);
+			return true;
+		}
+		UE_LOG(LogTemp, Warning, TEXT("UnsubscribeByToken: missing runtime."));
 		return false;
 	}
 
-	if (UBeamRuntime* Runtime = UBeamRuntime::GetSelf(ContextObject))
-	{
-		const bool bOk = Runtime->UnsubscribeToCustomNotification(Binding.Slot, Binding.Key, Binding.Handle);
-		if (!bOk)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("UnsubscribeToCustomNotification failed (Key=%s)."), *Binding.Key);
-		}
-		return bOk;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("UnsubscribeByToken: missing runtime."));
+	UE_LOG(LogTemp, Warning, TEXT("UnsubscribeByToken: token %lld not found."), Token);
 	return false;
 }
+
+
