@@ -10,7 +10,8 @@ public class Unreal2dDungeon : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
-			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "BeamableCore"
+			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "BeamableCore",
+			"HTTP"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
@@ -19,6 +20,7 @@ public class Unreal2dDungeon : ModuleRules
 			"Engine",
 			"Slate",
 			"SlateCore",
+			"HTTP"
 		});
 
 		
