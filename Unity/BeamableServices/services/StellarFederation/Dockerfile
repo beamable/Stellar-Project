@@ -9,7 +9,9 @@ RUN apt-get update && \
         libicu74 \
         libc6 \
         libstdc++6 \
-        libgcc-s1 && \
+        libgcc-s1 \
+        pkg-config \
+        libssl-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Build libsodium from source
@@ -30,7 +32,11 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/*
 
 # Install Rust
-RUN apt-get update && apt-get install -y rustc cargo
+ARG RUST_VERSION=1.90.0
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION} \
+    && echo 'source $HOME/.cargo/env' >> /root/.bashrc
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup target add wasm32v1-none
 
 # These args are provided by the Beam CLI
 

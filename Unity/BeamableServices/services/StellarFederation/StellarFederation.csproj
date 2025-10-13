@@ -39,6 +39,9 @@
       <None Update="Tools\stellar.zip">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+        <None Include="Features\Contract\Templates\**\*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

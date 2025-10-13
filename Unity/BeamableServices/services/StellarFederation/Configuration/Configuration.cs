@@ -45,6 +45,12 @@ public class Configuration : IService
     public ValueTask<string> StellarFaucet => GetValue(nameof(StellarFaucet), "https://friendbot.stellar.org/");
     public ValueTask<int> AuthenticationChallengeTtlSec => GetValue(nameof(AuthenticationChallengeTtlSec), 600);
     public ValueTask<string> WalletConnectBridgeUrl => GetValue(nameof(WalletConnectBridgeUrl), "");
+    public ValueTask<int> NumberOfWorkingWallets => GetValue(nameof(NumberOfWorkingWallets), 10);
+    public ValueTask<int> MaxNumberOffWorkingWallets => GetValue(nameof(MaxNumberOffWorkingWallets), 100);
+    public ValueTask<long> XlmMinimalAmountInStroops => GetValue<long>(nameof(XlmMinimalAmountInStroops), 10_000_000);
+    public ValueTask<int> CoinTransferPercentage => GetValue(nameof(CoinTransferPercentage), 10);
+    public ValueTask<int> TransactionTimeoutSec => GetValue(nameof(TransactionTimeoutSec), 300);
+    public ValueTask<uint> BaseFeeInStroops => GetValue<uint>(nameof(BaseFeeInStroops), 100);
 
     private async ValueTask<T> GetValue<T>(string key, T defaultValue) where T : IConvertible
     {
