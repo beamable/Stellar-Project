@@ -7,6 +7,9 @@ using Beamable.Server;
 using Beamable.StellarFederation.Endpoints;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
+using Beamable.StellarFederation.Features.Stellar;
+using Beamable.StellarFederation.Features.Transactions;
+using Beamable.StellarFederation.Features.WalletManager;
 using StellarFederationCommon;
 using StellarFederationCommon.Models.Response;
 
@@ -38,6 +41,11 @@ namespace Beamable.StellarFederation
 
 				//Generate Realm account
 				await initializer.Provider.GetService<AccountsService>().GetOrCreateRealmAccount();
+
+				// Initialize Contracts
+#if !DEBUG
+				await initializer.GetService<Features.Contract.ContractService>().InitializeContentContracts();
+#endif
 			}
 			catch (Exception ex)
 			{

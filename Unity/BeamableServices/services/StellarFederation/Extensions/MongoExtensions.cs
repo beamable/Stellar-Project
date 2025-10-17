@@ -1,5 +1,6 @@
 using System.Numerics;
 using Beamable.Server;
+using Beamable.StellarFederation.Features.Contract.Storage.Models;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -12,6 +13,13 @@ public static class MongoExtensions
     {
         BsonSerializer.RegisterSerializer(new BigIntegerNullableSerializer());
         BsonSerializer.RegisterSerializer(new BigIntegerSerializer());
+
+        BsonClassMap.RegisterClassMap<ContractBase>(cm => {
+            cm.AutoMap();
+            cm.SetIsRootClass(true);
+        });
+
+        BsonClassMap.RegisterClassMap<CoinContract>(cm => cm.AutoMap());
     }
 }
 
