@@ -16,7 +16,7 @@ public class Unreal2dDungeonTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_5;
 		ExtraModuleNames.Add("Unreal2dDungeon");
-		Beam.ConfigureEditor(this, Beam.OssConfig.Disabled());
+		Beam.ConfigureGame(this, Beam.OssConfig.Disabled());
 	}
 }
 /* BEAMABLE CODE TO COPY PASTE START */
