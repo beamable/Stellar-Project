@@ -8,20 +8,18 @@ public class Unreal2dDungeon : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[]
-		{
+		PublicDependencyModuleNames.AddRange([
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "BeamableCore",
 			"HTTP"
-		});
+		]);
 
-		PrivateDependencyModuleNames.AddRange(new string[]
-		{
+		PrivateDependencyModuleNames.AddRange([
 			"CoreUObject",
 			"Engine",
 			"Slate",
 			"SlateCore",
 			"HTTP"
-		});
+		]);
 
 		
 
