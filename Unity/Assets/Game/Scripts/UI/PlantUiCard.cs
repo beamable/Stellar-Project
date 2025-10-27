@@ -15,31 +15,29 @@ namespace Farm.UI
     {
         [Header("UI Elements")] 
         [SerializeField] private Image iconImage;
+        [SerializeField] private Image selectedImage;
         [SerializeField] private Image noStockImage;
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI amountText;
         [SerializeField] private CanvasGroup canvasGroup;
         
-        [Header("Colors")] 
-        [SerializeField] private Outline outline;
-        [SerializeField] private string defaultColor = "#2A3D68";
-        [SerializeField] private string selectedColor = "#F0E3B7";
-        
+        [Header("References")]
         [SerializeField] private Collider2D uiCollider;
         
         private bool _isSelectedByUI, _isCrop;
         private InventoryController _inventory;
         public PlantInfo CurrentPlant { get; private set; }
 
-        public void Init(bool isSelected, InventoryController inventory, 
+        public void Init(bool isSelected, bool isCrop, InventoryController inventory, 
             PlantInfo plant, int amount, bool isSeed = true)
         {
             _inventory = inventory;
+            SetIsCrop(isCrop);
             CurrentPlant = plant;
             nameText.text = plant.cropData.cropName;
             amountText.text = $"X{amount}";
             iconImage.sprite = isSeed ? plant.cropData.seedsSprite : plant.cropData.cropIcon;
-            SetSelectedColor(isSelected);
+            SetSelectedImage(isSelected);
         }
 
         private void OnEnable()
@@ -82,10 +80,9 @@ namespace Farm.UI
 
         #region Pointer Events
 
-        public void SetSelectedColor(bool isSelected)
+        public void SetSelectedImage(bool isSelected)
         {
-            outline.effectColor = isSelected ? GameUtilities.ParseHtmlColor(selectedColor) 
-                : GameUtilities.ParseHtmlColor(defaultColor);
+            selectedImage.enabled = isSelected;
         }
 
         public void SetIsSelectedByUI(bool isSelected)
@@ -97,14 +94,14 @@ namespace Farm.UI
         public void OnPointerEnter(PointerEventData eventData)
         {
             if(_isCrop) return;
-            SetSelectedColor(true);
+            SetSelectedImage(true);
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
             if(_isCrop) return;
             if(_isSelectedByUI) return;
-            SetSelectedColor(false);
+            SetSelectedImage(false);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -116,7 +113,7 @@ namespace Farm.UI
 
         #endregion
 
-        public void SetIsCrop(bool isCrop)
+        private void SetIsCrop(bool isCrop)
         {
             _isCrop = isCrop;
             if(_isCrop) uiCollider.enabled = false;

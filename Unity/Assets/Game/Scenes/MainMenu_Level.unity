@@ -639,6 +639,7 @@ MonoBehaviour:
   createAccountButton: {fileID: 1383546206}
   newAccountWindow: {fileID: 1069256420}
   externalWalletController: {fileID: 929259017}
+  mainMenuUiController: {fileID: 540058373}
   accountInfoWindow: {fileID: 929259015}
   userNameText: {fileID: 136965441}
   stellarIdValueText: {fileID: 186398774}

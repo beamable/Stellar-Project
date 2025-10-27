@@ -39,11 +39,11 @@ namespace Farm.Player
         {
             if (_selectedSeedCard != null)
             {
-                _selectedSeedCard.SetSelectedColor(false);
+                _selectedSeedCard.SetSelectedImage(false);
                 _selectedSeedCard.SetIsSelectedByUI(false);
             }
             _selectedSeedCard = card;
-            _selectedSeedCard.SetSelectedColor(true);
+            _selectedSeedCard.SetSelectedImage(true);
             _selectedSeedCard.SetIsSelectedByUI(true);
             _toolsBarPanel.SetSeedSprite(card.CurrentPlant.cropData.seedsSprite);
             UiManager.Instance.RaiseSelectSeed(card.CurrentPlant);
@@ -54,15 +54,14 @@ namespace Farm.Player
             for (var i = 0; i < cropInfos.Count; i++)
             {
                 var card = Instantiate(plantUiCard, seedsContainer);
-                card.Init(false, this, cropInfos[i], cropInfos[i].seedsToPlant);
+                card.Init(false, false,this, cropInfos[i], cropInfos[i].seedsToPlant);
                 card.transform.SetParent(seedsContainer);
 
-                card.SetSelectedColor(i == 0);
+                card.SetSelectedImage(i == 0);
                 if (i == 0)
                 {
                     SetSelectedSeed(card);
                 }
-                card.SetIsCrop(false);
                 _seedsCards.Add(card);
             }
         }
