@@ -2,6 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Farm.Beam;
+using Farm.MainMenu;
 using Farm.Managers;
 using Farm.UI;
 using UnityEngine;
@@ -24,7 +25,7 @@ namespace Farm.Game.Scripts.MainMenu
             fader.FadeIn(false).ContinueWith(()=> fader.FadeOut(false).Forget());
             //fader.FadeIn().Forget();
             AudioManager.Instance.PlayTitleMusic();
-            playGamePanel.SetActive(false);
+            SetPlayGamePanelActive(false);
         }
 
         private void OnEnable()
@@ -40,7 +41,12 @@ namespace Farm.Game.Scripts.MainMenu
         
         private void Init()
         {
-            playGamePanel.SetActive(true);
+            //
+        }
+
+        public void SetPlayGamePanelActive(bool isActive)
+        {
+            playGamePanel.SetActive(isActive);
         }
 
         #region OnClick Events
