@@ -3,6 +3,10 @@
  */
 
 import type { Tower } from "./types"
+const DEBUG = false
+const dlog = (...args: any[]) => {
+  if (DEBUG) console.log(...args)
+}
 import {
   MIN_TOWERS,
   MAX_TOWERS,
@@ -27,7 +31,7 @@ export function generateTowers(): { towers: Tower[]; towerCount: number } {
     newTowerCount > TOWER_THRESHOLD_FOR_HIGH_SPECIAL ? SPECIAL_BLOCK_PERCENTAGE_HIGH : SPECIAL_BLOCK_PERCENTAGE_LOW
   const specialBlockCount = Math.floor(newTowerCount * specialBlockPercentage)
 
-  console.log(
+  dlog(
     `[v0] Generating ${newTowerCount} towers with ${specialBlockCount} special blocks (${specialBlockPercentage * 100}%)`,
   )
 

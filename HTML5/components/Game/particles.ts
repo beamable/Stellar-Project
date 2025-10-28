@@ -5,6 +5,11 @@ import type React from "react"
  */
 
 import type { Particle, BallType } from "./types"
+
+const DEBUG = false
+const dlog = (...args: any[]) => {
+  if (DEBUG) console.log(...args)
+}
 import {
   PARTICLE_COUNT_NORMAL,
   PARTICLE_COUNT_MULTISHOT,
@@ -39,7 +44,7 @@ export function createParticles(
         ? PARTICLE_COUNT_MULTISHOT
         : PARTICLE_COUNT_NORMAL
 
-  console.log(`[v0] Creating ${particleCount} particles at (${x}, ${y}) for ${ballType} ball`)
+  dlog(`[v0] Creating ${particleCount} particles at (${x}, ${y}) for ${ballType} ball`)
 
   for (let i = 0; i < particleCount; i++) {
     let color = towerColor
@@ -77,14 +82,14 @@ export function createParticles(
     })
   }
 
-  console.log(`[v0] Total particles in array: ${particlesRef.current.length}`)
+  dlog(`[v0] Total particles in array: ${particlesRef.current.length}`)
 }
 
 /**
  * Creates laser-specific particles when a laser hits a tower
  */
 export function createLaserParticles(particlesRef: React.MutableRefObject<Particle[]>, x: number, y: number): void {
-  console.log(`[v0] Creating ${PARTICLE_COUNT_LASER} laser particles at (${x}, ${y})`)
+  dlog(`[v0] Creating ${PARTICLE_COUNT_LASER} laser particles at (${x}, ${y})`)
 
   for (let i = 0; i < PARTICLE_COUNT_LASER; i++) {
     particlesRef.current.push({
@@ -109,7 +114,7 @@ export function createLaserDestructionParticles(
   x: number,
   y: number,
 ): void {
-  console.log(`[v0] Creating laser destruction particles at (${x}, ${y})`)
+  dlog(`[v0] Creating laser destruction particles at (${x}, ${y})`)
 
   for (let i = 0; i < PARTICLE_COUNT_LASER_DESTRUCTION; i++) {
     const laserColors = [...LASER_COLORS, "#FF00FF"]
@@ -131,7 +136,7 @@ export function createLaserDestructionParticles(
  * Creates celebratory particles when the player wins
  */
 export function createWinParticles(particlesRef: React.MutableRefObject<Particle[]>): void {
-  console.log("[v0] Creating win particles!")
+  dlog("[v0] Creating win particles!")
 
   for (let i = 0; i < PARTICLE_COUNT_WIN; i++) {
     particlesRef.current.push({
@@ -152,7 +157,7 @@ export function createWinParticles(particlesRef: React.MutableRefObject<Particle
  * Creates sad falling particles when the player loses
  */
 export function createLoseParticles(particlesRef: React.MutableRefObject<Particle[]>): void {
-  console.log("[v0] Creating lose particles!")
+  dlog("[v0] Creating lose particles!")
 
   for (let i = 0; i < PARTICLE_COUNT_LOSE; i++) {
     particlesRef.current.push({

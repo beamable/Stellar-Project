@@ -6,6 +6,11 @@ import type React from "react"
 
 import type { BallType } from "./types"
 
+const DEBUG = false
+const dlog = (...args: any[]) => {
+  if (DEBUG) console.log(...args)
+}
+
 /**
  * Initializes the Web Audio API context
  * Must be called after user interaction due to browser autoplay policies
@@ -14,7 +19,7 @@ export function initAudioContext(audioContextRef: React.MutableRefObject<AudioCo
   if (!audioContextRef.current) {
     try {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
-      console.log("[v0] Audio context initialized")
+      dlog("[v0] Audio context initialized")
     } catch (error) {
       console.error("[v0] Failed to initialize audio context:", error)
     }
@@ -53,7 +58,7 @@ export function playChargingSound(
   chargingOscillatorRef.current = oscillator
   chargingGainRef.current = gainNode
 
-  console.log("[v0] Charging sound started")
+  dlog("[v0] Charging sound started")
 }
 
 /**
@@ -72,7 +77,7 @@ export function stopChargingSound(
     }
     chargingOscillatorRef.current = null
     chargingGainRef.current = null
-    console.log("[v0] Charging sound stopped")
+    dlog("[v0] Charging sound stopped")
   }
 }
 
@@ -127,7 +132,7 @@ export function playShootSound(audioContextRef: React.MutableRefObject<AudioCont
   oscillator.start()
   oscillator.stop(audioContext.currentTime + 0.3)
 
-  console.log(`[v0] ${ballType} ball shoot sound played`)
+  dlog(`[v0] ${ballType} ball shoot sound played`)
 }
 
 export function playTowerBreakSound(audioContextRef: React.MutableRefObject<AudioContext | null>): void {

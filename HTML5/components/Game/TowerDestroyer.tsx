@@ -29,6 +29,10 @@ import {
 import * as Audio from "./audio"
 
 export default function TowerDestroyer() {
+  const DEBUG = false
+  const dlog = (...args: any[]) => {
+    if (DEBUG) console.log(...args)
+  }
   // ============================================================================
   // REFS
   // ============================================================================
@@ -85,7 +89,7 @@ export default function TowerDestroyer() {
   // ============================================================================
 
   const resetBall = useCallback(() => {
-    console.log("[v0] Resetting ball for next shot")
+    dlog("[v0] Resetting ball for next shot")
     const newBall = {
       x: 100,
       y: 500,
@@ -98,36 +102,41 @@ export default function TowerDestroyer() {
     }
     ballsRef.current = [newBall]
     lasersRef.current = []
-    console.log(`[v0] Ball reset complete - ball exists: ${ballsRef.current.length > 0}, type: ${newBall.type}`)
+    dlog(`[v0] Ball reset complete - ball exists: ${ballsRef.current.length > 0}, type: ${newBall.type}`)
   }, [selectedBallType])
 
   const shootBall = useCallback(
     (targetX: number, targetY: number, power: number) => {
-      console.log(`[v0] Shooting ball - type: ${selectedBallType}, power: ${power}`)
+      dlog(`[v0] Shooting ball - type: ${selectedBallType}, power: ${power}`)
 
       if (ballsRef.current.length === 0) {
-        console.log("[v0] No balls in array!")
+        dlog("[v0] No balls in array!")
         return
       }
 
       const currentBall = ballsRef.current[0]
       if (!currentBall) {
-        console.log("[v0] No ball found to shoot!")
+        dlog("[v0] No ball found to shoot!")
         return
       }
-
-      Audio.playShootSound(audioContextRef, selectedBallType)
 
       const dx = targetX - currentBall.x
       const dy = targetY - currentBall.y
       const distance = Math.sqrt(dx * dx + dy * dy)
+
+      if (distance < 1e-6) {
+        dlog("[v0] Shot ignored due to minimal distance")
+        return
+      }
+
+      Audio.playShootSound(audioContextRef, selectedBallType)
 
       const force = Math.min(power / CONST.MAX_POWER, 1) * CONST.SHOT_FORCE_MULTIPLIER
       const baseVx = (dx / distance) * force
       const baseVy = (dy / distance) * force
 
       if (selectedBallType === "multishot") {
-        console.log("[v0] Creating multishot balls")
+        dlog("[v0] Creating multishot balls")
         ballsRef.current = []
 
         CONST.MULTISHOT_ANGLES.forEach((angleOffset) => {
@@ -148,14 +157,14 @@ export default function TowerDestroyer() {
           })
         })
       } else if (selectedBallType === "laser") {
-        console.log("[v0] Creating laser ball")
+        dlog("[v0] Creating laser ball")
         currentBall.vx = baseVx
         currentBall.vy = baseVy
         currentBall.active = true
         currentBall.type = "laser"
         currentBall.shotTime = Date.now()
       } else {
-        console.log(`[v0] Creating ${selectedBallType} ball`)
+        dlog(`[v0] Creating ${selectedBallType} ball`)
         currentBall.vx = baseVx
         currentBall.vy = baseVy
         currentBall.active = true
@@ -167,7 +176,7 @@ export default function TowerDestroyer() {
 
       setBallsLeft((prev) => prev - 1)
       setHasShot(true)
-      console.log(`[v0] Ball shot! Active balls: ${ballsRef.current.filter((b) => b.active).length}`)
+      dlog(`[v0] Ball shot! Active balls: ${ballsRef.current.filter((b) => b.active).length}`)
     },
     [selectedBallType],
   )
@@ -239,7 +248,7 @@ export default function TowerDestroyer() {
         Date.now() - ball.shotTime >= CONST.LASER_CREATION_DELAY_MS &&
         lasersRef.current.filter((l) => l.ballId === ball.id).length === 0
       ) {
-        console.log("[v0] Creating lasers for laser ball")
+        dlog("[v0] Creating lasers for laser ball")
         Audio.playLaserShootSound(audioContextRef)
 
         const activeTowers = towersRef.current.filter((t) => !t.destroyed)
@@ -285,6 +294,9 @@ export default function TowerDestroyer() {
         // Fire ball logic
         if (ball.type === "fire") {
           if (ball.fireDestroyCount !== undefined && ball.fireDestroyCount >= CONST.FIRE_BALL_DESTROY_THRESHOLD) {
+            // convert fire ball to normal after threshold
+            ball.type = "normal"
+            delete (ball as any).fireDestroyCount
             // Fire ball converted to normal - bounce off tower
             const centerX = tower.x + tower.width / 2
             const centerY = tower.y + tower.height / 2
@@ -436,7 +448,7 @@ export default function TowerDestroyer() {
     )
 
     if ((allBallsSettled || allBallsOffScreen) && activeBalls.length > 0) {
-      console.log("[v0] All balls settled, resetting for next shot")
+      dlog("[v0] All balls settled, resetting for next shot")
       collisionCooldownRef.current.clear()
       resetBall()
     }
@@ -548,12 +560,22 @@ export default function TowerDestroyer() {
       ctx.stroke()
     })
 
+    // Increase power while charging
+    if (isCharging) {
+      setPower((prev) => Math.min(prev + CONST.POWER_INCREMENT, CONST.MAX_POWER))
+    }
+
     // Aim line rendering
     if (isCharging && ballsRef.current.length > 0 && !ballsRef.current[0].active) {
       const ball = ballsRef.current[0]
       const dx = mousePos.x - ball.x
       const dy = mousePos.y - ball.y
       const distance = Math.sqrt(dx * dx + dy * dy)
+      if (distance < 1e-6) {
+        // avoid NaN when drawing aim line
+        animationRef.current = requestAnimationFrame(gameLoop)
+        return
+      }
       const maxDistance = 150
       const lineLength = Math.min(distance, maxDistance)
 
@@ -572,10 +594,13 @@ export default function TowerDestroyer() {
 
     if (remainingTowers === 0 && gameState === "playing") {
       const ballMultiplier = ballsLeft > 0 ? 1 + ballsLeft * CONST.VICTORY_BONUS_MULTIPLIER : 1
-      const bonusPoints = Math.floor(score * (ballMultiplier - 1))
-      if (bonusPoints > 0) {
-        setScore((prev) => prev + bonusPoints)
-      }
+      setScore((prev) => {
+        if (ballMultiplier <= 1) {
+          return prev
+        }
+        const bonusPoints = Math.floor(prev * (ballMultiplier - 1))
+        return bonusPoints > 0 ? prev + bonusPoints : prev
+      })
       createWinParticles(particlesRef)
       Audio.playWinSound(audioContextRef)
       setGameState("won")
@@ -591,7 +616,7 @@ export default function TowerDestroyer() {
     }
 
     animationRef.current = requestAnimationFrame(gameLoop)
-  }, [ballsLeft, gameState, isCharging, mousePos, power, score, resetBall])
+  }, [ballsLeft, gameState, isCharging, mousePos, power, resetBall])
 
   useEffect(() => {
     animationRef.current = requestAnimationFrame(gameLoop)
@@ -606,7 +631,7 @@ export default function TowerDestroyer() {
   // EVENT HANDLERS
   // ============================================================================
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (
       (ballsRef.current.length > 0 && ballsRef.current.some((ball) => ball.active)) ||
       gameState !== "playing" ||
@@ -628,7 +653,7 @@ export default function TowerDestroyer() {
     }
   }
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
       setMousePos({
@@ -637,12 +662,10 @@ export default function TowerDestroyer() {
       })
     }
 
-    if (isCharging) {
-      setPower((prev) => Math.min(prev + CONST.POWER_INCREMENT, CONST.MAX_POWER))
-    }
+    // Power increases in the game loop while charging
   }
 
-  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     Audio.stopChargingSound(chargingOscillatorRef, chargingGainRef)
 
     if (!isCharging || (ballsRef.current.length > 0 && ballsRef.current.some((ball) => ball.active))) {
@@ -661,7 +684,7 @@ export default function TowerDestroyer() {
   }
 
   const resetGame = () => {
-    console.log("[v0] Resetting game")
+    dlog("[v0] Resetting game")
     Audio.playRestartSound(audioContextRef)
 
     setGameState("playing")
@@ -714,9 +737,9 @@ export default function TowerDestroyer() {
             width={CONST.CANVAS_WIDTH}
             height={CONST.CANVAS_HEIGHT}
             className="border-4 border-primary/30 rounded-lg cursor-crosshair bg-gradient-to-b from-blue-200 to-yellow-200"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
           />
 
           {!hasShot && gameState === "playing" && (
@@ -771,7 +794,7 @@ export default function TowerDestroyer() {
                 <div className="space-y-2 text-sm mb-4">
                   <p className="text-muted-foreground">Click and hold to aim, release to shoot!</p>
                   <p className="text-muted-foreground">Destroy all towers to win.</p>
-                  <p className="text-accent">⭐ Special blocks (darker) need 2 hits and give double points!</p>
+                  <p className="text-accent">Tip: Special blocks (darker) need 2 hits and give double points!</p>
                 </div>
 
                 <p className="text-primary font-semibold">Click anywhere outside this window to start playing!</p>

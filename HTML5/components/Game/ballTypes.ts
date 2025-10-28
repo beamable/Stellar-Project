@@ -8,14 +8,14 @@ export const BALL_TYPES: BallTypeConfig[] = [
   {
     type: "normal",
     name: "Normal Ball",
-    icon: "🏀",
+    icon: "⚪",
     description: "Standard ball with normal physics and collision",
     color: "#8B4513",
   },
   {
     type: "multishot",
     name: "Multishot",
-    icon: "🎯",
+    icon: "🔱",
     description: "Splits into 3 balls with different angles",
     color: "#FF6B35",
   },
@@ -34,3 +34,4 @@ export const BALL_TYPES: BallTypeConfig[] = [
     color: "#8A2BE2",
   },
 ]
+
