@@ -15,9 +15,12 @@ const _sourceSerif_4 = V0_Font_Source_Serif_4({
 const _v0_fontVariables = `${_sourceSerif_4.variable}`
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Tower Destroyer',
+  description: 'HTML5 game integrated with Beamable and Stellar',
+  applicationName: 'Tower Destroyer',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({

@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
+import { getBeam } from "@/lib/beam"
 import { Card } from "@/components/ui/card"
 
 // Import types
@@ -64,6 +65,7 @@ export default function TowerDestroyer() {
   const [towerCount, setTowerCount] = useState(0)
   const [hasShot, setHasShot] = useState(false)
   const [selectedBallType, setSelectedBallType] = useState<BallType>("normal")
+  const [playerId, setPlayerId] = useState<string | null>(null)
 
   // ============================================================================
   // INITIALIZATION
@@ -83,6 +85,25 @@ export default function TowerDestroyer() {
   useEffect(() => {
     initializeTowers()
   }, [initializeTowers])
+
+  // Initialize Beamable and capture the player id for logging/UI
+  useEffect(() => {
+    let mounted = true
+    getBeam()
+      .then((beam: any) => {
+        const id = beam?.player?.id ?? null
+        if (mounted) {
+          setPlayerId(id)
+          console.log("[Beam] Initialized. Player ID:", id)
+        }
+      })
+      .catch((err) => {
+        console.error("[Beam] Initialization failed:", err?.message || err)
+      })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   // ============================================================================
   // BALL MANAGEMENT
@@ -720,6 +741,9 @@ export default function TowerDestroyer() {
             <span className="text-muted-foreground">
               Towers: {towersRef.current.filter((t) => !t.destroyed).length}/{towerCount}
             </span>
+            {playerId && (
+              <span className="text-muted-foreground">Player: {playerId}</span>
+            )}
             {isCharging && <span className="text-destructive">Power: {power}%</span>}
           </div>
           {hasShot && gameState === "playing" && (
