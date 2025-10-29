@@ -1,7 +1,10 @@
 using System;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Farm.Beam;
+using Farm.MainMenu;
 using Farm.Managers;
+using Farm.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,6 +14,7 @@ namespace Farm.Game.Scripts.MainMenu
     {
         [Header("UI Elements")]
         [SerializeField] private GameObject playGamePanel;
+        [SerializeField] private Fader fader;
         
         [Header("Scene Names")]
         [SerializeField] private string farmSceneName;
@@ -18,8 +22,10 @@ namespace Farm.Game.Scripts.MainMenu
         public void Start()
         {
             DOTween.Init();
+            fader.FadeIn(false).ContinueWith(()=> fader.FadeOut(false).Forget());
+            //fader.FadeIn().Forget();
             AudioManager.Instance.PlayTitleMusic();
-            playGamePanel.SetActive(false);
+            SetPlayGamePanelActive(false);
         }
 
         private void OnEnable()
@@ -35,13 +41,19 @@ namespace Farm.Game.Scripts.MainMenu
         
         private void Init()
         {
-            playGamePanel.SetActive(true);
+            //
+        }
+
+        public void SetPlayGamePanelActive(bool isActive)
+        {
+            playGamePanel.SetActive(isActive);
         }
 
         #region OnClick Events
 
         public void OnPlayGame()
         {
+            fader.FadeIn(false).Forget();
             AudioManager.Instance.StopMusic(LoadFarmScene);
             return;
             

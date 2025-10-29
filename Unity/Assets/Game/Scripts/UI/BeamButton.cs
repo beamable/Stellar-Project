@@ -22,13 +22,15 @@ namespace Farm.UI
 
         private void Start()
         {
-            _defaultText = buttonText.text;
+            if(buttonText != null)
+                _defaultText = buttonText.text;
         }
 
         private void OnEnable()
         {
             _startingScale = transform.localScale.x;
-            if(string.IsNullOrEmpty(buttonText.text)) _defaultText = buttonText.text;
+            if(buttonText != null)
+                if(string.IsNullOrEmpty(buttonText.text)) _defaultText = buttonText.text;
         }
 
         public void AddListener(UnityAction onClick)
@@ -67,6 +69,11 @@ namespace Farm.UI
 
         public void SetText(bool toDefault = false, string newText = "")
         {
+            if (buttonText == null)
+            {
+                Debug.LogWarning($"Button text for object {gameObject.name} is null");
+                return;
+            }
             if(toDefault && string.IsNullOrEmpty(_defaultText)) _defaultText = buttonText.text; 
             buttonText.text = toDefault ? _defaultText : newText;
         }

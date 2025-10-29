@@ -2,6 +2,7 @@ using System;
 using Beamable.Editor.Inspectors;
 using Cysharp.Threading.Tasks;
 using Farm.Beam;
+using Farm.Game.Scripts.MainMenu;
 using Farm.Game.Scripts.Stellar;
 using Farm.UI;
 using StellarFederationCommon;
@@ -19,6 +20,7 @@ namespace Farm.MainMenu
         [SerializeField] private BeamButton createAccountButton;
         [SerializeField] private GameObject newAccountWindow;
         [SerializeField] private StellarExternalWalletController externalWalletController;
+        [SerializeField] private MainMenuUiController mainMenuUiController;
         
         [Header("Account Info")]
         [SerializeField] private GameObject accountInfoWindow;
@@ -47,7 +49,7 @@ namespace Farm.MainMenu
 
         private void OnEnable()
         {
-            BeamManager.Instance.OnInitialized += Init;
+            BeamManager.Instance.OnInitialized += CheckForUsers;
             createAccountButton.AddListener(CreateNewAccount);
             usernameInput.onValueChanged.AddListener(SetUserName);
             openPortalButton.AddListener(OpenUserPortal);
@@ -56,18 +58,19 @@ namespace Farm.MainMenu
         private void OnDisable()
         {
             if(BeamManager.Instance != null)
-                BeamManager.Instance.OnInitialized -= Init;
+                BeamManager.Instance.OnInitialized -= CheckForUsers;
             usernameInput.onValueChanged.RemoveAllListeners();
             openPortalButton.RemoveAllListeners();
             externalWalletController.DeInit();
         }
 
-        private void Init()
+        private void CheckForUsers()
         {
             beamLoadingText.gameObject.SetActive(false);
             var hasStellarId = BeamManager.Instance.AccountManager.HasStellarId(StellarFederationSettings.StellarIdentityName);
             if (!hasStellarId.Item1) //no stellar wallet attached
             {
+                mainMenuUiController.SetPlayGamePanelActive(false);
                 newAccountWindow.SetActive(true);
             }
             else
@@ -75,6 +78,7 @@ namespace Farm.MainMenu
                 newAccountWindow.SetActive(false);
                 accountInfoWindow.SetActive(true);
                 SetupAccountPanelInfo(hasStellarId.Item2);
+                mainMenuUiController.SetPlayGamePanelActive(true);
             }
             
             externalWalletController.Init();
@@ -112,7 +116,7 @@ namespace Farm.MainMenu
             createAccountButton.SetInteractable(false);
             createAccountButton.SetText(false, "Creating...");
             await BeamManager.Instance.AccountManager.CreateNewAccount(_username);
-            Init();
+            CheckForUsers();
             _isCreatingAccount = false;
         }
 

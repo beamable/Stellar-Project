@@ -18,11 +18,10 @@ namespace Farm.UI
             for (var i = 0; i < cropInfos.Count; i++)
             {
                 var card = Instantiate(plantUiCard, cropsContainer);
-                card.Init(false, null, cropInfos[i], cropInfos[i].yieldAmount, false);
+                card.Init(false, true, null, cropInfos[i], cropInfos[i].yieldAmount, false);
                 card.transform.SetParent(cropsContainer);
 
-                card.SetSelectedColor(false);
-                card.SetIsCrop(true);
+                card.SetSelectedImage(false);
                 card.SetIsSelectedByUI(false);
                 _cropsCards.Add(card);
             }

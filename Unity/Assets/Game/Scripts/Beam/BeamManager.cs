@@ -114,6 +114,11 @@ namespace Farm.Beam
         
         private async UniTask Init()
         {
+            while (Application.internetReachability == NetworkReachability.NotReachable)
+            {
+                    Debug.LogWarning($"Not internet available retrying in 10 seconds...");
+                    await UniTask.Delay(10000);
+            }
             BeamContext ??= BeamContext.Default;
             await BeamContext.OnReady;
             StellarClient ??= BeamContext.Microservices.StellarFederation();

@@ -18,9 +18,11 @@ namespace Farm.UI
             FadeOut().Forget();
         }
         
-        public async UniTask FadeIn()
+        public async UniTask FadeIn(bool adjustTimeScale = true)
         {
-            UnityEngine.Time.timeScale = 0.75f;
+            faderCanvasGroup.blocksRaycasts = true;
+            if(adjustTimeScale)
+                UnityEngine.Time.timeScale = 0.75f;
             Tween t = fader.DOFade(1, fadeDuration).SetEase(Ease.Linear).OnComplete(() =>
             {
                 UnityEngine.Time.timeScale = 1;
@@ -29,9 +31,11 @@ namespace Farm.UI
             await UniTask.Yield();
         }
         
-        public async UniTask FadeOut()
+        public async UniTask FadeOut(bool adjustTimeScale = true)
         {
-            UnityEngine.Time.timeScale = 0.75f;
+            faderCanvasGroup.blocksRaycasts = false;
+            if(adjustTimeScale)
+                UnityEngine.Time.timeScale = 0.75f;
             Tween t = fader.DOFade(0, fadeDuration).SetEase(Ease.Linear).OnComplete(() =>
             {
                 UnityEngine.Time.timeScale = 1;
