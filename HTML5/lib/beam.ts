@@ -23,18 +23,7 @@ async function resolveBeamConfig(): Promise<BeamConfig> {
       return { cid: fromWindow.cid, pid: fromWindow.pid, environment: fromWindow.environment }
     }
 
-    // 1) Public file (no rebuild required)
-    try {
-      const res = await fetch("/beam-config.json", { cache: "no-store" })
-      if (res.ok) {
-        const data = (await res.json()) as Partial<BeamConfig>
-        if (data.cid && data.pid) {
-          return { cid: data.cid, pid: data.pid, environment: (data as any).environment }
-        }
-      }
-    } catch {}
-
-    // 2) API route (server reads env at runtime)
+    // Read from API route -> uses .beamable/connection-configuration.json at runtime
     try {
       const res = await fetch("/api/beam-config", { cache: "no-store" })
       if (res.ok) {
@@ -47,7 +36,7 @@ async function resolveBeamConfig(): Promise<BeamConfig> {
   }
 
   throw new Error(
-    `Missing Beam config. Provide NEXT_PUBLIC_BEAM_CID/NEXT_PUBLIC_BEAM_PID, window.__BEAM__ = { cid, pid }, or public/beam-config.json`,
+    `Missing Beam config. Preferred source is .beamable/connection-configuration.json (via /api/beam-config). Alternatively set NEXT_PUBLIC_BEAM_CID/NEXT_PUBLIC_BEAM_PID or provide window.__BEAM__ = { cid, pid }`,
   )
 }
 
