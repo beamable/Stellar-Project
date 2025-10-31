@@ -73,6 +73,7 @@ export default function TowerDestroyer() {
   const [aliasSaving, setAliasSaving] = useState(false)
   const [aliasError, setAliasError] = useState<string | null>(null)
   const readyForGame = beamReady && !!(alias && alias.length > 0)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   // ============================================================================
   // INITIALIZATION
@@ -769,6 +770,10 @@ export default function TowerDestroyer() {
 
   const selectedBallInfo = BALL_TYPES.find((ball) => ball.type === selectedBallType)
   async function handleResetPlayer() {
+    setShowResetConfirm(true)
+  }
+
+  async function confirmResetPlayer() {
     try {
       const beam: any = await getBeam().catch(() => null)
       await beam?.tokenStorage?.clear?.()
@@ -793,7 +798,8 @@ export default function TowerDestroyer() {
       <Card className="p-6 bg-card border-2 border-primary/20 shadow-2xl">
         <div className="text-center mb-4">
           <h1 className="text-4xl font-bold text-primary mb-2 font-mono">Tower Destroyer</h1>
-          <div className="flex justify-center gap-8 text-lg font-semibold">
+          <div className="flex items-center justify-between gap-4 text-lg font-semibold">
+            <div className="flex justify-center gap-8 grow">
             <span className="text-accent">Score: {score}</span>
             <span className="text-secondary flex items-center gap-1">
               {selectedBallInfo && <span className="text-base">{selectedBallInfo.icon}</span>}
@@ -809,13 +815,14 @@ export default function TowerDestroyer() {
             )}
             {isCharging && <span className="text-destructive">Power: {power}%</span>}
           </div>
+            <Button onClick={handleResetPlayer} variant="destructive" size="sm" className="text-xs transition-transform duration-150 hover:scale-105 hover:shadow-lg">
+              Reset Player
+            </Button>
+          </div>
           {hasShot && gameState === "playing" && (
             <div className="mt-2 flex gap-2">
               <Button onClick={resetGame} variant="outline" size="sm" className="text-xs bg-transparent">
                 Restart Game
-              </Button>
-              <Button onClick={handleResetPlayer} variant="destructive" size="sm" className="text-xs">
-                Reset Player
               </Button>
             </div>
           )}
@@ -942,6 +949,22 @@ export default function TowerDestroyer() {
                     className="bg-primary hover:bg-primary/90"
                   >
                     {aliasSaving ? 'Saving...' : 'Save Alias'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          {showResetConfirm && (
+            <div className="absolute inset-0 bg-black/60 z-50 rounded-lg flex items-center justify-center">
+              <div className="bg-card p-6 rounded-lg border-2 border-primary/30 text-center max-w-md w-full">
+                <h2 className="text-2xl font-bold text-primary mb-2">Reset Player?</h2>
+                <p className="text-sm text-muted-foreground mb-4">This will create a new guest player for this tab.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <Button onClick={() => setShowResetConfirm(false)} variant="outline" size="sm" className="text-xs">
+                    Cancel
+                  </Button>
+                  <Button onClick={confirmResetPlayer} variant="destructive" size="sm" className="text-xs transition-transform duration-150 hover:scale-105 hover:shadow-lg">
+                    Yes, Reset
                   </Button>
                 </div>
               </div>
