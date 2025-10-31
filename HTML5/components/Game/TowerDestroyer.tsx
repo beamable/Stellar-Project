@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { getBeam } from "@/lib/beam"
+import getBeam from "@/lib/beam"
 import { Card } from "@/components/ui/card"
 
 // Import types
@@ -67,6 +67,12 @@ export default function TowerDestroyer() {
   const [selectedBallType, setSelectedBallType] = useState<BallType>("normal")
   const [playerId, setPlayerId] = useState<string | null>(null)
   const [beamReady, setBeamReady] = useState(false)
+  const [alias, setAlias] = useState<string | null>(null)
+  const [aliasInput, setAliasInput] = useState('')
+  const [aliasModalOpen, setAliasModalOpen] = useState(false)
+  const [aliasSaving, setAliasSaving] = useState(false)
+  const [aliasError, setAliasError] = useState<string | null>(null)
+  const readyForGame = beamReady && !!(alias && alias.length > 0)
 
   // ============================================================================
   // INITIALIZATION
@@ -95,11 +101,11 @@ export default function TowerDestroyer() {
         const id = beam?.player?.id ?? null
         if (mounted) {
           setPlayerId(id)
-          setBeamReady(Boolean(id))
+          setBeamReady(true)
           console.log("[Beam] Initialized. Player ID:", id)
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error("[Beam] Initialization failed:", err?.message || err)
       })
     return () => {
@@ -108,6 +114,42 @@ export default function TowerDestroyer() {
   }, [])
 
   // ============================================================================
+  // After Beam is ready, fetch Alias stat and decide whether to prompt
+  // After Beam is ready, fetch Alias stat and decide whether to prompt
+  useEffect(() => {
+    if (!beamReady) return
+    let mounted = true
+    ;(async () => {
+      try {
+        const beam: any = await getBeam()
+        let a = ''
+        try {
+          const statsPrivate = await beam.stats.get({ domainType: 'client', accessType: 'private', stats: ['Alias'] })
+          a = (statsPrivate && (statsPrivate as any).Alias) || ''
+        } catch {}
+        if (!a) {
+          try {
+            const statsPublic = await beam.stats.get({ domainType: 'client', accessType: 'public', stats: ['Alias'] })
+            a = (statsPublic && (statsPublic as any).Alias) || ''
+          } catch {}
+        }
+        if (!mounted) return
+        if (a && a.length > 0) {
+          setAlias(a)
+          setAliasModalOpen(false)
+        } else {
+          setAlias(null)
+          setAliasModalOpen(true)
+        }
+      } catch (e) {
+        if (!mounted) return
+        setAlias(null)
+        setAliasModalOpen(true)
+      }
+    })()
+    return () => { mounted = false }
+  }, [beamReady])
+
   // BALL MANAGEMENT
   // ============================================================================
 
@@ -212,9 +254,9 @@ export default function TowerDestroyer() {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
+    const ctxMaybe = canvas.getContext("2d")
+    if (!ctxMaybe) { animationRef.current = requestAnimationFrame(gameLoop); return }
+    const ctx = ctxMaybe
     // Draw background gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, CONST.CANVAS_HEIGHT)
     gradient.addColorStop(0, "#87CEEB")
@@ -468,7 +510,7 @@ export default function TowerDestroyer() {
 
     const allBallsOffScreen = activeBalls.every(
       (ball) => ball.x < -50 || ball.x > CONST.CANVAS_WIDTH + 50 || ball.y > CONST.CANVAS_HEIGHT + 50,
-    )
+  );
 
     if ((allBallsSettled || allBallsOffScreen) && activeBalls.length > 0) {
       dlog("[v0] All balls settled, resetting for next shot")
@@ -655,7 +697,7 @@ export default function TowerDestroyer() {
   // ============================================================================
  
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!beamReady) return
+    if (!readyForGame) return
     if (
       (ballsRef.current.length > 0 && ballsRef.current.some((ball) => ball.active)) ||
       gameState !== "playing" ||
@@ -678,7 +720,7 @@ export default function TowerDestroyer() {
   }
  
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!beamReady) return
+    if (!readyForGame) return
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
       setMousePos({
@@ -691,7 +733,7 @@ export default function TowerDestroyer() {
   }
  
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!beamReady) return
+    if (!readyForGame) return
     Audio.stopChargingSound(chargingOscillatorRef, chargingGainRef)
  
     if (!isCharging || (ballsRef.current.length > 0 && ballsRef.current.some((ball) => ball.active))) {
@@ -726,10 +768,25 @@ export default function TowerDestroyer() {
   }
 
   const selectedBallInfo = BALL_TYPES.find((ball) => ball.type === selectedBallType)
+  async function handleResetPlayer() {
+    try {
+      const beam: any = await getBeam().catch(() => null)
+      await beam?.tokenStorage?.clear?.()
+      await beam?.tokenStorage?.dispose?.()
+    } catch {}
+    try { window.sessionStorage?.removeItem('BEAM_TAB_INSTANCE_TAG') } catch {}
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.set('beam_new', '1')
+      window.location.href = url.toString()
+      return
+    } catch {}
+    window.location.reload()
+  }
+
 
   // ============================================================================
   // UI RENDERING
-  // ============================================================================
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
@@ -745,15 +802,20 @@ export default function TowerDestroyer() {
             <span className="text-muted-foreground">
               Towers: {towersRef.current.filter((t) => !t.destroyed).length}/{towerCount}
             </span>
-            {playerId && (
-              <span className="text-muted-foreground">Player: {playerId}</span>
+            {alias ? (
+              <span className="text-muted-foreground">Alias: {alias}</span>
+            ) : (
+              playerId && <span className="text-muted-foreground">Player: {playerId}</span>
             )}
             {isCharging && <span className="text-destructive">Power: {power}%</span>}
           </div>
           {hasShot && gameState === "playing" && (
-            <div className="mt-2">
+            <div className="mt-2 flex gap-2">
               <Button onClick={resetGame} variant="outline" size="sm" className="text-xs bg-transparent">
                 Restart Game
+              </Button>
+              <Button onClick={handleResetPlayer} variant="destructive" size="sm" className="text-xs">
+                Reset Player
               </Button>
             </div>
           )}
@@ -764,7 +826,7 @@ export default function TowerDestroyer() {
             ref={canvasRef}
             width={CONST.CANVAS_WIDTH}
             height={CONST.CANVAS_HEIGHT}
-            className={`${!beamReady ? 'pointer-events-none' : ''} border-4 border-primary/30 rounded-lg cursor-crosshair bg-gradient-to-b from-blue-200 to-yellow-200`}
+            className={`${!readyForGame ? 'pointer-events-none' : ''} border-4 border-primary/30 rounded-lg cursor-crosshair bg-gradient-to-b from-blue-200 to-yellow-200`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -778,7 +840,7 @@ export default function TowerDestroyer() {
             </div>
           )}
 
-          {!hasShot && gameState === "playing" && beamReady && (
+          {!hasShot && gameState === "playing" && readyForGame && (
             <div
               className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center"
               onClick={(e) => {
@@ -815,6 +877,7 @@ export default function TowerDestroyer() {
                       <div className="text-sm font-semibold">{ballType.name}</div>
                     </button>
                   ))}
+
                 </div>
 
                 {selectedBallInfo && (
@@ -834,6 +897,53 @@ export default function TowerDestroyer() {
                 </div>
 
                 <p className="text-primary font-semibold">Click anywhere outside this window to start playing!</p>
+              </div>
+            </div>
+          )}
+          {beamReady && (!alias || alias.length === 0 || aliasModalOpen) && (
+            <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+              <div className="bg-card p-6 rounded-lg border-2 border-primary/30 text-center max-w-md w-full">
+                <h2 className="text-2xl font-bold text-primary mb-4">Set Your Alias</h2>
+                <p className="text-sm text-muted-foreground mb-3">Alphabet letters only, minimum 3 characters.</p>
+                <input
+                  type="text"
+                  value={aliasInput}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    const filtered = v.replace(/[^A-Za-z]/g, "")
+                    setAliasInput(filtered)
+                  }}
+                  className="w-full p-2 border rounded mb-3 bg-background text-foreground border-primary/30"
+                  placeholder="Enter alias"
+                />
+                {aliasError && <p className="text-destructive text-sm mb-2">{aliasError}</p>}
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    onClick={async () => {
+                      setAliasError(null)
+                      const valid = /^[A-Za-z]{3,}$/.test(aliasInput)
+                      if (!valid) {
+                        setAliasError('Alias must be letters only, at least 3 characters.')
+                        return
+                      }
+                      try {
+                        setAliasSaving(true)
+                        const beam: any = await getBeam()
+                        await beam.stats.set({ domainType: 'client', accessType: 'private', stats: { Alias: aliasInput } })
+                        setAlias(aliasInput)
+                        setAliasModalOpen(false)
+                      } catch (e: any) {
+                        setAliasError(e?.message || 'Failed to save alias. Try again.')
+                      } finally {
+                        setAliasSaving(false)
+                      }
+                    }}
+                    disabled={aliasSaving || !/^[A-Za-z]{3,}$/.test(aliasInput)}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    {aliasSaving ? 'Saving...' : 'Save Alias'}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -870,5 +980,6 @@ export default function TowerDestroyer() {
         </div>
       </Card>
     </div>
-  )
+  );
+
 }
