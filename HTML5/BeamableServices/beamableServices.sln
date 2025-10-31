@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{8C1AD193-485E-4358-85C2-D229A827C940}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StellarFederation", "services\StellarFederation\StellarFederation.csproj", "{C6686CDD-7070-4A8F-9B7A-3F345D311647}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StellarFederationCommon", "services\StellarFederationCommon\StellarFederationCommon.csproj", "{4E48B4B9-BB64-448F-8C73-6206D38DC5DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StellarFederationStorage", "services\StellarFederationStorage\StellarFederationStorage.csproj", "{D0C7B97C-CAB2-446A-BA1F-AEE79A813B68}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C6686CDD-7070-4A8F-9B7A-3F345D311647}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6686CDD-7070-4A8F-9B7A-3F345D311647}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6686CDD-7070-4A8F-9B7A-3F345D311647}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6686CDD-7070-4A8F-9B7A-3F345D311647}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E48B4B9-BB64-448F-8C73-6206D38DC5DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E48B4B9-BB64-448F-8C73-6206D38DC5DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E48B4B9-BB64-448F-8C73-6206D38DC5DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E48B4B9-BB64-448F-8C73-6206D38DC5DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0C7B97C-CAB2-446A-BA1F-AEE79A813B68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0C7B97C-CAB2-446A-BA1F-AEE79A813B68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0C7B97C-CAB2-446A-BA1F-AEE79A813B68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0C7B97C-CAB2-446A-BA1F-AEE79A813B68}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C6686CDD-7070-4A8F-9B7A-3F345D311647} = {8C1AD193-485E-4358-85C2-D229A827C940}
+		{4E48B4B9-BB64-448F-8C73-6206D38DC5DD} = {8C1AD193-485E-4358-85C2-D229A827C940}
+		{D0C7B97C-CAB2-446A-BA1F-AEE79A813B68} = {8C1AD193-485E-4358-85C2-D229A827C940}
+	EndGlobalSection
+EndGlobal

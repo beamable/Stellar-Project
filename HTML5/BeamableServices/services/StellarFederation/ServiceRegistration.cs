@@ -1,0 +1,20 @@
+using System.Linq;
+using System.Reflection;
+using Beamable.Common.Dependencies;
+using Beamable.StellarFederation.Extensions;
+using Beamable.StellarFederation.Features.Transactions;
+
+namespace Beamable.StellarFederation;
+
+public static class ServiceRegistration
+{
+    public static void AddFeatures(this IDependencyBuilder builder)
+    {
+        Assembly.GetExecutingAssembly()
+            .GetDerivedTypes<IService>()
+            .ToList()
+            .ForEach(serviceType => builder.AddSingleton(serviceType));
+
+        builder.AddScoped<TransactionManager>();
+    }
+}

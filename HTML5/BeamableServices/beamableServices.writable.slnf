@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "path": "beamableServices.sln",
+    "projects": [
+      "services\\StellarFederation\\StellarFederation.csproj",
+      "services\\StellarFederationCommon\\StellarFederationCommon.csproj",
+      "services\\StellarFederationStorage\\StellarFederationStorage.csproj"
+    ]
+  }
+}
