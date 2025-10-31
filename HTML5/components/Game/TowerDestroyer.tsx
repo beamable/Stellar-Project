@@ -66,6 +66,7 @@ export default function TowerDestroyer() {
   const [hasShot, setHasShot] = useState(false)
   const [selectedBallType, setSelectedBallType] = useState<BallType>("normal")
   const [playerId, setPlayerId] = useState<string | null>(null)
+  const [beamReady, setBeamReady] = useState(false)
 
   // ============================================================================
   // INITIALIZATION
@@ -94,6 +95,7 @@ export default function TowerDestroyer() {
         const id = beam?.player?.id ?? null
         if (mounted) {
           setPlayerId(id)
+          setBeamReady(Boolean(id))
           console.log("[Beam] Initialized. Player ID:", id)
         }
       })
@@ -651,8 +653,9 @@ export default function TowerDestroyer() {
   // ============================================================================
   // EVENT HANDLERS
   // ============================================================================
-
+ 
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!beamReady) return
     if (
       (ballsRef.current.length > 0 && ballsRef.current.some((ball) => ball.active)) ||
       gameState !== "playing" ||
@@ -660,11 +663,11 @@ export default function TowerDestroyer() {
     ) {
       return
     }
-
+ 
     setIsCharging(true)
     setPower(0)
     Audio.playChargingSound(audioContextRef, chargingOscillatorRef, chargingGainRef)
-
+ 
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
       setMousePos({
@@ -673,8 +676,9 @@ export default function TowerDestroyer() {
       })
     }
   }
-
+ 
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!beamReady) return
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
       setMousePos({
@@ -682,28 +686,28 @@ export default function TowerDestroyer() {
         y: e.clientY - rect.top,
       })
     }
-
+ 
     // Power increases in the game loop while charging
   }
-
+ 
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!beamReady) return
     Audio.stopChargingSound(chargingOscillatorRef, chargingGainRef)
-
+ 
     if (!isCharging || (ballsRef.current.length > 0 && ballsRef.current.some((ball) => ball.active))) {
       return
     }
-
+ 
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
       const targetX = e.clientX - rect.left
       const targetY = e.clientY - rect.top
       shootBall(targetX, targetY, power)
     }
-
+ 
     setIsCharging(false)
     setPower(0)
   }
-
   const resetGame = () => {
     dlog("[v0] Resetting game")
     Audio.playRestartSound(audioContextRef)
@@ -760,13 +764,21 @@ export default function TowerDestroyer() {
             ref={canvasRef}
             width={CONST.CANVAS_WIDTH}
             height={CONST.CANVAS_HEIGHT}
-            className="border-4 border-primary/30 rounded-lg cursor-crosshair bg-gradient-to-b from-blue-200 to-yellow-200"
+            className={`${!beamReady ? 'pointer-events-none' : ''} border-4 border-primary/30 rounded-lg cursor-crosshair bg-gradient-to-b from-blue-200 to-yellow-200`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
           />
 
-          {!hasShot && gameState === "playing" && (
+          {!beamReady && (
+            <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+              <div className="bg-card p-4 rounded-lg border-2 border-primary/30 text-center">
+                <p className="text-lg font-semibold text-primary">Beam is initializing...</p>
+              </div>
+            </div>
+          )}
+
+          {!hasShot && gameState === "playing" && beamReady && (
             <div
               className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center"
               onClick={(e) => {
@@ -829,7 +841,7 @@ export default function TowerDestroyer() {
           {gameState === "won" && (
             <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
               <div className="bg-card p-6 rounded-lg border-2 border-primary/30 text-center">
-                <p className="text-3xl font-bold text-primary mb-2">🎉 Victory! 🎉</p>
+                <p className="text-3xl font-bold text-primary mb-2">dYZ% Victory! dYZ%</p>
                 <p className="text-accent mb-2">All towers destroyed! Final Score: {score}</p>
                 {ballsLeft > 0 && (
                   <p className="text-sm text-primary mb-4">
