@@ -76,7 +76,10 @@ export default function TowerDestroyer() {
   const readyForGame = beamReady && !!(alias && alias.length > 0)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [showPlayerInfo, setShowPlayerInfo] = useState(false)
+  // Stellar custodial ID (attached via addExternalIdentity with StellarIdentity)
   const [stellarExternalId, setStellarExternalId] = useState<string | null>(null)
+  // Stellar External ID (non-custodial; providerNamespace = StellarExternalIdentity)
+  const [stellarExternalIdentityId, setStellarExternalIdentityId] = useState<string | null>(null)
 
   // ============================================================================
   // INITIALIZATION
@@ -165,14 +168,23 @@ export default function TowerDestroyer() {
         const beam: any = await getBeam()
         const acct = await beam.account.current()
         const providerService: string = beam?.stellarFederationClient?.serviceName || "StellarFederation"
-        const providerNamespace: string = beam?.stellarFederationClient?.federationIds?.StellarIdentity || "StellarIdentity"
-        const ext = (acct?.external || []).find((e: any) => e.providerService === providerService && e.providerNamespace === providerNamespace)
-        const stellarId = ext?.userId
-        if (stellarId) {
-          console.log("[Stellar] Returning player Stellar ID:", stellarId)
-          setStellarExternalId(stellarId)
-          stellarLoggedOnceRef.current = true
+        // Custodial/federated wallet ID
+        const providerNamespaceCustodial: string = beam?.stellarFederationClient?.federationIds?.StellarIdentity || "StellarIdentity"
+        const extCustodial = (acct?.external || []).find((e: any) => e.providerService === providerService && e.providerNamespace === providerNamespaceCustodial)
+        const stellarCustodialId = extCustodial?.userId
+        if (stellarCustodialId) {
+          console.log("[Stellar] Returning player Stellar ID:", stellarCustodialId)
+          setStellarExternalId(stellarCustodialId)
         }
+        // External identity ID
+        const providerNamespaceExternal: string = beam?.stellarFederationClient?.federationIds?.StellarExternalIdentity || "StellarExternalIdentity"
+        const extExternal = (acct?.external || []).find((e: any) => e.providerService === providerService && e.providerNamespace === providerNamespaceExternal)
+        const stellarExternalIdVal = extExternal?.userId
+        if (stellarExternalIdVal) {
+          console.log("[Stellar] Returning player Stellar External ID:", stellarExternalIdVal)
+          setStellarExternalIdentityId(stellarExternalIdVal)
+        }
+        stellarLoggedOnceRef.current = true
       } catch {}
     })()
   }, [beamReady, alias])
@@ -957,6 +969,57 @@ export default function TowerDestroyer() {
                       <div className="font-mono break-all">{stellarExternalId || '-'}</div>
                     </div>
                     <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(stellarExternalId || '') } catch {} }}>Copy</Button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Stellar External ID</div>
+                      <div className="font-mono break-all">{stellarExternalIdentityId || '-'}</div>
+                    </div>
+                    {stellarExternalIdentityId ? (
+                      <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(stellarExternalIdentityId || '') } catch {} }}>Copy</Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          try {
+                            const beam: any = await getBeam()
+                            const cfg = await beam.stellarFederationClient.stellarConfiguration()
+                            // resolve cid/pid
+                            let cid = (process.env.NEXT_PUBLIC_BEAM_CID || '').trim()
+                            let pid = (process.env.NEXT_PUBLIC_BEAM_PID || '').trim()
+                            if ((!cid || !pid) && typeof window !== 'undefined') {
+                              const w = window as any
+                              if (w.__BEAM__?.cid && w.__BEAM__?.pid) {
+                                cid = (w.__BEAM__.cid || '').trim()
+                                pid = (w.__BEAM__.pid || '').trim()
+                              }
+                            }
+                            if ((!cid || !pid) && typeof window !== 'undefined') {
+                              try {
+                                const res = await fetch('/api/beam-config', { cache: 'no-store' })
+                                if (res.ok) {
+                                  const data = (await res.json()) as any
+                                  if (data?.cid && data?.pid) {
+                                    cid = String(data.cid).trim()
+                                    pid = String(data.pid).trim()
+                                  }
+                                }
+                              } catch {}
+                            }
+                            const gamerTag = (playerId || '').toString()
+                            const url = `https://${cfg.walletConnectBridgeUrl}/?network=${encodeURIComponent(cfg.network)}&cid=${encodeURIComponent(cid)}&pid=${encodeURIComponent(pid)}&gamerTag=${encodeURIComponent(gamerTag)}`
+                            if (typeof window !== 'undefined') {
+                              window.open(url, '_blank', 'noopener,noreferrer')
+                            }
+                          } catch (e) {
+                            console.error('[Stellar] Failed to open External ID attach flow:', (e as any)?.message || e)
+                          }
+                        }}
+                      >
+                        Attach External Id
+                      </Button>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center justify-center gap-3 mt-5">
