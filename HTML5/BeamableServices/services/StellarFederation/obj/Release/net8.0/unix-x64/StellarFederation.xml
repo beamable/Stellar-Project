@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>StellarFederation</name>
+    </assembly>
+    <members>
+        <member name="P:Beamable.StellarFederation.Configuration.StellarRpc">
+            <summary>
+            CONFIG VALUES
+            To configure an explicit configuration values, visit the Beamable portal and add configuration under Operate -> Config.
+            Configuration namespace is configured in the <see cref="F:Beamable.StellarFederation.Configuration.ConfigurationNamespace"/> constant.
+            </summary>
+        </member>
+        <member name="T:Beamable.StellarFederation.Endpoints.IEndpoint">
+            <summary>
+            Everything implementing IEndpoint must be registered as a scoped dependency
+            </summary>
+        </member>
+        <member name="T:Beamable.StellarFederation.IService">
+            <summary>
+            Everything implementing IService will be registered as a singleton dependency
+            </summary>
+        </member>
+        <member name="M:Beamable.StellarFederation.Program.Main">
+            <summary>
+            The entry point for the <see cref="T:Beamable.StellarFederation.StellarFederation"/> service.
+            </summary>
+        </member>
+    </members>
+</doc>
