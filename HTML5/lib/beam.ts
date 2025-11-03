@@ -1,4 +1,5 @@
-import { Beam, StatsService } from "beamable-sdk"
+import { Beam, StatsService, AuthService, AccountService } from "beamable-sdk"
+import { StellarFederationClient } from "@/beamable/clients/StellarFederationClient"
 
 type BeamConfig = { cid: string; pid: string; environment?: "prod" | "stg" | "dev" }
 
@@ -76,6 +77,9 @@ async function bootBeamOnce(cfg: BeamConfig, tag?: string) {
     instanceTag,
   })
   ;(beam as any).use?.(StatsService)
+  ;(beam as any).use?.(AuthService)
+  ;(beam as any).use?.(AccountService)
+  ;(beam as any).use?.(StellarFederationClient)
   // Ensure we have a token
   try {
     const tokenData = await (beam as any)?.tokenStorage?.getTokenData?.()

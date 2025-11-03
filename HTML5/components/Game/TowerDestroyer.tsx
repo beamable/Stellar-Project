@@ -933,10 +933,41 @@ export default function TowerDestroyer() {
                         setAliasError('Alias must be letters only, at least 3 characters.')
                         return
                       }
+                      setAliasSaving(true)
                       try {
-                        setAliasSaving(true)
                         const beam: any = await getBeam()
+                        // 1) Save alias
                         await beam.stats.set({ domainType: 'client', accessType: 'private', stats: { Alias: aliasInput } })
+
+                        // 2) Attach external identity (custodial Stellar wallet)
+                        try {
+                          const providerService: string = beam?.stellarFederationClient?.serviceName || "StellarFederation"
+                          const providerNamespace: string = beam?.stellarFederationClient?.federationIds?.StellarIdentity || "StellarIdentity"
+
+                          await beam.account.addExternalIdentity({
+                            externalToken: "",
+                            providerService,
+                            providerNamespace,
+                            // challengeHandler intentionally omitted (null)
+                          })
+
+                          // Log the Stellar ID (external identity userId) if available
+                          try {
+                            const acct = await beam.account.current()
+                            const ext = (acct?.external || []).find((e: any) => e.providerService === providerService && e.providerNamespace === providerNamespace)
+                            if (ext?.userId) {
+                              console.log("[Stellar] Custodial wallet attached. Stellar ID:", ext.userId)
+                            } else {
+                              console.log("[Stellar] Custodial wallet attached (no external userId found).")
+                            }
+                          } catch {}
+                        } catch (authErr: any) {
+                          console.error("[Stellar] Failed to attach custodial wallet:", authErr?.message || authErr)
+                          setAliasError('We could not attach your wallet. Please restart the game and try again.')
+                          return
+                        }
+
+                        // 3) Success → close alias modal and start game
                         setAlias(aliasInput)
                         setAliasModalOpen(false)
                       } catch (e: any) {
