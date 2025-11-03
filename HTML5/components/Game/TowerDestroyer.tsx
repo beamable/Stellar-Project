@@ -51,6 +51,7 @@ export default function TowerDestroyer() {
   const towersRef = useRef<Tower[]>([])
   const particlesRef = useRef<Particle[]>([])
   const collisionCooldownRef = useRef<Set<string>>(new Set())
+  const stellarLoggedOnceRef = useRef<boolean>(false)
 
   // ============================================================================
   // STATE
@@ -74,6 +75,8 @@ export default function TowerDestroyer() {
   const [aliasError, setAliasError] = useState<string | null>(null)
   const readyForGame = beamReady && !!(alias && alias.length > 0)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [showPlayerInfo, setShowPlayerInfo] = useState(false)
+  const [stellarExternalId, setStellarExternalId] = useState<string | null>(null)
 
   // ============================================================================
   // INITIALIZATION
@@ -138,6 +141,7 @@ export default function TowerDestroyer() {
         if (a && a.length > 0) {
           setAlias(a)
           setAliasModalOpen(false)
+          setShowPlayerInfo(true)
         } else {
           setAlias(null)
           setAliasModalOpen(true)
@@ -150,6 +154,28 @@ export default function TowerDestroyer() {
     })()
     return () => { mounted = false }
   }, [beamReady])
+
+  // Log Stellar ID for returning players (filter by provider)
+  useEffect(() => {
+    if (!beamReady) return
+    if (!alias || alias.length === 0) return
+    if (stellarLoggedOnceRef.current) return
+    ;(async () => {
+      try {
+        const beam: any = await getBeam()
+        const acct = await beam.account.current()
+        const providerService: string = beam?.stellarFederationClient?.serviceName || "StellarFederation"
+        const providerNamespace: string = beam?.stellarFederationClient?.federationIds?.StellarIdentity || "StellarIdentity"
+        const ext = (acct?.external || []).find((e: any) => e.providerService === providerService && e.providerNamespace === providerNamespace)
+        const stellarId = ext?.userId
+        if (stellarId) {
+          console.log("[Stellar] Returning player Stellar ID:", stellarId)
+          setStellarExternalId(stellarId)
+          stellarLoggedOnceRef.current = true
+        }
+      } catch {}
+    })()
+  }, [beamReady, alias])
 
   // BALL MANAGEMENT
   // ============================================================================
@@ -847,7 +873,7 @@ export default function TowerDestroyer() {
             </div>
           )}
 
-          {!hasShot && gameState === "playing" && readyForGame && (
+          {!hasShot && gameState === "playing" && readyForGame && !showPlayerInfo && (
             <div
               className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center"
               onClick={(e) => {
@@ -907,6 +933,39 @@ export default function TowerDestroyer() {
               </div>
             </div>
           )}
+          {beamReady && readyForGame && showPlayerInfo && (
+            <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+              <div className="bg-card p-6 rounded-lg border-2 border-primary/30 text-center max-w-lg w-full">
+                <h2 className="text-2xl font-bold text-primary mb-4">Player Info</h2>
+                <div className="space-y-3 text-left">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-sm text-muted-foreground">GamerTag ID</div>
+                      <div className="font-mono break-all">{playerId || '-'}</div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(playerId || '') } catch {} }}>Copy</Button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Alias</div>
+                      <div className="font-semibold">{alias || '-'}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Stellar Custodial ID</div>
+                      <div className="font-mono break-all">{stellarExternalId || '-'}</div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(stellarExternalId || '') } catch {} }}>Copy</Button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center gap-3 mt-5">
+                  <Button onClick={handleResetPlayer} variant="destructive" size="sm">Reset Player</Button>
+                  <Button className="bg-primary hover:bg-primary/90" size="sm" onClick={() => setShowPlayerInfo(false)}>Play Game</Button>
+                </div>
+              </div>
+            </div>
+          )}
           {beamReady && (!alias || alias.length === 0 || aliasModalOpen) && (
             <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
               <div className="bg-card p-6 rounded-lg border-2 border-primary/30 text-center max-w-md w-full">
@@ -957,9 +1016,10 @@ export default function TowerDestroyer() {
                             const ext = (acct?.external || []).find((e: any) => e.providerService === providerService && e.providerNamespace === providerNamespace)
                             if (ext?.userId) {
                               console.log("[Stellar] Custodial wallet attached. Stellar ID:", ext.userId)
-                            } else {
+                              setStellarExternalId(ext.userId)
+                              } else {
                               console.log("[Stellar] Custodial wallet attached (no external userId found).")
-                            }
+                              }
                           } catch {}
                         } catch (authErr: any) {
                           console.error("[Stellar] Failed to attach custodial wallet:", authErr?.message || authErr)
@@ -970,6 +1030,7 @@ export default function TowerDestroyer() {
                         // 3) Success → close alias modal and start game
                         setAlias(aliasInput)
                         setAliasModalOpen(false)
+                        setShowPlayerInfo(true)
                       } catch (e: any) {
                         setAliasError(e?.message || 'Failed to save alias. Try again.')
                       } finally {
