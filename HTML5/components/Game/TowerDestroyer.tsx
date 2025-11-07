@@ -28,6 +28,7 @@ import {
 
 // Import audio functions
 import * as Audio from "./audio"
+import { subscribeToContext, PlayerNotificationContexts, getNotificationBootstrap } from "@/lib/notifications"
 
 export default function TowerDestroyer() {
   const DEBUG = false
@@ -80,6 +81,10 @@ export default function TowerDestroyer() {
   const [stellarExternalId, setStellarExternalId] = useState<string | null>(null)
   // Stellar External ID (non-custodial; providerNamespace = StellarExternalIdentity)
   const [stellarExternalIdentityId, setStellarExternalIdentityId] = useState<string | null>(null)
+  // External auth address subscription handle
+  const externalAddressSubRef = useRef<{ stop: () => void } | null>(null)
+  // ChallengeSolution that we will carry through the process
+  const challengeSolutionRef = useRef<{ challenge_token?: string } | null>(null)
 
   // ============================================================================
   // INITIALIZATION
@@ -833,6 +838,36 @@ export default function TowerDestroyer() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+      <div className="absolute top-4 right-4 flex gap-2 z-50">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={async () => {
+            try {
+              const beam: any = await getBeam()
+              const cid = beam?.cid
+              const pid = beam?.pid
+              const channelBase = `custom.${cid}.${pid}.external-auth-address`
+              const channels = [
+                channelBase,
+                playerId ? `${channelBase}.${playerId}` : null,
+              ].filter(Boolean) as string[]
+              for (const ch of channels) {
+              const res = await beam.requester.request({
+                url: `/basic/notification/?channel=${encodeURIComponent(ch)}`,
+                method: "GET",
+                withAuth: true,
+              })
+                console.log("[Debug] Notification GET response:", ch, res.body)
+              }
+            } catch (err) {
+              console.error("[Debug] Notification GET failed:", err)
+            }
+          }}
+        >
+          Fetch Notifications
+        </Button>
+      </div>
       <Card className="p-6 bg-card border-2 border-primary/20 shadow-2xl">
         <div className="text-center mb-4">
           <h1 className="text-4xl font-bold text-primary mb-2 font-mono">Tower Destroyer</h1>
@@ -985,9 +1020,22 @@ export default function TowerDestroyer() {
                           try {
                             const beam: any = await getBeam()
                             const cfg = await beam.stellarFederationClient.stellarConfiguration()
-                            // resolve cid/pid
-                            let cid = (process.env.NEXT_PUBLIC_BEAM_CID || '').trim()
-                            let pid = (process.env.NEXT_PUBLIC_BEAM_PID || '').trim()
+                            // resolve cid/pid — prefer parsing from notification bootstrap to match active session
+                            let cid = ''
+                            let pid = ''
+                            try {
+                              const nb = await getNotificationBootstrap()
+                              const prefix: string = String(nb?.customChannelPrefix || '') // custom.<cid>.<pid>.
+                              const parts = prefix.split('.') // ['custom', '<cid>', '<pid>', '']
+                              if (parts.length >= 3) {
+                                cid = String(parts[1] || '').trim()
+                                pid = String(parts[2] || '').trim()
+                              }
+                            } catch {}
+                            if (!cid || !pid) {
+                              cid = (process.env.NEXT_PUBLIC_BEAM_CID || '').trim()
+                              pid = (process.env.NEXT_PUBLIC_BEAM_PID || '').trim()
+                            }
                             if ((!cid || !pid) && typeof window !== 'undefined') {
                               const w = window as any
                               if (w.__BEAM__?.cid && w.__BEAM__?.pid) {
@@ -1009,8 +1057,90 @@ export default function TowerDestroyer() {
                             }
                             const gamerTag = (playerId || '').toString()
                             const url = `https://${cfg.walletConnectBridgeUrl}/?network=${encodeURIComponent(cfg.network)}&cid=${encodeURIComponent(cid)}&pid=${encodeURIComponent(pid)}&gamerTag=${encodeURIComponent(gamerTag)}`
+                            console.log('[Stellar] Launching wallet flow with cid/pid:', { cid, pid, gamerTag })
                             if (typeof window !== 'undefined') {
                               window.open(url, '_blank', 'noopener,noreferrer')
+                            }
+
+                            // Subscribe to ExternalAuthAddress notifications to receive the address 'Value'
+                            try {
+                              externalAddressSubRef.current?.stop?.()
+                              externalAddressSubRef.current = await subscribeToContext(
+                                PlayerNotificationContexts.ExternalAuthAddress,
+                                async (payload: any) => {
+                                  let processed = false
+                                  try {
+                                    console.log('[Stellar] ExternalAuthAddress message payload:', payload)
+                                    if (payload?.messageFull) {
+                                      console.log('[Stellar] ExternalAuthAddress raw messageFull:', payload.messageFull)
+                                    }
+                                    const ctxRaw = (payload && (payload.Context ?? payload.context)) || null
+                                    const ctx = ctxRaw ? String(ctxRaw).toLowerCase() : null
+                                    if (ctx && ctx !== PlayerNotificationContexts.ExternalAuthAddress) {
+                                      console.log('[Stellar] Ignoring message for different context:', ctxRaw)
+                                      return
+                                    }
+                                    // Accept both direct and nested forms, including messageFull patterns
+                                    let value = (payload && (payload.Value ?? payload.value)) || null
+                                    if (!value && typeof (payload?.messageFull) === 'string') {
+                                      try {
+                                        const inner = JSON.parse(payload.messageFull)
+                                        value = inner?.Value ?? inner?.value ?? null
+                                      } catch {}
+                                    }
+                                    if (!value || typeof value !== 'string') {
+                                      console.warn('[Stellar] ExternalAuthAddress payload missing Value:', payload)
+                                      return
+                                    }
+                                    // Attach external identity (StellarExternalIdentity)
+                                    const providerService: string = beam?.stellarFederationClient?.serviceName || 'StellarFederation'
+                                    const providerNamespace: string = beam?.stellarFederationClient?.federationIds?.StellarExternalIdentity || 'StellarExternalIdentity'
+                                    console.log('[Stellar] Attaching External Identity with token:', value, { providerService, providerNamespace })
+                                    const attachResp: any = await beam.account.addExternalIdentity({
+                                      externalToken: value,
+                                      providerService,
+                                      providerNamespace,
+                                    })
+                                    console.log('[Stellar] attach external identity response:', attachResp)
+                                    // Derive challenge token if present on response
+                                    const challengeToken = attachResp?.challenge_token || attachResp?.challengeResponse?.challenge_token
+                                    if (challengeToken) {
+                                      challengeSolutionRef.current = { challenge_token: challengeToken }
+                                      console.log('[Stellar] challenge_token:', challengeToken)
+                                      processed = true
+                                    } else {
+                                      // As a fallback, try to request a challenge from auth endpoint without refreshing
+                                      try {
+                                        console.log('[Stellar] Falling back to auth.loginWithExternalIdentity to obtain challenge_token')
+                                        const authResp: any = await beam.auth.loginWithExternalIdentity({
+                                          externalToken: value,
+                                          providerService,
+                                          providerNamespace,
+                                        })
+                                        const t = authResp?.challengeResponse?.challenge_token || authResp?.challenge_token
+                                        if (t) {
+                                          challengeSolutionRef.current = { challenge_token: t }
+                                          console.log('[Stellar] challenge_token:', t)
+                                          processed = true
+                                        }
+                                      } catch (e) {
+                                        console.warn('[Stellar] Could not obtain challenge_token from auth flow:', (e as any)?.message || e)
+                                      }
+                                    }
+                                  } catch (err) {
+                                    console.error('[Stellar] External ID attach flow error:', (err as any)?.message || err)
+                                  } finally {
+                                    // Stop after first successful message
+                                    if (processed) {
+                                      console.log('[Stellar] Stopping ExternalAuthAddress subscription')
+                                      externalAddressSubRef.current?.stop?.()
+                                    }
+                                  }
+                                },
+                                { intervalMs: 2000 }
+                              )
+                            } catch (subErr) {
+                              console.warn('[Stellar] Failed to start ExternalAuthAddress subscription:', (subErr as any)?.message || subErr)
                             }
                           } catch (e) {
                             console.error('[Stellar] Failed to open External ID attach flow:', (e as any)?.message || e)

@@ -28,9 +28,7 @@ declare module 'beamable-sdk' {
 export class StellarFederationClient extends BeamMicroServiceClient {
   readonly federationIds = {
     StellarIdentity: "StellarIdentity",
-    StellarIdentity: "StellarIdentity",
     StellarExternalIdentity: "StellarExternalIdentity",
-    StellarExternalIdentity: "StellarExternalIdentity"
   } as const;
   
   constructor(
