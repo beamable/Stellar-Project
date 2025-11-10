@@ -25,3 +25,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]in/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Rider / JetBrains workspace settings
+.idea/
+*.DotSettings.user
+
+# Visual Studio
+.vs/
+*.csproj.user
