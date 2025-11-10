@@ -25,3 +25,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Rider / JetBrains workspace settings
+.idea/
+*.DotSettings.user
+
+# Visual Studio
+.vs/
+*.csproj.user
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]in/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+!BeamableServices/services/StellarFederation/Tools/stellar.zip
