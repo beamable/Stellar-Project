@@ -69,75 +69,6 @@
           }
         }
       }
-    },
-    ".NETStandard,Version=v2.1/unix-x64": {
-      "Beamable.Common/5.4.2": {
-        "type": "package",
-        "dependencies": {
-          "Beamable.UnityEngine": "5.4.2",
-          "Beamable.UnityEngine.Addressables": "5.4.2",
-          "Newtonsoft.Json": "13.0.3"
-        },
-        "compile": {
-          "lib/netstandard2.0/Unity.Beamable.Runtime.Common.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/Unity.Beamable.Runtime.Common.dll": {
-            "related": ".xml"
-          }
-        },
-        "build": {
-          "build/netstandard2.0/Beamable.Common.Targets": {},
-          "build/netstandard2.0/Beamable.Common.props": {}
-        }
-      },
-      "Beamable.UnityEngine/5.4.2": {
-        "type": "package",
-        "dependencies": {
-          "Newtonsoft.Json": "13.0.3"
-        },
-        "compile": {
-          "lib/netstandard2.0/UnityEngine.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/UnityEngine.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "Beamable.UnityEngine.Addressables/5.4.2": {
-        "type": "package",
-        "dependencies": {
-          "Beamable.UnityEngine": "5.4.2"
-        },
-        "compile": {
-          "lib/netstandard2.0/Unity.Addressables.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/Unity.Addressables.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "Newtonsoft.Json/13.0.3": {
-        "type": "package",
-        "compile": {
-          "lib/netstandard2.0/Newtonsoft.Json.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/Newtonsoft.Json.dll": {
-            "related": ".xml"
-          }
-        }
-      }
     }
   },
   "libraries": {
@@ -665,11 +596,6 @@
           }
         },
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306\\RuntimeIdentifierGraph.json"
-      }
-    },
-    "runtimes": {
-      "unix-x64": {
-        "#import": []
       }
     }
   }

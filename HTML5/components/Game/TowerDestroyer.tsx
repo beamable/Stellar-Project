@@ -118,7 +118,7 @@ export default function TowerDestroyer() {
         }
       })
       .catch((err: unknown) => {
-        console.error("[Beam] Initialization failed:", err?.message || err)
+        console.error("[Beam] Initialization failed:", (err as any)?.message || err)
       })
     return () => {
       mounted = false
@@ -866,6 +866,26 @@ export default function TowerDestroyer() {
           }}
         >
           Fetch Notifications
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={async () => {
+            try {
+              const beam: any = await getBeam()
+              await beam?.stellarFederationClient?.sendTestNotification?.({
+                message: "Hello World. Testing Stellar Notification system.",
+              })
+              console.log("[Debug] Test notification sent.")
+            } catch (err) {
+              console.error(
+                "[Debug] Test notification failed:",
+                (err as any)?.message || err
+              )
+            }
+          }}
+        >
+          Send Test Notification
         </Button>
       </div>
       <Card className="p-6 bg-card border-2 border-primary/20 shadow-2xl">

@@ -9,6 +9,18 @@
             FederationContentExtensions
             </summary>
         </member>
+        <member name="M:StellarFederationCommon.Extensions.FederationContentExtensions.ToModuleName(StellarFederationCommon.FederationContent.CoinCurrency)">
+            <summary>
+            CoinCurrency module name
+            </summary>
+            <param name="coinCurrency"></param>
+            <returns></returns>
+        </member>
+        <member name="M:StellarFederationCommon.Extensions.FederationContentExtensions.SanitizeModuleName(System.String)">
+            <summary>
+            Removes invalid characters from a module name
+            </summary>
+        </member>
         <member name="T:StellarFederationCommon.Extensions.FederationContentTypes">
             <summary>
             Federation Content Type Names
@@ -213,6 +225,17 @@
             <summary>
             Empty type used for StellarFederationCommon assembly load in the Federation service
             </summary>
+        </member>
+        <member name="T:StellarFederationCommon.StellarFederationCommonHelper">
+            <summary>
+             StellarFederationCommonHelper
+            </summary>
+        </member>
+        <member name="M:StellarFederationCommon.StellarFederationCommonHelper.GetFederationTypes">
+            <summary>
+            Get federation types
+            </summary>
+            <returns></returns>
         </member>
         <member name="T:SuiFederationCommon.Models.Notifications.ExternalAuthAddressNotification">
             <summary>

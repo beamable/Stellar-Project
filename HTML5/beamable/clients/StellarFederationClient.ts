@@ -62,6 +62,14 @@ export class StellarFederationClient extends BeamMicroServiceClient {
     });
   }
   
+  async sendTestNotification(params: Types.SendTestNotificationRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "SendTestNotification",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
   async externalAddress(): Promise<void> {
     return this.request({
       endpoint: "ExternalAddress",

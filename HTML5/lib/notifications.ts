@@ -314,6 +314,8 @@ export async function subscribeToContext(
           if (playerChannel) channels.push(String(playerChannel))
           if (gameChannel) channels.push(String(gameChannel))
           channels.push(...extraPlayerChannels)
+          const contextOnlyChannel = `custom.${context}`
+          channels.push(contextOnlyChannel)
           // As a fallback, include a custom channel derived from the context
           for (const prefix of customPrefixCandidates.length ? customPrefixCandidates : [sub.customPrefix]) {
             if (!prefix) continue

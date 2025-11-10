@@ -73,11 +73,6 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306\\RuntimeIdentifierGraph.json"
         }
-      },
-      "runtimes": {
-        "unix-x64": {
-          "#import": []
-        }
       }
     },
     "C:\\Beamable\\Repos\\Stellar-Project\\HTML5\\BeamableServices\\services\\StellarFederationStorage\\StellarFederationStorage.csproj": {
@@ -148,11 +143,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "unix-x64": {
-          "#import": []
         }
       }
     },
@@ -247,11 +237,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "unix-x64": {
-          "#import": []
         }
       }
     }

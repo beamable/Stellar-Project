@@ -167,6 +167,36 @@
       "x-beamable-method-skip-client-generation": false,
       "x-beamable-callable-method-name": "StellarConfiguration"
     },
+    "/SendTestNotification": {
+      "post": {
+        "tags": [
+          "Uncategorized"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendTestNotificationRequestArgs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "scope": [ ],
+            "user": [ ]
+          }
+        ],
+        "x-beamable-operation-method-type": "ClientCallableAttribute"
+      },
+      "x-beamable-method-skip-client-generation": false,
+      "x-beamable-callable-method-name": "SendTestNotification"
+    },
     "/ExternalAddress": {
       "post": {
         "tags": [
@@ -728,6 +758,20 @@
         "x-beamable-assembly": "Unity.Beamable.Runtime.Common",
         "x-beamable-assembly-version": "5.4.2.0",
         "x-beamable-method-skip-client-generation": true
+      },
+      "SendTestNotificationRequestArgs": {
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "x-beamable-is-optional-schema": false
+          }
+        },
+        "additionalProperties": false,
+        "x-beamable-method-skip-client-generation": false
       },
       "StellarIdentity_inventory_stateRequestArgs": {
         "required": [

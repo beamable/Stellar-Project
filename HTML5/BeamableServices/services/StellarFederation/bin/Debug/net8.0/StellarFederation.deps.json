@@ -2028,7 +2028,10 @@
           "Beamable.Common": "5.4.2"
         },
         "runtime": {
-          "StellarFederationCommon.dll": {}
+          "StellarFederationCommon.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "StellarFederationStorage/1.0.0": {
@@ -2036,7 +2039,10 @@
           "Beamable.Microservice.Runtime": "5.4.2"
         },
         "runtime": {
-          "StellarFederationStorage.dll": {}
+          "StellarFederationStorage.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       }
     }
