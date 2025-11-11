@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StellarFederationCommon")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+51275d29f4dae766c1409bc4d7458144d8bde1ab")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4efb9f74ad2856a14f95844cb59431d855cfac02")]
 [assembly: System.Reflection.AssemblyProductAttribute("StellarFederationCommon")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StellarFederationCommon")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

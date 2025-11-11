@@ -1,9 +1,8 @@
-"use client"
+﻿"use client"
 
 import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import getBeam from "@/lib/beam"
 import { Card } from "@/components/ui/card"
 
 // Import types
@@ -28,7 +27,21 @@ import {
 
 // Import audio functions
 import * as Audio from "./audio"
-import { subscribeToContext, PlayerNotificationContexts, getNotificationBootstrap } from "@/lib/notifications"
+import {
+  initBeamPlayer,
+  fetchPlayerAlias,
+  fetchStellarIdentityInfo,
+  saveAliasAndAttachWallet,
+  resetBeamSession,
+  fetchNotificationDebugData,
+  sendStellarTestNotification,
+  buildWalletConnectUrl,
+  subscribeToExternalAddress,
+  attachExternalIdentityToken,
+  loginExternalIdentityToken,
+  EXTERNAL_AUTH_CONTEXT,
+} from "@/lib/beam/player"
+import type { ExternalAddressSubscription } from "@/lib/beam/player"
 
 export default function TowerDestroyer() {
   const DEBUG = false
@@ -61,9 +74,10 @@ export default function TowerDestroyer() {
   const [gameState, setGameState] = useState<"playing" | "won" | "gameOver">("playing")
   const [score, setScore] = useState(0)
   const [ballsLeft, setBallsLeft] = useState(CONST.BALLS_FOR_LOW_TOWER_COUNT)
-  const [power, setPower] = useState(0)
+  const powerRef = useRef(0)
+  const [powerSnapshot, setPowerSnapshot] = useState(0)
   const [isCharging, setIsCharging] = useState(false)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const mousePosRef = useRef({ x: 0, y: 0 })
   const [towerCount, setTowerCount] = useState(0)
   const [hasShot, setHasShot] = useState(false)
   const [selectedBallType, setSelectedBallType] = useState<BallType>("normal")
@@ -82,9 +96,30 @@ export default function TowerDestroyer() {
   // Stellar External ID (non-custodial; providerNamespace = StellarExternalIdentity)
   const [stellarExternalIdentityId, setStellarExternalIdentityId] = useState<string | null>(null)
   // External auth address subscription handle
-  const externalAddressSubRef = useRef<{ stop: () => void } | null>(null)
+  const externalAddressSubRef = useRef<ExternalAddressSubscription | null>(null)
   // ChallengeSolution that we will carry through the process
   const challengeSolutionRef = useRef<{ challenge_token?: string } | null>(null)
+
+  useEffect(() => {
+    return () => {
+      try {
+        externalAddressSubRef.current?.stop?.()
+      } catch {}
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const id = window.setInterval(() => {
+      setPowerSnapshot((prev) => {
+        const next = Math.round(powerRef.current)
+        return prev === next ? prev : next
+      })
+    }, 100)
+    return () => {
+      window.clearInterval(id)
+    }
+  }, [])
 
   // ============================================================================
   // INITIALIZATION
@@ -108,14 +143,12 @@ export default function TowerDestroyer() {
   // Initialize Beamable and capture the player id for logging/UI
   useEffect(() => {
     let mounted = true
-    getBeam()
-      .then((beam: any) => {
-        const id = beam?.player?.id ?? null
-        if (mounted) {
-          setPlayerId(id)
-          setBeamReady(true)
-          console.log("[Beam] Initialized. Player ID:", id)
-        }
+    initBeamPlayer()
+      .then(({ playerId: id }) => {
+        if (!mounted) return
+        setPlayerId(id)
+        setBeamReady(true)
+        console.log("[Beam] Initialized. Player ID:", id)
       })
       .catch((err: unknown) => {
         console.error("[Beam] Initialization failed:", (err as any)?.message || err)
@@ -133,21 +166,10 @@ export default function TowerDestroyer() {
     let mounted = true
     ;(async () => {
       try {
-        const beam: any = await getBeam()
-        let a = ''
-        try {
-          const statsPrivate = await beam.stats.get({ domainType: 'client', accessType: 'private', stats: ['Alias'] })
-          a = (statsPrivate && (statsPrivate as any).Alias) || ''
-        } catch {}
-        if (!a) {
-          try {
-            const statsPublic = await beam.stats.get({ domainType: 'client', accessType: 'public', stats: ['Alias'] })
-            a = (statsPublic && (statsPublic as any).Alias) || ''
-          } catch {}
-        }
+        const aliasValue = await fetchPlayerAlias()
         if (!mounted) return
-        if (a && a.length > 0) {
-          setAlias(a)
+        if (aliasValue && aliasValue.length > 0) {
+          setAlias(aliasValue)
           setAliasModalOpen(false)
           setShowPlayerInfo(true)
         } else {
@@ -170,24 +192,14 @@ export default function TowerDestroyer() {
     if (stellarLoggedOnceRef.current) return
     ;(async () => {
       try {
-        const beam: any = await getBeam()
-        const acct = await beam.account.current()
-        const providerService: string = beam?.stellarFederationClient?.serviceName || "StellarFederation"
-        // Custodial/federated wallet ID
-        const providerNamespaceCustodial: string = beam?.stellarFederationClient?.federationIds?.StellarIdentity || "StellarIdentity"
-        const extCustodial = (acct?.external || []).find((e: any) => e.providerService === providerService && e.providerNamespace === providerNamespaceCustodial)
-        const stellarCustodialId = extCustodial?.userId
-        if (stellarCustodialId) {
-          console.log("[Stellar] Returning player Stellar ID:", stellarCustodialId)
-          setStellarExternalId(stellarCustodialId)
+        const info = await fetchStellarIdentityInfo()
+        if (info.custodialId) {
+          console.log("[Stellar] Returning player Stellar ID:", info.custodialId)
+          setStellarExternalId(info.custodialId)
         }
-        // External identity ID
-        const providerNamespaceExternal: string = beam?.stellarFederationClient?.federationIds?.StellarExternalIdentity || "StellarExternalIdentity"
-        const extExternal = (acct?.external || []).find((e: any) => e.providerService === providerService && e.providerNamespace === providerNamespaceExternal)
-        const stellarExternalIdVal = extExternal?.userId
-        if (stellarExternalIdVal) {
-          console.log("[Stellar] Returning player Stellar External ID:", stellarExternalIdVal)
-          setStellarExternalIdentityId(stellarExternalIdVal)
+        if (info.externalId) {
+          console.log("[Stellar] Returning player Stellar External ID:", info.externalId)
+          setStellarExternalIdentityId(info.externalId)
         }
         stellarLoggedOnceRef.current = true
       } catch {}
@@ -671,14 +683,14 @@ export default function TowerDestroyer() {
 
     // Increase power while charging
     if (isCharging) {
-      setPower((prev) => Math.min(prev + CONST.POWER_INCREMENT, CONST.MAX_POWER))
+      powerRef.current = Math.min(powerRef.current + CONST.POWER_INCREMENT, CONST.MAX_POWER)
     }
 
     // Aim line rendering
     if (isCharging && ballsRef.current.length > 0 && !ballsRef.current[0].active) {
       const ball = ballsRef.current[0]
-      const dx = mousePos.x - ball.x
-      const dy = mousePos.y - ball.y
+      const dx = mousePosRef.current.x - ball.x
+      const dy = mousePosRef.current.y - ball.y
       const distance = Math.sqrt(dx * dx + dy * dy)
       if (distance < 1e-6) {
         // avoid NaN when drawing aim line
@@ -688,8 +700,9 @@ export default function TowerDestroyer() {
       const maxDistance = 150
       const lineLength = Math.min(distance, maxDistance)
 
-      ctx.strokeStyle = `rgba(139, 69, 19, ${0.3 + (power / CONST.MAX_POWER) * 0.4})`
-      ctx.lineWidth = 2 + (power / CONST.MAX_POWER) * 3
+      const powerRatio = powerRef.current / CONST.MAX_POWER
+      ctx.strokeStyle = `rgba(139, 69, 19, ${0.3 + powerRatio * 0.4})`
+      ctx.lineWidth = 2 + powerRatio * 3
       ctx.setLineDash([5, 5])
       ctx.beginPath()
       ctx.moveTo(ball.x, ball.y)
@@ -725,7 +738,7 @@ export default function TowerDestroyer() {
     }
 
     animationRef.current = requestAnimationFrame(gameLoop)
-  }, [ballsLeft, gameState, isCharging, mousePos, power, resetBall])
+  }, [ballsLeft, gameState, isCharging, resetBall])
 
   useEffect(() => {
     animationRef.current = requestAnimationFrame(gameLoop)
@@ -751,15 +764,16 @@ export default function TowerDestroyer() {
     }
  
     setIsCharging(true)
-    setPower(0)
+    powerRef.current = 0
+    setPowerSnapshot(0)
     Audio.playChargingSound(audioContextRef, chargingOscillatorRef, chargingGainRef)
- 
+
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
-      setMousePos({
+      mousePosRef.current = {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
-      })
+      }
     }
   }
  
@@ -767,10 +781,10 @@ export default function TowerDestroyer() {
     if (!readyForGame) return
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
-      setMousePos({
+      mousePosRef.current = {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
-      })
+      }
     }
  
     // Power increases in the game loop while charging
@@ -788,11 +802,13 @@ export default function TowerDestroyer() {
     if (rect) {
       const targetX = e.clientX - rect.left
       const targetY = e.clientY - rect.top
-      shootBall(targetX, targetY, power)
+      const currentPower = powerRef.current
+      shootBall(targetX, targetY, currentPower)
     }
- 
+
     setIsCharging(false)
-    setPower(0)
+    powerRef.current = 0
+    setPowerSnapshot(0)
   }
   const resetGame = () => {
     dlog("[v0] Resetting game")
@@ -800,7 +816,8 @@ export default function TowerDestroyer() {
 
     setGameState("playing")
     setScore(0)
-    setPower(0)
+    powerRef.current = 0
+    setPowerSnapshot(0)
     setIsCharging(false)
     setHasShot(false)
     setSelectedBallType("normal")
@@ -818,9 +835,7 @@ export default function TowerDestroyer() {
 
   async function confirmResetPlayer() {
     try {
-      const beam: any = await getBeam().catch(() => null)
-      await beam?.tokenStorage?.clear?.()
-      await beam?.tokenStorage?.dispose?.()
+      await resetBeamSession()
     } catch {}
     try { window.sessionStorage?.removeItem('BEAM_TAB_INSTANCE_TAG') } catch {}
     try {
@@ -844,22 +859,10 @@ export default function TowerDestroyer() {
           variant="outline"
           onClick={async () => {
             try {
-              const beam: any = await getBeam()
-              const cid = beam?.cid
-              const pid = beam?.pid
-              const channelBase = `custom.${cid}.${pid}.external-auth-address`
-              const channels = [
-                channelBase,
-                playerId ? `${channelBase}.${playerId}` : null,
-              ].filter(Boolean) as string[]
-              for (const ch of channels) {
-              const res = await beam.requester.request({
-                url: `/basic/notification/?channel=${encodeURIComponent(ch)}`,
-                method: "GET",
-                withAuth: true,
+              const payloads = await fetchNotificationDebugData(playerId || null)
+              payloads.forEach(({ channel, body }) => {
+                console.log("[Debug] Notification GET response:", channel, body)
               })
-                console.log("[Debug] Notification GET response:", ch, res.body)
-              }
             } catch (err) {
               console.error("[Debug] Notification GET failed:", err)
             }
@@ -872,10 +875,7 @@ export default function TowerDestroyer() {
           variant="outline"
           onClick={async () => {
             try {
-              const beam: any = await getBeam()
-              await beam?.stellarFederationClient?.sendTestNotification?.({
-                message: "Hello World. Testing Stellar Notification system.",
-              })
+              await sendStellarTestNotification("Hello World. Testing Stellar Notification system.")
               console.log("[Debug] Test notification sent.")
             } catch (err) {
               console.error(
@@ -906,7 +906,7 @@ export default function TowerDestroyer() {
             ) : (
               playerId && <span className="text-muted-foreground">Player: {playerId}</span>
             )}
-            {isCharging && <span className="text-destructive">Power: {power}%</span>}
+            {isCharging && <span className="text-destructive">Power: {powerSnapshot}%</span>}
           </div>
             <Button onClick={handleResetPlayer} variant="destructive" size="sm" className="text-xs transition-transform duration-150 hover:scale-105 hover:shadow-lg">
               Reset Player
@@ -1038,46 +1038,8 @@ export default function TowerDestroyer() {
                         variant="outline"
                         onClick={async () => {
                           try {
-                            const beam: any = await getBeam()
-                            const cfg = await beam.stellarFederationClient.stellarConfiguration()
-                            // resolve cid/pid — prefer parsing from notification bootstrap to match active session
-                            let cid = ''
-                            let pid = ''
-                            try {
-                              const nb = await getNotificationBootstrap()
-                              const prefix: string = String(nb?.customChannelPrefix || '') // custom.<cid>.<pid>.
-                              const parts = prefix.split('.') // ['custom', '<cid>', '<pid>', '']
-                              if (parts.length >= 3) {
-                                cid = String(parts[1] || '').trim()
-                                pid = String(parts[2] || '').trim()
-                              }
-                            } catch {}
-                            if (!cid || !pid) {
-                              cid = (process.env.NEXT_PUBLIC_BEAM_CID || '').trim()
-                              pid = (process.env.NEXT_PUBLIC_BEAM_PID || '').trim()
-                            }
-                            if ((!cid || !pid) && typeof window !== 'undefined') {
-                              const w = window as any
-                              if (w.__BEAM__?.cid && w.__BEAM__?.pid) {
-                                cid = (w.__BEAM__.cid || '').trim()
-                                pid = (w.__BEAM__.pid || '').trim()
-                              }
-                            }
-                            if ((!cid || !pid) && typeof window !== 'undefined') {
-                              try {
-                                const res = await fetch('/api/beam-config', { cache: 'no-store' })
-                                if (res.ok) {
-                                  const data = (await res.json()) as any
-                                  if (data?.cid && data?.pid) {
-                                    cid = String(data.cid).trim()
-                                    pid = String(data.pid).trim()
-                                  }
-                                }
-                              } catch {}
-                            }
-                            const gamerTag = (playerId || '').toString()
-                            const url = `https://${cfg.walletConnectBridgeUrl}/?network=${encodeURIComponent(cfg.network)}&cid=${encodeURIComponent(cid)}&pid=${encodeURIComponent(pid)}&gamerTag=${encodeURIComponent(gamerTag)}`
-                            console.log('[Stellar] Launching wallet flow with cid/pid:', { cid, pid, gamerTag })
+                            const { url } = await buildWalletConnectUrl(playerId || null)
+                            console.log('[Stellar] Launching wallet flow:', url)
                             if (typeof window !== 'undefined') {
                               window.open(url, '_blank', 'noopener,noreferrer')
                             }
@@ -1085,8 +1047,7 @@ export default function TowerDestroyer() {
                             // Subscribe to ExternalAuthAddress notifications to receive the address 'Value'
                             try {
                               externalAddressSubRef.current?.stop?.()
-                              externalAddressSubRef.current = await subscribeToContext(
-                                PlayerNotificationContexts.ExternalAuthAddress,
+                              externalAddressSubRef.current = await subscribeToExternalAddress(
                                 async (payload: any) => {
                                   let processed = false
                                   try {
@@ -1096,7 +1057,7 @@ export default function TowerDestroyer() {
                                     }
                                     const ctxRaw = (payload && (payload.Context ?? payload.context)) || null
                                     const ctx = ctxRaw ? String(ctxRaw).toLowerCase() : null
-                                    if (ctx && ctx !== PlayerNotificationContexts.ExternalAuthAddress) {
+                                    if (ctx && ctx !== EXTERNAL_AUTH_CONTEXT) {
                                       console.log('[Stellar] Ignoring message for different context:', ctxRaw)
                                       return
                                     }
@@ -1113,14 +1074,8 @@ export default function TowerDestroyer() {
                                       return
                                     }
                                     // Attach external identity (StellarExternalIdentity)
-                                    const providerService: string = beam?.stellarFederationClient?.serviceName || 'StellarFederation'
-                                    const providerNamespace: string = beam?.stellarFederationClient?.federationIds?.StellarExternalIdentity || 'StellarExternalIdentity'
-                                    console.log('[Stellar] Attaching External Identity with token:', value, { providerService, providerNamespace })
-                                    const attachResp: any = await beam.account.addExternalIdentity({
-                                      externalToken: value,
-                                      providerService,
-                                      providerNamespace,
-                                    })
+                                    const attachResp: any = await attachExternalIdentityToken(value)
+                                    console.log('[Stellar] Attaching External Identity with token:', value)
                                     console.log('[Stellar] attach external identity response:', attachResp)
                                     // Derive challenge token if present on response
                                     const challengeToken = attachResp?.challenge_token || attachResp?.challengeResponse?.challenge_token
@@ -1132,11 +1087,7 @@ export default function TowerDestroyer() {
                                       // As a fallback, try to request a challenge from auth endpoint without refreshing
                                       try {
                                         console.log('[Stellar] Falling back to auth.loginWithExternalIdentity to obtain challenge_token')
-                                        const authResp: any = await beam.auth.loginWithExternalIdentity({
-                                          externalToken: value,
-                                          providerService,
-                                          providerNamespace,
-                                        })
+                                        const authResp: any = await loginExternalIdentityToken(value)
                                         const t = authResp?.challengeResponse?.challenge_token || authResp?.challenge_token
                                         if (t) {
                                           challengeSolutionRef.current = { challenge_token: t }
@@ -1154,6 +1105,8 @@ export default function TowerDestroyer() {
                                     if (processed) {
                                       console.log('[Stellar] Stopping ExternalAuthAddress subscription')
                                       externalAddressSubRef.current?.stop?.()
+                                      const updatedInfo = await fetchStellarIdentityInfo()
+                                      setStellarExternalIdentityId(updatedInfo.externalId)
                                     }
                                   }
                                 },
@@ -1207,40 +1160,15 @@ export default function TowerDestroyer() {
                       }
                       setAliasSaving(true)
                       try {
-                        const beam: any = await getBeam()
-                        // 1) Save alias
-                        await beam.stats.set({ domainType: 'client', accessType: 'private', stats: { Alias: aliasInput } })
-
-                        // 2) Attach external identity (custodial Stellar wallet)
-                        try {
-                          const providerService: string = beam?.stellarFederationClient?.serviceName || "StellarFederation"
-                          const providerNamespace: string = beam?.stellarFederationClient?.federationIds?.StellarIdentity || "StellarIdentity"
-
-                          await beam.account.addExternalIdentity({
-                            externalToken: "",
-                            providerService,
-                            providerNamespace,
-                            // challengeHandler intentionally omitted (null)
-                          })
-
-                          // Log the Stellar ID (external identity userId) if available
-                          try {
-                            const acct = await beam.account.current()
-                            const ext = (acct?.external || []).find((e: any) => e.providerService === providerService && e.providerNamespace === providerNamespace)
-                            if (ext?.userId) {
-                              console.log("[Stellar] Custodial wallet attached. Stellar ID:", ext.userId)
-                              setStellarExternalId(ext.userId)
-                              } else {
-                              console.log("[Stellar] Custodial wallet attached (no external userId found).")
-                              }
-                          } catch {}
-                        } catch (authErr: any) {
-                          console.error("[Stellar] Failed to attach custodial wallet:", authErr?.message || authErr)
-                          setAliasError('We could not attach your wallet. Please restart the game and try again.')
-                          return
+                        const { stellarId } = await saveAliasAndAttachWallet(aliasInput)
+                        if (stellarId) {
+                          console.log("[Stellar] Custodial wallet attached. Stellar ID:", stellarId)
+                          setStellarExternalId(stellarId)
+                        } else {
+                          console.log("[Stellar] Custodial wallet attached (no external userId found).")
                         }
 
-                        // 3) Success → close alias modal and start game
+                        // 3) Success — close alias modal and start game
                         setAlias(aliasInput)
                         setAliasModalOpen(false)
                         setShowPlayerInfo(true)
@@ -1311,3 +1239,5 @@ export default function TowerDestroyer() {
   );
 
 }
+
+

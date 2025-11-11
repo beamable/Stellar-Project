@@ -5,6 +5,7 @@ export type BeamResolvedConfig = { cid: string; pid: string; environment?: "prod
 
 let beamPromise: Promise<any> | null = null
 let cachedBeamConfig: BeamResolvedConfig | null = null
+let currentBeamInstance: any | null = null
 
 export async function resolveBeamConfig(): Promise<BeamResolvedConfig> {
   if (cachedBeamConfig) {
@@ -111,6 +112,7 @@ async function bootBeamOnce(cfg: BeamResolvedConfig, tag?: string) {
   } catch (e) {
     console.warn('[Beam] Auth bootstrap warning:', (e as any)?.message || e)
   }
+  currentBeamInstance = beam
   return beam
 }
 
@@ -128,6 +130,14 @@ export function getBeam() {
     })()
   }
   return beamPromise
+}
+
+export function resetBeam() {
+  try {
+    currentBeamInstance?.tokenStorage?.dispose?.()
+  } catch {}
+  currentBeamInstance = null
+  beamPromise = null
 }
 
 export default getBeam
