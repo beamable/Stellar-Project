@@ -24,7 +24,60 @@ export type ExternalAddressSubscription = {
   stop: () => void
 }
 
+type ExternalChallengePayload = {
+  challenge_token: string
+  challenge_ttl?: number
+  user_id?: string | null
+}
+
+type ExternalChallengeRequestResult = ExternalChallengePayload & {
+  challengeResponse: ExternalChallengePayload
+}
+
+type Deferred<T> = {
+  promise: Promise<T>
+  resolve: (value: T | PromiseLike<T>) => void
+  reject: (reason?: any) => void
+  readonly settled: boolean
+}
+
+type PendingExternalIdentityAttach = {
+  challengeDeferred: Deferred<ExternalChallengeRequestResult>
+  signatureDeferred: Deferred<string>
+  attachPromise: Promise<any>
+  challengeToken?: string
+}
+
+let pendingExternalIdentityAttach: PendingExternalIdentityAttach | null = null
+
+function createDeferred<T>(): Deferred<T> {
+  let isSettled = false
+  let resolveFn: (value: T | PromiseLike<T>) => void = () => {}
+  let rejectFn: (reason?: any) => void = () => {}
+  const promise = new Promise<T>((resolve, reject) => {
+    resolveFn = (value) => {
+      if (isSettled) return
+      isSettled = true
+      resolve(value)
+    }
+    rejectFn = (reason) => {
+      if (isSettled) return
+      isSettled = true
+      reject(reason)
+    }
+  })
+  return {
+    promise,
+    resolve: resolveFn,
+    reject: rejectFn,
+    get settled() {
+      return isSettled
+    },
+  }
+}
+
 export const EXTERNAL_AUTH_CONTEXT = PlayerNotificationContexts.ExternalAuthAddress
+export const EXTERNAL_SIGN_CONTEXT = PlayerNotificationContexts.ExternalAuthSignature
 
 export async function initBeamPlayer() {
   const beam: any = await getBeam()
@@ -135,17 +188,27 @@ export async function buildWalletConnectUrl(playerId: string | null): Promise<{ 
   const config = await beam.stellarFederationClient.stellarConfiguration()
   const { cid, pid } = await deriveCidPid()
   const gamerTag = (playerId || "").toString()
-  const url = `https://${config.walletConnectBridgeUrl}/?network=${encodeURIComponent(config.network)}&cid=${encodeURIComponent(
-    cid,
-  )}&pid=${encodeURIComponent(pid)}&gamerTag=${encodeURIComponent(gamerTag)}`
-  return { url }
+  const rawBridge = String(config.walletConnectBridgeUrl || "").trim()
+  if (!rawBridge) {
+    throw new Error("[Stellar] Missing walletConnectBridgeUrl from stellar federation configuration.")
+  }
+  const hasProtocol = /^https?:\/\//i.test(rawBridge)
+  const base = hasProtocol ? rawBridge : `https://${rawBridge}`
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`
+  const url = new URL(normalizedBase)
+  url.searchParams.set("network", String(config.network || ""))
+  url.searchParams.set("cid", String(cid))
+  url.searchParams.set("pid", String(pid))
+  url.searchParams.set("gamerTag", gamerTag)
+  return { url: url.toString() }
 }
 
-export async function subscribeToExternalAddress(
+export async function subscribeToExternalContext(
+  context: string,
   handler: NotificationHandler,
   options?: { intervalMs?: number },
 ): Promise<ExternalAddressSubscription> {
-  const sub = await subscribeToContext(PlayerNotificationContexts.ExternalAuthAddress, handler, options)
+  const sub = await subscribeToContext(context, handler, options)
   return {
     stop: () => {
       try {
@@ -161,71 +224,86 @@ export async function attachExternalIdentityToken(
 ) {
   const beam: any = await getBeam()
   const { providerService, externalNamespace } = getProviderInfo(beam)
-  const normalizedHandler: (challenge: string) => string | Promise<string> =
-    typeof challengeHandler === 'function'
-      ? challengeHandler
-      : (challenge: string) => {
-          console.warn('[Stellar] challengeHandler missing; returning empty string for challenge:', challenge)
-          return ''
-        }
-  try {
-    console.log('[Stellar] attachExternalIdentityToken params:', {
-      token,
-      providerService,
-      providerNamespace: externalNamespace,
-      hasChallengeHandler: typeof challengeHandler === 'function',
-    })
-  } catch {}
-  const attemptedAuthAttach = await tryAuthAttach(beam, {
-    token,
-    providerService,
-    providerNamespace: externalNamespace,
-    challengeHandler: normalizedHandler,
-  })
-  if (attemptedAuthAttach) {
-    return attemptedAuthAttach
-  }
-  const params: {
-    externalToken: string
-    providerService: string
-    providerNamespace: string
-    challengeHandler?: (challenge: string) => string | Promise<string>
-  } = {
+  return beam.account.addExternalIdentity({
     externalToken: token,
     providerService,
     providerNamespace: externalNamespace,
-  }
-  params.challengeHandler = normalizedHandler
-  return beam.account.addExternalIdentity(params)
+    challengeHandler,
+  })
 }
 
-async function tryAuthAttach(
-  beam: any,
-  opts: {
-    token: string
-    providerService: string
-    providerNamespace: string
-    challengeHandler?: (challenge: string) => string | Promise<string>
-  },
-) {
-  try {
-    const auth = beam?.auth
-    const attachFn =
-      auth?.attachExternalIdentityToken ??
-      auth?.attachExternalIdentity ??
-      auth?.attachIdentity
-    if (typeof attachFn !== 'function') {
-      return null
-    }
-    console.log('[Stellar] Using auth attach flow.')
-    if (typeof opts.challengeHandler === 'function') {
-      return await attachFn.call(auth, opts.token, opts.providerService, opts.providerNamespace, opts.challengeHandler)
-    }
-    return await attachFn.call(auth, opts.token, opts.providerService, opts.providerNamespace)
-  } catch (err) {
-    console.warn('[Stellar] Auth attach flow failed, falling back to account service:', (err as any)?.message || err)
-    return null
+export async function requestExternalIdentityChallenge(token: string) {
+  if (pendingExternalIdentityAttach) {
+    throw new Error("[Stellar] An external identity challenge is already in progress.")
   }
+  const beam: any = await getBeam()
+  const { providerService, externalNamespace } = getProviderInfo(beam)
+  const challengeDeferred = createDeferred<ExternalChallengeRequestResult>()
+  const signatureDeferred = createDeferred<string>()
+  const session: PendingExternalIdentityAttach = {
+    challengeDeferred,
+    signatureDeferred,
+    attachPromise: Promise.resolve(null),
+  }
+  session.attachPromise = beam.account
+    .addExternalIdentity({
+      externalToken: token,
+      providerService,
+      providerNamespace: externalNamespace,
+      challengeHandler: async (challenge: string) => {
+        const payload: ExternalChallengePayload = {
+          challenge_token: challenge,
+        }
+        session.challengeToken = payload.challenge_token
+        challengeDeferred.resolve({
+          ...payload,
+          challengeResponse: payload,
+        })
+        return signatureDeferred.promise
+      },
+    })
+    .then((result: any) => {
+      if (!challengeDeferred.settled) {
+        const err = new Error("[Stellar] Beam account.addExternalIdentity completed without issuing a challenge.")
+        challengeDeferred.reject(err)
+        throw err
+      }
+      return result
+    })
+    .catch((err: any) => {
+      if (!challengeDeferred.settled) {
+        challengeDeferred.reject(err)
+      }
+      if (!signatureDeferred.settled) {
+        signatureDeferred.reject(err)
+      }
+      throw err
+    })
+    .finally(() => {
+      if (pendingExternalIdentityAttach === session) {
+        pendingExternalIdentityAttach = null
+      }
+    })
+  pendingExternalIdentityAttach = session
+  console.log('[Stellar] Requesting external identity challenge.')
+  return challengeDeferred.promise
+}
+
+export async function completeExternalIdentityChallenge(challengeToken: string, signature: string) {
+  const session = pendingExternalIdentityAttach
+  if (!session) {
+    throw new Error("[Stellar] No external identity challenge is currently pending.")
+  }
+  if (session.challengeToken && session.challengeToken !== challengeToken) {
+    console.warn("[Stellar] Challenge token mismatch detected. Continuing with provided signature.")
+  }
+  if (session.signatureDeferred.settled) {
+    console.warn("[Stellar] Signature has already been provided for the current challenge.")
+    return session.attachPromise
+  }
+  console.log('[Stellar] Completing external identity challenge.')
+  session.signatureDeferred.resolve(signature)
+  return session.attachPromise
 }
 
 export async function loginExternalIdentityToken(token: string) {
