@@ -96,6 +96,9 @@ export default function TowerDestroyer() {
   const [stellarExternalIdentityId, setStellarExternalIdentityId] = useState<string | null>(null)
   const [pendingSignUrl, setPendingSignUrl] = useState<string | null>(null)
   const [signatureError, setSignatureError] = useState<string | null>(null)
+  const [walletPopupBlocked, setWalletPopupBlocked] = useState(false)
+  const [walletPopupBlockedUrl, setWalletPopupBlockedUrl] = useState<string | null>(null)
+  const [walletPopupContext, setWalletPopupContext] = useState<string | null>(null)
   // External auth address subscription handle
   const externalAddressSubRef = useRef<ExternalAddressSubscription | null>(null)
   const externalSignatureSubRef = useRef<ExternalAddressSubscription | null>(null)
@@ -133,6 +136,9 @@ export default function TowerDestroyer() {
   const openWalletWindow = useCallback(
     (targetUrl: string | null, contextLabel: string, options?: { allowNew?: boolean }) => {
       const allowNew = options?.allowNew ?? true
+      setWalletPopupBlocked(false)
+      setWalletPopupBlockedUrl(null)
+      setWalletPopupContext(null)
       if (!targetUrl) {
         console.warn('[Stellar] Cannot open wallet window; missing URL.')
         return
@@ -165,6 +171,9 @@ export default function TowerDestroyer() {
         walletWindowRef.current = opened
         console.log(`[Stellar] Wallet window opened for ${contextLabel}.`)
       } else {
+        setWalletPopupBlocked(true)
+        setWalletPopupBlockedUrl(targetUrl)
+        setWalletPopupContext(contextLabel)
         console.warn('[Stellar] Browser blocked the wallet window; please enable popups or open manually:', targetUrl)
       }
     },
@@ -1245,6 +1254,27 @@ export default function TowerDestroyer() {
                         >
                           {pendingSignUrl ? 'Sign Stellar Wallet' : 'Attach External Id'}
                         </Button>
+                        {walletPopupBlocked && (
+                          <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-3">
+                            <p>
+                              Your browser blocked the {walletPopupContext || "Stellar wallet"} popup. Please allow
+                              popups for this site and click the button again.
+                            </p>
+                            {walletPopupBlockedUrl && (
+                              <p className="mt-2">
+                                Or open the wallet manually:&nbsp;
+                                <a
+                                  href={walletPopupBlockedUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="underline font-semibold"
+                                >
+                                  Open Stellar Wallet
+                                </a>
+                              </p>
+                            )}
+                          </div>
+                        )}
                         {signatureError && (
                           <div
                             role="alert"
