@@ -5,6 +5,10 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
+const WALLET_WINDOW_NAME = 'stellarWalletBridge'
+const WALLET_WINDOW_FEATURES =
+  'noopener,noreferrer,width=480,height=780,resizable=yes,scrollbars=yes,menubar=no,toolbar=no'
+
 // Import types
 import type { Ball, Laser, Tower, Particle, BallType } from "./types"
 
@@ -106,6 +110,75 @@ export default function TowerDestroyer() {
   const challengeSolutionRef = useRef<{ challenge_token?: string } | null>(null)
   const walletConnectUrlRef = useRef<string | null>(null)
   const walletWindowRef = useRef<Window | null>(null)
+  const clearWalletPopupWarning = useCallback(() => {
+    setWalletPopupBlocked(false)
+    setWalletPopupBlockedUrl(null)
+    setWalletPopupContext(null)
+  }, [])
+  const flagWalletPopupBlocked = useCallback(
+    (blockedUrl: string | null, contextLabel: string) => {
+      setWalletPopupBlocked(true)
+      setWalletPopupBlockedUrl(blockedUrl)
+      setWalletPopupContext(contextLabel)
+    },
+    [],
+  )
+  const renderWalletWindowPlaceholder = useCallback((walletWindow: Window | null, contextLabel: string) => {
+    if (!walletWindow || typeof walletWindow.document === 'undefined') {
+      return
+    }
+    const label = contextLabel || 'Stellar wallet'
+    try {
+      const doc = walletWindow.document
+      doc.open()
+      doc.write(`<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <title>${label}</title>
+      <style>
+        body {
+          margin: 0;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: Arial, sans-serif;
+          background: #111827;
+          color: #f8fafc;
+        }
+        .panel {
+          background: rgba(15, 23, 42, 0.9);
+          border: 1px solid #475569;
+          border-radius: 12px;
+          padding: 32px;
+          max-width: 360px;
+          text-align: center;
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+        h1 {
+          font-size: 1.25rem;
+          margin-bottom: 0.5rem;
+        }
+        p {
+          margin: 0.25rem 0;
+          line-height: 1.4;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="panel">
+        <h1>Preparing ${label}…</h1>
+        <p>You can keep playing while we open the wallet.</p>
+        <p>If your browser blocked this window, allow popups for this site and try again.</p>
+      </div>
+    </body>
+  </html>`)
+      doc.close()
+    } catch (err) {
+      console.warn('[Stellar] Unable to render wallet placeholder page:', err)
+    }
+  }, [])
   const closeWalletWindow = useCallback(() => {
     try {
       walletWindowRef.current?.close?.()
@@ -136,24 +209,22 @@ export default function TowerDestroyer() {
   const openWalletWindow = useCallback(
     (targetUrl: string | null, contextLabel: string, options?: { allowNew?: boolean }) => {
       const allowNew = options?.allowNew ?? true
-      setWalletPopupBlocked(false)
-      setWalletPopupBlockedUrl(null)
-      setWalletPopupContext(null)
       if (!targetUrl) {
         console.warn('[Stellar] Cannot open wallet window; missing URL.')
-        return
+        return null
       }
       if (typeof window === 'undefined') {
         console.warn('[Stellar] Cannot open wallet window outside the browser environment.')
-        return
+        return null
       }
       const existing = walletWindowRef.current
       if (existing && !existing.closed) {
         try {
           existing.location.href = targetUrl
           existing.focus?.()
+          clearWalletPopupWarning()
           console.log(`[Stellar] Wallet window navigated for ${contextLabel}.`)
-          return
+          return existing
         } catch (err) {
           console.warn('[Stellar] Failed to reuse wallet window, reopening...', err)
           try {
@@ -164,20 +235,21 @@ export default function TowerDestroyer() {
       }
       if (!allowNew) {
         console.warn('[Stellar] Wallet window is closed; please click Attach again to continue signing.')
-        return
+        return null
       }
-      const opened = window.open(targetUrl, 'stellarWalletBridge', 'noopener,noreferrer')
+      const opened = window.open(targetUrl, WALLET_WINDOW_NAME, WALLET_WINDOW_FEATURES)
       if (opened) {
         walletWindowRef.current = opened
+        clearWalletPopupWarning()
+        opened.focus?.()
         console.log(`[Stellar] Wallet window opened for ${contextLabel}.`)
-      } else {
-        setWalletPopupBlocked(true)
-        setWalletPopupBlockedUrl(targetUrl)
-        setWalletPopupContext(contextLabel)
-        console.warn('[Stellar] Browser blocked the wallet window; please enable popups or open manually:', targetUrl)
+        return opened
       }
+      flagWalletPopupBlocked(targetUrl, contextLabel)
+      console.warn('[Stellar] Browser blocked the wallet window; please enable popups or open manually:', targetUrl)
+      return null
     },
-    [],
+    [clearWalletPopupWarning, flagWalletPopupBlocked],
   )
   const primeWalletWindow = useCallback(() => {
     if (typeof window === 'undefined') {
@@ -188,15 +260,22 @@ export default function TowerDestroyer() {
       existing.focus?.()
       return existing
     }
-    const opened = window.open('', 'stellarWalletBridge', 'noopener,noreferrer')
+    const opened = window.open('', WALLET_WINDOW_NAME, WALLET_WINDOW_FEATURES)
     if (opened) {
       walletWindowRef.current = opened
+      renderWalletWindowPlaceholder(opened, 'Stellar wallet')
+      try {
+        opened.blur?.()
+        window.focus?.()
+      } catch {}
+      clearWalletPopupWarning()
       console.log('[Stellar] Wallet window primed.')
       return opened
     }
     console.warn('[Stellar] Browser blocked the wallet window; please enable popups or open manually from the logged URL.')
+    flagWalletPopupBlocked(null, 'Stellar wallet')
     return null
-  }, [])
+  }, [clearWalletPopupWarning, flagWalletPopupBlocked, renderWalletWindowPlaceholder])
 
   const formatSignatureErrorMessage = useCallback((err: unknown) => {
     const rawMessage =
@@ -1142,6 +1221,7 @@ export default function TowerDestroyer() {
                                 if (primedWindow && !primedWindow.closed) {
                                   primedWindow.location.href = url
                                   primedWindow.focus?.()
+                                  clearWalletPopupWarning()
                                   console.log('[Stellar] Wallet window navigated for initial wallet connect.')
                                 } else {
                                   openWalletWindow(url, 'initial wallet connect')
@@ -1228,6 +1308,7 @@ export default function TowerDestroyer() {
                                     closeWalletWindow()
                                     setPendingSignUrl(null)
                                     setSignatureError(null)
+                                    clearWalletPopupWarning()
                                     externalSignatureSubRef.current?.stop?.()
                                     externalSignatureSubRef.current = null
                                     console.log('[Stellar] ExternalAuthSignature subscription stopped after successful attachment.')
