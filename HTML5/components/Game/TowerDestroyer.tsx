@@ -33,8 +33,6 @@ import {
   fetchStellarIdentityInfo,
   saveAliasAndAttachWallet,
   resetBeamSession,
-  fetchNotificationDebugData,
-  sendStellarTestNotification,
   buildWalletConnectUrl,
   subscribeToExternalContext,
   requestExternalIdentityChallenge,
@@ -968,42 +966,7 @@ export default function TowerDestroyer() {
   // UI RENDERING
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
-      <div className="absolute top-4 right-4 flex gap-2 z-50">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={async () => {
-            try {
-              const payloads = await fetchNotificationDebugData(playerId || null)
-              payloads.forEach(({ channel, body }) => {
-                console.log("[Debug] Notification GET response:", channel, body)
-              })
-            } catch (err) {
-              console.error("[Debug] Notification GET failed:", err)
-            }
-          }}
-        >
-          Fetch Notifications
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={async () => {
-            try {
-              await sendStellarTestNotification("Hello World. Testing Stellar Notification system.")
-              console.log("[Debug] Test notification sent.")
-            } catch (err) {
-              console.error(
-                "[Debug] Test notification failed:",
-                (err as any)?.message || err
-              )
-            }
-          }}
-        >
-          Send Test Notification
-        </Button>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-black">
       <Card className="p-6 bg-card border-2 border-primary/20 shadow-2xl">
         <div className="text-center mb-4">
           <h1 className="text-4xl font-bold text-primary mb-2 font-mono">Tower Destroyer</h1>
