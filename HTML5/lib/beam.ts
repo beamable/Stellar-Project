@@ -1,36 +1,55 @@
 import { Beam, StatsService, AuthService, AccountService } from "beamable-sdk"
 import { StellarFederationClient } from "@/beamable/clients/StellarFederationClient"
 
-type BeamConfig = { cid: string; pid: string; environment?: "prod" | "stg" | "dev" }
+export type BeamResolvedConfig = { cid: string; pid: string; environment?: "prod" | "stg" | "dev" }
 
 let beamPromise: Promise<any> | null = null
+let cachedBeamConfig: BeamResolvedConfig | null = null
+let currentBeamInstance: any | null = null
 
-async function resolveBeamConfig(): Promise<BeamConfig> {
-  const cidEnv = (process.env.NEXT_PUBLIC_BEAM_CID || "").trim()
-  const pidEnv = (process.env.NEXT_PUBLIC_BEAM_PID || "").trim()
+export async function resolveBeamConfig(): Promise<BeamResolvedConfig> {
+  if (cachedBeamConfig) {
+    return cachedBeamConfig
+  }
+
   const envName = ((process.env.NEXT_PUBLIC_BEAM_ENV || process.env.BEAM_ENV || "prod").trim().toLowerCase() || "prod") as
     | "prod"
     | "stg"
     | "dev"
 
+  const remember = (cfg: BeamResolvedConfig) => {
+    cachedBeamConfig = cfg
+    return cfg
+  }
+
+  const cidEnv = (process.env.NEXT_PUBLIC_BEAM_CID || "").trim()
+  const pidEnv = (process.env.NEXT_PUBLIC_BEAM_PID || "").trim()
   if (cidEnv && pidEnv) {
-    return { cid: cidEnv, pid: pidEnv, environment: envName }
+    return remember({ cid: cidEnv, pid: pidEnv, environment: envName })
   }
 
   if (typeof window !== "undefined") {
     const w = window as any
-    const fromWindow = w.__BEAM__ as Partial<BeamConfig> | undefined
+    const fromWindow = w.__BEAM__ as Partial<BeamResolvedConfig> | undefined
     if (fromWindow?.cid && fromWindow?.pid) {
-      return { cid: fromWindow.cid, pid: fromWindow.pid, environment: fromWindow.environment }
+      return remember({
+        cid: fromWindow.cid,
+        pid: fromWindow.pid,
+        environment: fromWindow.environment ?? envName,
+      })
     }
 
     // Read from API route -> uses .beamable/connection-configuration.json at runtime
     try {
       const res = await fetch("/api/beam-config", { cache: "no-store" })
       if (res.ok) {
-        const data = (await res.json()) as Partial<BeamConfig>
+        const data = (await res.json()) as Partial<BeamResolvedConfig>
         if (data.cid && data.pid) {
-          return { cid: data.cid, pid: data.pid, environment: (data as any).environment }
+          return remember({
+            cid: data.cid,
+            pid: data.pid,
+            environment: (data as any).environment ?? envName,
+          })
         }
       }
     } catch {}
@@ -68,7 +87,7 @@ function getOrCreateTabInstanceTag(): string {
   }
 }
 
-async function bootBeamOnce(cfg: BeamConfig, tag?: string) {
+async function bootBeamOnce(cfg: BeamResolvedConfig, tag?: string) {
   const instanceTag = tag || getOrCreateTabInstanceTag()
   const beam = await Beam.init({
     cid: cfg.cid,
@@ -93,6 +112,7 @@ async function bootBeamOnce(cfg: BeamConfig, tag?: string) {
   } catch (e) {
     console.warn('[Beam] Auth bootstrap warning:', (e as any)?.message || e)
   }
+  currentBeamInstance = beam
   return beam
 }
 
@@ -110,6 +130,14 @@ export function getBeam() {
     })()
   }
   return beamPromise
+}
+
+export function resetBeam() {
+  try {
+    currentBeamInstance?.tokenStorage?.dispose?.()
+  } catch {}
+  currentBeamInstance = null
+  beamPromise = null
 }
 
 export default getBeam

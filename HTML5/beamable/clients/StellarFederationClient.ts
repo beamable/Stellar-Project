@@ -28,9 +28,7 @@ declare module 'beamable-sdk' {
 export class StellarFederationClient extends BeamMicroServiceClient {
   readonly federationIds = {
     StellarIdentity: "StellarIdentity",
-    StellarIdentity: "StellarIdentity",
     StellarExternalIdentity: "StellarExternalIdentity",
-    StellarExternalIdentity: "StellarExternalIdentity"
   } as const;
   
   constructor(
@@ -60,6 +58,14 @@ export class StellarFederationClient extends BeamMicroServiceClient {
   async stellarConfiguration(): Promise<Types.ConfigurationResponse> {
     return this.request({
       endpoint: "StellarConfiguration",
+      withAuth: true
+    });
+  }
+  
+  async sendTestNotification(params: Types.SendTestNotificationRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "SendTestNotification",
+      payload: params,
       withAuth: true
     });
   }

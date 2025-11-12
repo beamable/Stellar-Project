@@ -7,3 +7,7 @@ export type ConfigurationResponse = {
   network: string; 
   walletConnectBridgeUrl: string; 
 };
+
+export type SendTestNotificationRequestArgs = { 
+  message: string; 
+};

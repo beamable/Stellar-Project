@@ -2,16 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Beamable.Common;
+using Beamable.Common.Api;
 using Beamable.Common.Api.Inventory;
 using Beamable.Server;
 using Beamable.StellarFederation.Endpoints;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
+using Beamable.StellarFederation.Features.Notifications;
 using Beamable.StellarFederation.Features.Stellar;
 using Beamable.StellarFederation.Features.Transactions;
 using Beamable.StellarFederation.Features.WalletManager;
 using StellarFederationCommon;
 using StellarFederationCommon.Models.Response;
+using SuiFederationCommon.Models.Notifications;
 
 namespace Beamable.StellarFederation
 {
@@ -99,5 +102,15 @@ namespace Beamable.StellarFederation
 				walletConnectBridgeUrl = await configuration.WalletConnectBridgeUrl
 			};
 		}
+
+		[ClientCallable]
+		public async Promise SendTestNotification(string message)
+        {
+			await Provider.GetService<PlayerNotificationService>()
+			.SendPlayerNotification(Context.UserId, new ExternalAuthAddressNotification
+			{
+				Value = message
+			});
+        }
 	}
 }
