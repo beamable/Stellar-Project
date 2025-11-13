@@ -1,4 +1,4 @@
-"use client"
+ï»¿"use client"
 
 import type React from "react"
 import { useState, useEffect, useRef, useCallback, useReducer } from "react"
@@ -92,6 +92,30 @@ import {
   EXTERNAL_SIGN_CONTEXT,
 } from "@/lib/beam/player"
 import type { ExternalAddressSubscription } from "@/lib/beam/player"
+
+function formatSignatureErrorMessage(err: unknown): string {
+  const rawMessage =
+    typeof (err as any)?.message === "string"
+      ? (err as any).message
+      : typeof err === "string"
+        ? err
+        : (() => {
+            try {
+              return JSON.stringify(err)
+            } catch {
+              return "Unknown error"
+            }
+          })()
+
+  const lower = rawMessage.toLowerCase()
+  const beamErrorCode = typeof err === "object" && err !== null ? (err as any).error : undefined
+
+  if (lower.includes("external identity is unavailable") || beamErrorCode === "ExternalIdentityUnavailable") {
+    return "The connected Stellar Wallet is already attached to another Beamable account. Please try again with a different wallet."
+  }
+
+  return rawMessage || "Stellar signature failed. Please try again."
+}
 
 export default function TowerDestroyer() {
   const DEBUG = false
@@ -265,7 +289,7 @@ export default function TowerDestroyer() {
     </head>
     <body>
       <div class="panel">
-        <h1>Preparing ${label}…</h1>
+        <h1>Preparing ${label}?</h1>
         <p>You can keep playing while we open the wallet.</p>
         <p>If your browser blocked this window, allow popups for this site and try again.</p>
       </div>
@@ -508,7 +532,6 @@ export default function TowerDestroyer() {
     completeExternalIdentityChallenge,
     refreshPlayerProfile,
     closeWalletWindow,
-    formatSignatureErrorMessage,
   ])
 
   const handleRetryAttach = useCallback(() => {
@@ -516,27 +539,6 @@ export default function TowerDestroyer() {
     setPendingSignUrl(null)
     closeWalletWindow()
   }, [closeWalletWindow, setPendingSignUrl, setSignatureError])
-
-  const formatSignatureErrorMessage = useCallback((err: unknown) => {
-    const rawMessage =
-      typeof (err as any)?.message === 'string'
-        ? (err as any).message
-        : typeof err === 'string'
-          ? err
-          : (() => {
-              try {
-                return JSON.stringify(err)
-              } catch {
-                return 'Unknown error'
-              }
-            })()
-    const lower = rawMessage.toLowerCase()
-    const beamErrorCode = typeof err === 'object' && err !== null ? (err as any).error : undefined
-    if (lower.includes('external identity is unavailable') || beamErrorCode === 'ExternalIdentityUnavailable') {
-      return 'The connected Stellar Wallet is already attached to another Beamable account. Please try again with a different wallet.'
-    }
-    return rawMessage || 'Stellar signature failed. Please try again.'
-  }, [])
 
   useEffect(() => {
     return () => {
@@ -1240,10 +1242,8 @@ export default function TowerDestroyer() {
         y: e.clientY - rect.top,
       }
     }
- 
-    // Power increases in the game loop while charging
   }
- 
+
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!readyForGame) return
     Audio.stopChargingSound(chargingOscillatorRef, chargingGainRef)
@@ -1419,7 +1419,34 @@ export default function TowerDestroyer() {
               </div>
             </div>
           )}
-          {beamReady && readyForGame && showPlayerInfo && (\r\n            <PlayerInfoOverlay\r\n              playerId={playerId}\r\n              alias={alias}\r\n              stellarExternalId={stellarExternalId}\r\n              stellarExternalIdentityId={stellarExternalIdentityId}\r\n              pendingSignUrl={pendingSignUrl}\r\n              signatureError={signatureError}\r\n              walletPopupBlocked={walletPopupBlocked}\r\n              walletPopupBlockedUrl={walletPopupBlockedUrl}\r\n              walletPopupContext={walletPopupContext}\r\n              onAttachClick={handleAttachExternalId}\r\n              onRetryAttach={handleRetryAttach}\r\n              onResetPlayer={handleResetPlayer}\r\n              onClose={() => setShowPlayerInfo(false)}\r\n            />\r\n          )}\r\n          {beamReady && (!alias || alias.length === 0 || aliasModalOpen) && (\r\n            <AliasSetupOverlay\r\n              aliasInput={aliasInput}\r\n              aliasError={aliasError}\r\n              aliasSaving={aliasSaving}\r\n              canSave={aliasCanSave}\r\n              onAliasChange={handleAliasInputChange}\r\n              onSaveAlias={handleAliasSave}\r\n            />\r\n          )\r\n          {showResetConfirm && (
+          {beamReady && readyForGame && showPlayerInfo && (
+            <PlayerInfoOverlay
+              playerId={playerId}
+              alias={alias}
+              stellarExternalId={stellarExternalId}
+              stellarExternalIdentityId={stellarExternalIdentityId}
+              pendingSignUrl={pendingSignUrl}
+              signatureError={signatureError}
+              walletPopupBlocked={walletPopupBlocked}
+              walletPopupBlockedUrl={walletPopupBlockedUrl}
+              walletPopupContext={walletPopupContext}
+              onAttachClick={handleAttachExternalId}
+              onRetryAttach={handleRetryAttach}
+              onResetPlayer={handleResetPlayer}
+              onClose={() => setShowPlayerInfo(false)}
+            />
+          )}
+          {beamReady && (!alias || alias.length === 0 || aliasModalOpen) && (
+            <AliasSetupOverlay
+              aliasInput={aliasInput}
+              aliasError={aliasError}
+              aliasSaving={aliasSaving}
+              canSave={aliasCanSave}
+              onAliasChange={handleAliasInputChange}
+              onSaveAlias={handleAliasSave}
+            />
+          )}
+          {showResetConfirm && (
             <div className="absolute inset-0 bg-black/60 z-50 rounded-lg flex items-center justify-center">
               <div className="bg-card p-6 rounded-lg border-2 border-primary/30 text-center max-w-md w-full">
                 <h2 className="text-2xl font-bold text-primary mb-2">Reset Player?</h2>
@@ -1471,6 +1498,9 @@ export default function TowerDestroyer() {
   );
 
 }
+
+
+
 
 
 
