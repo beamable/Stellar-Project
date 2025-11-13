@@ -165,6 +165,7 @@ export default function TowerDestroyer() {
   const readyForGame = beamReady && !!(alias && alias.length > 0)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [showPlayerInfo, setShowPlayerInfo] = useState(false)
+  const [walletWindowHeartbeat, setWalletWindowHeartbeat] = useState(0)
   // Stellar custodial ID (attached via addExternalIdentity with StellarIdentity)
   const [stellarExternalId, setStellarExternalId] = useState<string | null>(null)
   // Stellar External ID (non-custodial; providerNamespace = StellarExternalIdentity)
@@ -178,10 +179,6 @@ export default function TowerDestroyer() {
     blockedContext: walletPopupContext,
   } = walletPopupState
 
-  const setPendingSignUrl = useCallback((url: string | null) => {
-    dispatchWalletPopup({ type: "setPending", payload: url })
-  }, [])
-
   const setSignatureError = useCallback((message: string | null) => {
     dispatchWalletPopup({ type: "setSignatureError", payload: message })
   }, [])
@@ -189,6 +186,21 @@ export default function TowerDestroyer() {
   const clearWalletPopupWarning = useCallback(() => {
     dispatchWalletPopup({ type: "clearBlocked" })
   }, [])
+
+  const clearPopupWarningAndHeartbeat = useCallback(() => {
+    clearWalletPopupWarning()
+    setWalletWindowHeartbeat((value) => value + 1)
+  }, [clearWalletPopupWarning])
+
+  const setPendingSignUrl = useCallback(
+    (url: string | null) => {
+      dispatchWalletPopup({ type: "setPending", payload: url })
+      if (url) {
+        clearPopupWarningAndHeartbeat()
+      }
+    },
+    [clearPopupWarningAndHeartbeat],
+  )
 
   const flagWalletPopupBlocked = useCallback((url: string | null, contextLabel: string) => {
     dispatchWalletPopup({ type: "flagBlocked", payload: { url, context: contextLabel } })
@@ -305,7 +317,8 @@ export default function TowerDestroyer() {
       walletWindowRef.current?.close?.()
     } catch {}
     walletWindowRef.current = null
-  }, [])
+    setWalletWindowHeartbeat((value) => value + 1)
+  }, [setWalletWindowHeartbeat])
   const buildSignUrlFromChallenge = useCallback(
     (challengeToken: string) => {
       const base = walletConnectUrlRef.current
@@ -344,6 +357,7 @@ export default function TowerDestroyer() {
           existing.location.href = targetUrl
           existing.focus?.()
           clearWalletPopupWarning()
+          setWalletWindowHeartbeat((value) => value + 1)
           console.log(`[Stellar] Wallet window navigated for ${contextLabel}.`)
           return existing
         } catch (err) {
@@ -361,7 +375,7 @@ export default function TowerDestroyer() {
       const opened = window.open(targetUrl, WALLET_WINDOW_NAME, WALLET_WINDOW_FEATURES)
       if (opened) {
         walletWindowRef.current = opened
-        clearWalletPopupWarning()
+        clearPopupWarningAndHeartbeat()
         opened.focus?.()
         console.log(`[Stellar] Wallet window opened for ${contextLabel}.`)
         return opened
@@ -370,7 +384,7 @@ export default function TowerDestroyer() {
       console.warn('[Stellar] Browser blocked the wallet window; please enable popups or open manually:', targetUrl)
       return null
     },
-    [clearWalletPopupWarning, flagWalletPopupBlocked],
+    [clearPopupWarningAndHeartbeat, flagWalletPopupBlocked],
   )
   const primeWalletWindow = useCallback(() => {
     if (typeof window === 'undefined') {
@@ -400,8 +414,9 @@ export default function TowerDestroyer() {
 
   const handleAttachExternalId = useCallback(() => {
     setSignatureError(null)
+    clearPopupWarningAndHeartbeat()
     if (pendingSignUrl) {
-      openWalletWindow(pendingSignUrl, 'challenge signing', { allowNew: true })
+      openWalletWindow(pendingSignUrl, "challenge signing", { allowNew: true })
       return
     }
     setPendingSignUrl(null)
@@ -410,14 +425,14 @@ export default function TowerDestroyer() {
       try {
         const { url } = await buildWalletConnectUrl(playerId || null)
         walletConnectUrlRef.current = url
-        console.log('[Stellar] Launching wallet flow:', url)
+        console.log("[Stellar] Launching wallet flow:", url)
         if (primedWindow && !primedWindow.closed) {
           primedWindow.location.href = url
           primedWindow.focus?.()
-          clearWalletPopupWarning()
-          console.log('[Stellar] Wallet window navigated for initial wallet connect.')
+          clearPopupWarningAndHeartbeat()
+          console.log("[Stellar] Wallet window navigated for initial wallet connect.")
         } else {
-          openWalletWindow(url, 'initial wallet connect')
+          openWalletWindow(url, "initial wallet connect")
         }
         externalAddressSubRef.current?.stop?.()
         externalAddressSubRef.current = null
@@ -537,8 +552,89 @@ export default function TowerDestroyer() {
   const handleRetryAttach = useCallback(() => {
     setSignatureError(null)
     setPendingSignUrl(null)
+    clearWalletPopupWarning()
     closeWalletWindow()
-  }, [closeWalletWindow, setPendingSignUrl, setSignatureError])
+  }, [clearWalletPopupWarning, closeWalletWindow, setPendingSignUrl, setSignatureError])
+
+  const handleManualWalletOpen = useCallback(() => {
+    if (!walletPopupBlockedUrl) {
+      return
+    }
+    clearPopupWarningAndHeartbeat()
+    openWalletWindow(walletPopupBlockedUrl, walletPopupContext || "Stellar wallet", { allowNew: true })
+  }, [clearPopupWarningAndHeartbeat, openWalletWindow, walletPopupBlockedUrl, walletPopupContext])
+
+  useEffect(() => {
+    if (!walletPopupBlocked) return
+    if (typeof window === "undefined") return
+    const walletWindow = walletWindowRef.current
+    if (walletWindow && !walletWindow.closed) {
+      clearWalletPopupWarning()
+    }
+  }, [walletPopupBlocked, walletWindowHeartbeat, clearWalletPopupWarning])
+
+  useEffect(() => {
+    if (!walletPopupBlocked) return
+    if (typeof window === "undefined") return
+
+    let attempts = 0
+    let cancelled = false
+    let timeoutId: number | null = null
+
+    const scheduleNext = () => {
+      if (cancelled) return
+      timeoutId = window.setTimeout(tryClaimWindow, 600)
+    }
+
+    const tryClaimWindow = () => {
+      if (cancelled || !walletPopupBlocked) return
+      if (attempts >= 6) return
+
+      attempts += 1
+      let reopened: Window | null = null
+      try {
+        reopened = window.open("", WALLET_WINDOW_NAME, WALLET_WINDOW_FEATURES)
+      } catch {
+        reopened = null
+      }
+
+      if (!reopened) {
+        scheduleNext()
+        return
+      }
+
+      const looksLikeWalletWindow = (() => {
+        try {
+          const href = reopened.location?.href
+          // A real wallet window will have a non-blank URL or throw due to cross-origin.
+          return typeof href === "string" && href !== "" && href !== "about:blank"
+        } catch {
+          return true
+        }
+      })()
+
+      if (looksLikeWalletWindow) {
+        walletWindowRef.current = reopened
+        clearWalletPopupWarning()
+        setWalletWindowHeartbeat((value) => value + 1)
+        return
+      }
+
+      try {
+        reopened.close()
+      } catch {}
+      scheduleNext()
+    }
+
+    tryClaimWindow()
+
+    return () => {
+      cancelled = true
+      if (timeoutId) {
+        window.clearTimeout(timeoutId)
+      }
+    }
+  }, [walletPopupBlocked, clearWalletPopupWarning, setWalletWindowHeartbeat])
 
   useEffect(() => {
     return () => {
@@ -1433,6 +1529,7 @@ export default function TowerDestroyer() {
               onAttachClick={handleAttachExternalId}
               onRetryAttach={handleRetryAttach}
               onResetPlayer={handleResetPlayer}
+              onManualWalletOpen={handleManualWalletOpen}
               onClose={() => setShowPlayerInfo(false)}
             />
           )}

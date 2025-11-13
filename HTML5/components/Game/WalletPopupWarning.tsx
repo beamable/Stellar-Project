@@ -4,9 +4,10 @@ type WalletPopupWarningProps = {
   blocked: boolean
   blockedUrl: string | null
   context: string | null
+  onManualOpen?: (url: string) => void
 }
 
-export default function WalletPopupWarning({ blocked, blockedUrl, context }: WalletPopupWarningProps) {
+export default function WalletPopupWarning({ blocked, blockedUrl, context, onManualOpen }: WalletPopupWarningProps) {
   if (!blocked) return null
   return (
     <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-3">
@@ -17,7 +18,17 @@ export default function WalletPopupWarning({ blocked, blockedUrl, context }: Wal
       {blockedUrl && (
         <p className="mt-2">
           Or open the wallet manually:&nbsp;
-          <a href={blockedUrl} target="_blank" rel="noreferrer" className="underline font-semibold">
+          <a
+            href={blockedUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="underline font-semibold"
+            onClick={(event) => {
+              if (!onManualOpen) return
+              event.preventDefault()
+              onManualOpen(blockedUrl)
+            }}
+          >
             Open Stellar Wallet
           </a>
         </p>

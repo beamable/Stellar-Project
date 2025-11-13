@@ -16,6 +16,7 @@ type PlayerInfoOverlayProps = {
   onAttachClick: () => void
   onRetryAttach: () => void
   onResetPlayer: () => void
+  onManualWalletOpen: () => void
   onClose: () => void
 }
 
@@ -32,6 +33,7 @@ export default function PlayerInfoOverlay({
   onAttachClick,
   onRetryAttach,
   onResetPlayer,
+  onManualWalletOpen,
   onClose,
 }: PlayerInfoOverlayProps) {
   return (
@@ -76,6 +78,7 @@ export default function PlayerInfoOverlay({
                   blocked={walletPopupBlocked}
                   blockedUrl={walletPopupBlockedUrl}
                   context={walletPopupContext}
+                  onManualOpen={onManualWalletOpen}
                 />
                 {signatureError && (
                   <div
