@@ -1,14 +1,60 @@
 ﻿"use client"
 
 import type React from "react"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useReducer } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import WalletPopupWarning from "@/components/Game/WalletPopupWarning"
+import useRefreshPlayerProfile from "@/hooks/useRefreshPlayerProfile"
 
 const WALLET_WINDOW_NAME = 'stellarWalletBridge'
 const WALLET_WINDOW_FEATURES =
   'noopener,noreferrer,width=480,height=780,resizable=yes,scrollbars=yes,menubar=no,toolbar=no'
+
+type WalletPopupState = {
+  pendingSignUrl: string | null
+  signatureError: string | null
+  blocked: boolean
+  blockedUrl: string | null
+  blockedContext: string | null
+}
+
+type WalletPopupAction =
+  | { type: "setPending"; payload: string | null }
+  | { type: "setSignatureError"; payload: string | null }
+  | { type: "flagBlocked"; payload: { url: string | null; context: string } }
+  | { type: "clearBlocked" }
+  | { type: "reset" }
+
+const initialWalletPopupState: WalletPopupState = {
+  pendingSignUrl: null,
+  signatureError: null,
+  blocked: false,
+  blockedUrl: null,
+  blockedContext: null,
+}
+
+function walletPopupReducer(state: WalletPopupState, action: WalletPopupAction): WalletPopupState {
+  switch (action.type) {
+    case "setPending":
+      return { ...state, pendingSignUrl: action.payload }
+    case "setSignatureError":
+      return { ...state, signatureError: action.payload }
+    case "flagBlocked":
+      return {
+        ...state,
+        blocked: true,
+        blockedUrl: action.payload.url,
+        blockedContext: action.payload.context,
+      }
+    case "clearBlocked":
+      return { ...state, blocked: false, blockedUrl: null, blockedContext: null }
+    case "reset":
+      return initialWalletPopupState
+    default:
+      return state
+  }
+}
 
 // Import types
 import type { Ball, Laser, Tower, Particle, BallType } from "./types"
@@ -34,7 +80,6 @@ import {
 import * as Audio from "./audio"
 import {
   initBeamPlayer,
-  fetchPlayerAlias,
   fetchStellarIdentityInfo,
   saveAliasAndAttachWallet,
   resetBeamSession,
@@ -99,11 +144,34 @@ export default function TowerDestroyer() {
   const [stellarExternalId, setStellarExternalId] = useState<string | null>(null)
   // Stellar External ID (non-custodial; providerNamespace = StellarExternalIdentity)
   const [stellarExternalIdentityId, setStellarExternalIdentityId] = useState<string | null>(null)
-  const [pendingSignUrl, setPendingSignUrl] = useState<string | null>(null)
-  const [signatureError, setSignatureError] = useState<string | null>(null)
-  const [walletPopupBlocked, setWalletPopupBlocked] = useState(false)
-  const [walletPopupBlockedUrl, setWalletPopupBlockedUrl] = useState<string | null>(null)
-  const [walletPopupContext, setWalletPopupContext] = useState<string | null>(null)
+  const [walletPopupState, dispatchWalletPopup] = useReducer(walletPopupReducer, initialWalletPopupState)
+  const {
+    pendingSignUrl,
+    signatureError,
+    blocked: walletPopupBlocked,
+    blockedUrl: walletPopupBlockedUrl,
+    blockedContext: walletPopupContext,
+  } = walletPopupState
+
+  const setPendingSignUrl = useCallback((url: string | null) => {
+    dispatchWalletPopup({ type: "setPending", payload: url })
+  }, [])
+
+  const setSignatureError = useCallback((message: string | null) => {
+    dispatchWalletPopup({ type: "setSignatureError", payload: message })
+  }, [])
+
+  const clearWalletPopupWarning = useCallback(() => {
+    dispatchWalletPopup({ type: "clearBlocked" })
+  }, [])
+
+  const flagWalletPopupBlocked = useCallback((url: string | null, contextLabel: string) => {
+    dispatchWalletPopup({ type: "flagBlocked", payload: { url, context: contextLabel } })
+  }, [])
+
+  const resetWalletPopupState = useCallback(() => {
+    dispatchWalletPopup({ type: "reset" })
+  }, [])
   // External auth address subscription handle
   const externalAddressSubRef = useRef<ExternalAddressSubscription | null>(null)
   const externalSignatureSubRef = useRef<ExternalAddressSubscription | null>(null)
@@ -111,19 +179,16 @@ export default function TowerDestroyer() {
   const challengeSolutionRef = useRef<{ challenge_token?: string } | null>(null)
   const walletConnectUrlRef = useRef<string | null>(null)
   const walletWindowRef = useRef<Window | null>(null)
-  const clearWalletPopupWarning = useCallback(() => {
-    setWalletPopupBlocked(false)
-    setWalletPopupBlockedUrl(null)
-    setWalletPopupContext(null)
-  }, [])
-  const flagWalletPopupBlocked = useCallback(
-    (blockedUrl: string | null, contextLabel: string) => {
-      setWalletPopupBlocked(true)
-      setWalletPopupBlockedUrl(blockedUrl)
-      setWalletPopupContext(contextLabel)
-    },
-    [],
-  )
+  const refreshPlayerProfile = useRefreshPlayerProfile({
+    stellarLoggedOnceRef,
+    setPlayerId,
+    setAlias,
+    setAliasInput,
+    setAliasModalOpen,
+    setShowPlayerInfo,
+    setStellarExternalId,
+    setStellarExternalIdentityId,
+  })
   const renderWalletWindowPlaceholder = useCallback((walletWindow: Window | null, contextLabel: string) => {
     if (!walletWindow || typeof walletWindow.document === 'undefined') {
       return
@@ -323,10 +388,8 @@ export default function TowerDestroyer() {
       externalSignatureSubRef.current?.stop?.()
     } catch {}
     externalSignatureSubRef.current = null
-    setPendingSignUrl(null)
-    setSignatureError(null)
-    clearWalletPopupWarning()
-  }, [aliasModalOpen, clearWalletPopupWarning])
+    resetWalletPopupState()
+  }, [aliasModalOpen, resetWalletPopupState])
 
   useEffect(() => {
     if (aliasModalOpen) {
@@ -399,27 +462,8 @@ export default function TowerDestroyer() {
   // After Beam is ready, fetch Alias stat and decide whether to prompt
   useEffect(() => {
     if (!beamReady) return
-    let mounted = true
-    ;(async () => {
-      try {
-        const aliasValue = await fetchPlayerAlias()
-        if (!mounted) return
-        if (aliasValue && aliasValue.length > 0) {
-          setAlias(aliasValue)
-          setAliasModalOpen(false)
-          setShowPlayerInfo(true)
-        } else {
-          setAlias(null)
-          setAliasModalOpen(true)
-        }
-      } catch (e) {
-        if (!mounted) return
-        setAlias(null)
-        setAliasModalOpen(true)
-      }
-    })()
-    return () => { mounted = false }
-  }, [beamReady])
+    refreshPlayerProfile()
+  }, [beamReady, refreshPlayerProfile])
 
   // Log Stellar ID for returning players (filter by provider)
   useEffect(() => {
@@ -1338,9 +1382,7 @@ export default function TowerDestroyer() {
                                       return
                                     }
                                     await completeExternalIdentityChallenge(challengeToken, signature)
-                                    const updatedInfo = await fetchStellarIdentityInfo()
-                                    setStellarExternalIdentityId(updatedInfo.externalId)
-                                    setShowPlayerInfo(true)
+                                    await refreshPlayerProfile()
                                     console.log('[Stellar] External identity attached via signature.')
                                     closeWalletWindow()
                                     setPendingSignUrl(null)
