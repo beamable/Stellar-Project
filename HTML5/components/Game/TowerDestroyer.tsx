@@ -1,9 +1,61 @@
 ﻿"use client"
 
 import type React from "react"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useReducer } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import PlayerInfoOverlay from "@/components/Game/PlayerInfoOverlay"
+import AliasSetupOverlay from "@/components/Game/AliasSetupOverlay"
+import useRefreshPlayerProfile from "@/hooks/useRefreshPlayerProfile"
+
+const WALLET_WINDOW_NAME = 'stellarWalletBridge'
+const WALLET_WINDOW_FEATURES =
+  'noopener,noreferrer,width=480,height=780,resizable=yes,scrollbars=yes,menubar=no,toolbar=no'
+
+type WalletPopupState = {
+  pendingSignUrl: string | null
+  signatureError: string | null
+  blocked: boolean
+  blockedUrl: string | null
+  blockedContext: string | null
+}
+
+type WalletPopupAction =
+  | { type: "setPending"; payload: string | null }
+  | { type: "setSignatureError"; payload: string | null }
+  | { type: "flagBlocked"; payload: { url: string | null; context: string } }
+  | { type: "clearBlocked" }
+  | { type: "reset" }
+
+const initialWalletPopupState: WalletPopupState = {
+  pendingSignUrl: null,
+  signatureError: null,
+  blocked: false,
+  blockedUrl: null,
+  blockedContext: null,
+}
+
+function walletPopupReducer(state: WalletPopupState, action: WalletPopupAction): WalletPopupState {
+  switch (action.type) {
+    case "setPending":
+      return { ...state, pendingSignUrl: action.payload }
+    case "setSignatureError":
+      return { ...state, signatureError: action.payload }
+    case "flagBlocked":
+      return {
+        ...state,
+        blocked: true,
+        blockedUrl: action.payload.url,
+        blockedContext: action.payload.context,
+      }
+    case "clearBlocked":
+      return { ...state, blocked: false, blockedUrl: null, blockedContext: null }
+    case "reset":
+      return initialWalletPopupState
+    default:
+      return state
+  }
+}
 
 // Import types
 import type { Ball, Laser, Tower, Particle, BallType } from "./types"
@@ -29,7 +81,6 @@ import {
 import * as Audio from "./audio"
 import {
   initBeamPlayer,
-  fetchPlayerAlias,
   fetchStellarIdentityInfo,
   saveAliasAndAttachWallet,
   resetBeamSession,
@@ -41,6 +92,30 @@ import {
   EXTERNAL_SIGN_CONTEXT,
 } from "@/lib/beam/player"
 import type { ExternalAddressSubscription } from "@/lib/beam/player"
+
+function formatSignatureErrorMessage(err: unknown): string {
+  const rawMessage =
+    typeof (err as any)?.message === "string"
+      ? (err as any).message
+      : typeof err === "string"
+        ? err
+        : (() => {
+            try {
+              return JSON.stringify(err)
+            } catch {
+              return "Unknown error"
+            }
+          })()
+
+  const lower = rawMessage.toLowerCase()
+  const beamErrorCode = typeof err === "object" && err !== null ? (err as any).error : undefined
+
+  if (lower.includes("external identity is unavailable") || beamErrorCode === "ExternalIdentityUnavailable") {
+    return "The connected Stellar Wallet is already attached to another Beamable account. Please try again with a different wallet."
+  }
+
+  return rawMessage || "Stellar signature failed. Please try again."
+}
 
 export default function TowerDestroyer() {
   const DEBUG = false
@@ -94,11 +169,64 @@ export default function TowerDestroyer() {
   const [stellarExternalId, setStellarExternalId] = useState<string | null>(null)
   // Stellar External ID (non-custodial; providerNamespace = StellarExternalIdentity)
   const [stellarExternalIdentityId, setStellarExternalIdentityId] = useState<string | null>(null)
-  const [pendingSignUrl, setPendingSignUrl] = useState<string | null>(null)
-  const [signatureError, setSignatureError] = useState<string | null>(null)
-  const [walletPopupBlocked, setWalletPopupBlocked] = useState(false)
-  const [walletPopupBlockedUrl, setWalletPopupBlockedUrl] = useState<string | null>(null)
-  const [walletPopupContext, setWalletPopupContext] = useState<string | null>(null)
+  const [walletPopupState, dispatchWalletPopup] = useReducer(walletPopupReducer, initialWalletPopupState)
+  const {
+    pendingSignUrl,
+    signatureError,
+    blocked: walletPopupBlocked,
+    blockedUrl: walletPopupBlockedUrl,
+    blockedContext: walletPopupContext,
+  } = walletPopupState
+
+  const setPendingSignUrl = useCallback((url: string | null) => {
+    dispatchWalletPopup({ type: "setPending", payload: url })
+  }, [])
+
+  const setSignatureError = useCallback((message: string | null) => {
+    dispatchWalletPopup({ type: "setSignatureError", payload: message })
+  }, [])
+
+  const clearWalletPopupWarning = useCallback(() => {
+    dispatchWalletPopup({ type: "clearBlocked" })
+  }, [])
+
+  const flagWalletPopupBlocked = useCallback((url: string | null, contextLabel: string) => {
+    dispatchWalletPopup({ type: "flagBlocked", payload: { url, context: contextLabel } })
+  }, [])
+
+  const resetWalletPopupState = useCallback(() => {
+    dispatchWalletPopup({ type: "reset" })
+  }, [])
+  const handleAliasInputChange = useCallback((value: string) => {
+    const filtered = value.replace(/[^A-Za-z]/g, "")
+    setAliasInput(filtered)
+  }, [])
+  const aliasCanSave = /^[A-Za-z]{3,}$/.test(aliasInput)
+  const handleAliasSave = useCallback(async () => {
+    setAliasError(null)
+    const valid = /^[A-Za-z]{3,}$/.test(aliasInput)
+    if (!valid) {
+      setAliasError("Alias must be letters only, at least 3 characters.")
+      return
+    }
+    setAliasSaving(true)
+    try {
+      const { stellarId } = await saveAliasAndAttachWallet(aliasInput)
+      if (stellarId) {
+        console.log("[Stellar] Custodial wallet attached. Stellar ID:", stellarId)
+        setStellarExternalId(stellarId)
+      } else {
+        console.log("[Stellar] Custodial wallet attached (no external userId found).")
+      }
+      setAlias(aliasInput)
+      setAliasModalOpen(false)
+      setShowPlayerInfo(true)
+    } catch (e: any) {
+      setAliasError(e?.message || "Failed to save alias. Try again.")
+    } finally {
+      setAliasSaving(false)
+    }
+  }, [aliasInput, saveAliasAndAttachWallet, setAlias, setAliasModalOpen, setShowPlayerInfo, setStellarExternalId])
   // External auth address subscription handle
   const externalAddressSubRef = useRef<ExternalAddressSubscription | null>(null)
   const externalSignatureSubRef = useRef<ExternalAddressSubscription | null>(null)
@@ -106,6 +234,72 @@ export default function TowerDestroyer() {
   const challengeSolutionRef = useRef<{ challenge_token?: string } | null>(null)
   const walletConnectUrlRef = useRef<string | null>(null)
   const walletWindowRef = useRef<Window | null>(null)
+  const refreshPlayerProfile = useRefreshPlayerProfile({
+    stellarLoggedOnceRef,
+    setPlayerId,
+    setAlias,
+    setAliasInput,
+    setAliasModalOpen,
+    setShowPlayerInfo,
+    setStellarExternalId,
+    setStellarExternalIdentityId,
+  })
+  const renderWalletWindowPlaceholder = useCallback((walletWindow: Window | null, contextLabel: string) => {
+    if (!walletWindow || typeof walletWindow.document === 'undefined') {
+      return
+    }
+    const label = contextLabel || 'Stellar wallet'
+    try {
+      const doc = walletWindow.document
+      doc.open()
+      doc.write(`<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <title>${label}</title>
+      <style>
+        body {
+          margin: 0;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: Arial, sans-serif;
+          background: #111827;
+          color: #f8fafc;
+        }
+        .panel {
+          background: rgba(15, 23, 42, 0.9);
+          border: 1px solid #475569;
+          border-radius: 12px;
+          padding: 32px;
+          max-width: 360px;
+          text-align: center;
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+        h1 {
+          font-size: 1.25rem;
+          margin-bottom: 0.5rem;
+        }
+        p {
+          margin: 0.25rem 0;
+          line-height: 1.4;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="panel">
+        <h1>Preparing ${label}?</h1>
+        <p>You can keep playing while we open the wallet.</p>
+        <p>If your browser blocked this window, allow popups for this site and try again.</p>
+      </div>
+    </body>
+  </html>`)
+      doc.close()
+    } catch (err) {
+      console.warn('[Stellar] Unable to render wallet placeholder page:', err)
+    }
+  }, [])
   const closeWalletWindow = useCallback(() => {
     try {
       walletWindowRef.current?.close?.()
@@ -136,24 +330,22 @@ export default function TowerDestroyer() {
   const openWalletWindow = useCallback(
     (targetUrl: string | null, contextLabel: string, options?: { allowNew?: boolean }) => {
       const allowNew = options?.allowNew ?? true
-      setWalletPopupBlocked(false)
-      setWalletPopupBlockedUrl(null)
-      setWalletPopupContext(null)
       if (!targetUrl) {
         console.warn('[Stellar] Cannot open wallet window; missing URL.')
-        return
+        return null
       }
       if (typeof window === 'undefined') {
         console.warn('[Stellar] Cannot open wallet window outside the browser environment.')
-        return
+        return null
       }
       const existing = walletWindowRef.current
       if (existing && !existing.closed) {
         try {
           existing.location.href = targetUrl
           existing.focus?.()
+          clearWalletPopupWarning()
           console.log(`[Stellar] Wallet window navigated for ${contextLabel}.`)
-          return
+          return existing
         } catch (err) {
           console.warn('[Stellar] Failed to reuse wallet window, reopening...', err)
           try {
@@ -164,20 +356,21 @@ export default function TowerDestroyer() {
       }
       if (!allowNew) {
         console.warn('[Stellar] Wallet window is closed; please click Attach again to continue signing.')
-        return
+        return null
       }
-      const opened = window.open(targetUrl, 'stellarWalletBridge', 'noopener,noreferrer')
+      const opened = window.open(targetUrl, WALLET_WINDOW_NAME, WALLET_WINDOW_FEATURES)
       if (opened) {
         walletWindowRef.current = opened
+        clearWalletPopupWarning()
+        opened.focus?.()
         console.log(`[Stellar] Wallet window opened for ${contextLabel}.`)
-      } else {
-        setWalletPopupBlocked(true)
-        setWalletPopupBlockedUrl(targetUrl)
-        setWalletPopupContext(contextLabel)
-        console.warn('[Stellar] Browser blocked the wallet window; please enable popups or open manually:', targetUrl)
+        return opened
       }
+      flagWalletPopupBlocked(targetUrl, contextLabel)
+      console.warn('[Stellar] Browser blocked the wallet window; please enable popups or open manually:', targetUrl)
+      return null
     },
-    [],
+    [clearWalletPopupWarning, flagWalletPopupBlocked],
   )
   const primeWalletWindow = useCallback(() => {
     if (typeof window === 'undefined') {
@@ -188,36 +381,164 @@ export default function TowerDestroyer() {
       existing.focus?.()
       return existing
     }
-    const opened = window.open('', 'stellarWalletBridge', 'noopener,noreferrer')
+    const opened = window.open('', WALLET_WINDOW_NAME, WALLET_WINDOW_FEATURES)
     if (opened) {
       walletWindowRef.current = opened
+      renderWalletWindowPlaceholder(opened, 'Stellar wallet')
+      try {
+        opened.blur?.()
+        window.focus?.()
+      } catch {}
+      clearWalletPopupWarning()
       console.log('[Stellar] Wallet window primed.')
       return opened
     }
     console.warn('[Stellar] Browser blocked the wallet window; please enable popups or open manually from the logged URL.')
+    flagWalletPopupBlocked(null, 'Stellar wallet')
     return null
-  }, [])
+  }, [clearWalletPopupWarning, flagWalletPopupBlocked, renderWalletWindowPlaceholder])
 
-  const formatSignatureErrorMessage = useCallback((err: unknown) => {
-    const rawMessage =
-      typeof (err as any)?.message === 'string'
-        ? (err as any).message
-        : typeof err === 'string'
-          ? err
-          : (() => {
-              try {
-                return JSON.stringify(err)
-              } catch {
-                return 'Unknown error'
-              }
-            })()
-    const lower = rawMessage.toLowerCase()
-    const beamErrorCode = typeof err === 'object' && err !== null ? (err as any).error : undefined
-    if (lower.includes('external identity is unavailable') || beamErrorCode === 'ExternalIdentityUnavailable') {
-      return 'The connected Stellar Wallet is already attached to another Beamable account. Please try again with a different wallet.'
+  const handleAttachExternalId = useCallback(() => {
+    setSignatureError(null)
+    if (pendingSignUrl) {
+      openWalletWindow(pendingSignUrl, 'challenge signing', { allowNew: true })
+      return
     }
-    return rawMessage || 'Stellar signature failed. Please try again.'
-  }, [])
+    setPendingSignUrl(null)
+    const primedWindow = primeWalletWindow()
+    ;(async () => {
+      try {
+        const { url } = await buildWalletConnectUrl(playerId || null)
+        walletConnectUrlRef.current = url
+        console.log('[Stellar] Launching wallet flow:', url)
+        if (primedWindow && !primedWindow.closed) {
+          primedWindow.location.href = url
+          primedWindow.focus?.()
+          clearWalletPopupWarning()
+          console.log('[Stellar] Wallet window navigated for initial wallet connect.')
+        } else {
+          openWalletWindow(url, 'initial wallet connect')
+        }
+        externalAddressSubRef.current?.stop?.()
+        externalAddressSubRef.current = null
+        externalSignatureSubRef.current?.stop?.()
+        externalSignatureSubRef.current = null
+        const handleAddress = async (payload: any) => {
+          try {
+            console.log('[Stellar] ExternalAuthAddress message payload:', payload)
+            if (payload?.messageFull) {
+              console.log('[Stellar] ExternalAuthAddress raw messageFull:', payload.messageFull)
+            }
+            const ctxRaw = (payload && (payload.Context ?? payload.context)) || null
+            const ctx = ctxRaw ? String(ctxRaw).toLowerCase() : null
+            if (ctx && ctx !== EXTERNAL_AUTH_CONTEXT) {
+              console.log('[Stellar] Ignoring message for different context:', ctxRaw)
+              return
+            }
+            let value = (payload && (payload.Value ?? payload.value)) || null
+            if (!value && typeof payload?.messageFull === 'string') {
+              try {
+                const inner = JSON.parse(payload.messageFull)
+                value = inner?.Value ?? inner?.value ?? null
+              } catch {}
+            }
+            if (!value || typeof value !== 'string') {
+              console.warn('[Stellar] ExternalAuthAddress payload missing Value:', payload)
+              return
+            }
+            const challengeResp: any = await requestExternalIdentityChallenge(value)
+            const challengeToken =
+              challengeResp?.challenge_token || challengeResp?.challengeResponse?.challenge_token
+            if (!challengeToken) {
+              console.warn('[Stellar] No challenge_token returned from request:', challengeResp)
+              return
+            }
+            challengeSolutionRef.current = { challenge_token: challengeToken }
+            console.log('[Stellar] challenge_token:', challengeToken)
+            const signUrl = buildSignUrlFromChallenge(challengeToken)
+            console.log('[Stellar] Built sign URL from challenge:', signUrl || '[none]')
+            if (signUrl) {
+              setPendingSignUrl(signUrl)
+              console.log('[Stellar] Stellar bridge ready. Click "Sign Stellar Wallet" to continue.')
+            } else {
+              console.warn('[Stellar] Unable to build sign URL - missing wallet bridge base or invalid payload.')
+            }
+          } catch (err) {
+            console.error('[Stellar] External ID challenge request error:', (err as any)?.message || err)
+          } finally {
+            externalAddressSubRef.current?.stop?.()
+            externalAddressSubRef.current = null
+            console.log('[Stellar] ExternalAuthAddress subscription stopped after challenge request cycle.')
+          }
+        }
+        const handleSignature = async (payload: any) => {
+          try {
+            console.log('[Stellar] ExternalAuthSignature message payload:', payload)
+            let signature = (payload && (payload.Value ?? payload.value)) || null
+            if (!signature && typeof payload?.messageFull === 'string') {
+              try {
+                const inner = JSON.parse(payload.messageFull)
+                signature = inner?.Value ?? inner?.value ?? null
+              } catch {}
+            }
+            if (!signature || typeof signature !== 'string') {
+              console.warn('[Stellar] ExternalAuthSignature payload missing Value:', payload)
+              return
+            }
+            const challengeToken = challengeSolutionRef.current?.challenge_token
+            if (!challengeToken) {
+              console.warn('[Stellar] Missing challenge_token when signature arrived')
+              return
+            }
+            await completeExternalIdentityChallenge(challengeToken, signature)
+            await refreshPlayerProfile()
+            console.log('[Stellar] External identity attached via signature.')
+            closeWalletWindow()
+            setPendingSignUrl(null)
+            setSignatureError(null)
+            clearWalletPopupWarning()
+            externalSignatureSubRef.current?.stop?.()
+            externalSignatureSubRef.current = null
+            console.log('[Stellar] ExternalAuthSignature subscription stopped after successful attachment.')
+          } catch (err) {
+            const message = formatSignatureErrorMessage(err)
+            setSignatureError(message)
+            console.error('[Stellar] External signature flow error:', (err as any)?.message || err)
+          }
+        }
+        externalAddressSubRef.current = await subscribeToExternalContext(EXTERNAL_AUTH_CONTEXT, handleAddress, {
+          intervalMs: 2000,
+        })
+        console.log('[Stellar] Subscribed to ExternalAuthAddress notifications.')
+        externalSignatureSubRef.current = await subscribeToExternalContext(EXTERNAL_SIGN_CONTEXT, handleSignature, {
+          intervalMs: 2000,
+        })
+        console.log('[Stellar] Subscribed to ExternalAuthSignature notifications.')
+      } catch (e) {
+        console.error('[Stellar] Failed to open External ID attach flow:', (e as any)?.message || e)
+      }
+    })()
+  }, [
+    setSignatureError,
+    pendingSignUrl,
+    openWalletWindow,
+    setPendingSignUrl,
+    primeWalletWindow,
+    buildWalletConnectUrl,
+    playerId,
+    clearWalletPopupWarning,
+    requestExternalIdentityChallenge,
+    buildSignUrlFromChallenge,
+    completeExternalIdentityChallenge,
+    refreshPlayerProfile,
+    closeWalletWindow,
+  ])
+
+  const handleRetryAttach = useCallback(() => {
+    setSignatureError(null)
+    setPendingSignUrl(null)
+    closeWalletWindow()
+  }, [closeWalletWindow, setPendingSignUrl, setSignatureError])
 
   useEffect(() => {
     return () => {
@@ -230,6 +551,37 @@ export default function TowerDestroyer() {
       closeWalletWindow()
     }
   }, [closeWalletWindow])
+
+  useEffect(() => {
+    if (aliasModalOpen) {
+      return
+    }
+    try {
+      externalAddressSubRef.current?.stop?.()
+    } catch {}
+    externalAddressSubRef.current = null
+    try {
+      externalSignatureSubRef.current?.stop?.()
+    } catch {}
+    externalSignatureSubRef.current = null
+    resetWalletPopupState()
+  }, [aliasModalOpen, resetWalletPopupState])
+
+  useEffect(() => {
+    if (aliasModalOpen) {
+      return
+    }
+    try {
+      externalAddressSubRef.current?.stop?.()
+    } catch {}
+    externalAddressSubRef.current = null
+    try {
+      externalSignatureSubRef.current?.stop?.()
+    } catch {}
+    externalSignatureSubRef.current = null
+    setPendingSignUrl(null)
+    setSignatureError(null)
+  }, [aliasModalOpen])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -286,27 +638,8 @@ export default function TowerDestroyer() {
   // After Beam is ready, fetch Alias stat and decide whether to prompt
   useEffect(() => {
     if (!beamReady) return
-    let mounted = true
-    ;(async () => {
-      try {
-        const aliasValue = await fetchPlayerAlias()
-        if (!mounted) return
-        if (aliasValue && aliasValue.length > 0) {
-          setAlias(aliasValue)
-          setAliasModalOpen(false)
-          setShowPlayerInfo(true)
-        } else {
-          setAlias(null)
-          setAliasModalOpen(true)
-        }
-      } catch (e) {
-        if (!mounted) return
-        setAlias(null)
-        setAliasModalOpen(true)
-      }
-    })()
-    return () => { mounted = false }
-  }, [beamReady])
+    refreshPlayerProfile()
+  }, [beamReady, refreshPlayerProfile])
 
   // Log Stellar ID for returning players (filter by provider)
   useEffect(() => {
@@ -909,10 +1242,8 @@ export default function TowerDestroyer() {
         y: e.clientY - rect.top,
       }
     }
- 
-    // Power increases in the game loop while charging
   }
- 
+
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!readyForGame) return
     Audio.stopChargingSound(chargingOscillatorRef, chargingGainRef)
@@ -1089,277 +1420,31 @@ export default function TowerDestroyer() {
             </div>
           )}
           {beamReady && readyForGame && showPlayerInfo && (
-            <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-              <div className="bg-card p-6 rounded-lg border-2 border-primary/30 text-center max-w-lg w-full">
-                <h2 className="text-2xl font-bold text-primary mb-4">Player Info</h2>
-                <div className="space-y-3 text-left">
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <div className="text-sm text-muted-foreground">GamerTag ID</div>
-                      <div className="font-mono break-all">{playerId || '-'}</div>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(playerId || '') } catch {} }}>Copy</Button>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Alias</div>
-                      <div className="font-semibold">{alias || '-'}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Stellar Custodial ID</div>
-                      <div className="font-mono break-all">{stellarExternalId || '-'}</div>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(stellarExternalId || '') } catch {} }}>Copy</Button>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Stellar External ID</div>
-                      <div className="font-mono break-all">{stellarExternalIdentityId || '-'}</div>
-                    </div>
-                    {stellarExternalIdentityId ? (
-                      <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(stellarExternalIdentityId || '') } catch {} }}>Copy</Button>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          size="sm"
-                          variant={pendingSignUrl ? "default" : "outline"}
-                          className={pendingSignUrl ? "bg-orange-500 text-white hover:bg-orange-600 border-orange-500" : undefined}
-                          onClick={() => {
-                            setSignatureError(null)
-                            if (pendingSignUrl) {
-                              openWalletWindow(pendingSignUrl, 'challenge signing', { allowNew: true })
-                              return
-                            }
-                            setPendingSignUrl(null)
-                            const primedWindow = primeWalletWindow()
-                            ;(async () => {
-                              try {
-                                const { url } = await buildWalletConnectUrl(playerId || null)
-                                walletConnectUrlRef.current = url
-                                console.log('[Stellar] Launching wallet flow:', url)
-                                if (primedWindow && !primedWindow.closed) {
-                                  primedWindow.location.href = url
-                                  primedWindow.focus?.()
-                                  console.log('[Stellar] Wallet window navigated for initial wallet connect.')
-                                } else {
-                                  openWalletWindow(url, 'initial wallet connect')
-                                }
-
-                                externalAddressSubRef.current?.stop?.()
-                                externalAddressSubRef.current = null
-                                externalSignatureSubRef.current?.stop?.()
-                                externalSignatureSubRef.current = null
-
-                                const handleAddress = async (payload: any) => {
-                                  try {
-                                    console.log('[Stellar] ExternalAuthAddress message payload:', payload)
-                                    if (payload?.messageFull) {
-                                      console.log('[Stellar] ExternalAuthAddress raw messageFull:', payload.messageFull)
-                                    }
-                                    const ctxRaw = (payload && (payload.Context ?? payload.context)) || null
-                                    const ctx = ctxRaw ? String(ctxRaw).toLowerCase() : null
-                                    if (ctx && ctx !== EXTERNAL_AUTH_CONTEXT) {
-                                      console.log('[Stellar] Ignoring message for different context:', ctxRaw)
-                                      return
-                                    }
-                                    let value = (payload && (payload.Value ?? payload.value)) || null
-                                    if (!value && typeof (payload?.messageFull) === 'string') {
-                                      try {
-                                        const inner = JSON.parse(payload.messageFull)
-                                        value = inner?.Value ?? inner?.value ?? null
-                                      } catch {}
-                                    }
-                                    if (!value || typeof value !== 'string') {
-                                      console.warn('[Stellar] ExternalAuthAddress payload missing Value:', payload)
-                                      return
-                                    }
-                                    const challengeResp: any = await requestExternalIdentityChallenge(value)
-                                    const challengeToken =
-                                      challengeResp?.challenge_token || challengeResp?.challengeResponse?.challenge_token
-                                    if (!challengeToken) {
-                                      console.warn('[Stellar] No challenge_token returned from request:', challengeResp)
-                                      return
-                                    }
-                                    challengeSolutionRef.current = { challenge_token: challengeToken }
-                                    console.log('[Stellar] challenge_token:', challengeToken)
-                                    const signUrl = buildSignUrlFromChallenge(challengeToken)
-                                    console.log('[Stellar] Built sign URL from challenge:', signUrl || '[none]')
-                                    if (signUrl) {
-                                      setPendingSignUrl(signUrl)
-                                      console.log('[Stellar] Stellar bridge ready. Click "Sign Stellar Wallet" to continue.')
-                                    } else {
-                                      console.warn('[Stellar] Unable to build sign URL - missing wallet bridge base or invalid payload.')
-                                    }
-                                  } catch (err) {
-                                    console.error('[Stellar] External ID challenge request error:', (err as any)?.message || err)
-                                  } finally {
-                                    externalAddressSubRef.current?.stop?.()
-                                    externalAddressSubRef.current = null
-                                    console.log('[Stellar] ExternalAuthAddress subscription stopped after challenge request cycle.')
-                                  }
-                                }
-
-                                const handleSignature = async (payload: any) => {
-                                  try {
-                                    console.log('[Stellar] ExternalAuthSignature message payload:', payload)
-                                    let signature = (payload && (payload.Value ?? payload.value)) || null
-                                    if (!signature && typeof (payload?.messageFull) === 'string') {
-                                      try {
-                                        const inner = JSON.parse(payload.messageFull)
-                                        signature = inner?.Value ?? inner?.value ?? null
-                                      } catch {}
-                                    }
-                                    if (!signature || typeof signature !== 'string') {
-                                      console.warn('[Stellar] ExternalAuthSignature payload missing Value:', payload)
-                                      return
-                                    }
-                                    const challengeToken = challengeSolutionRef.current?.challenge_token
-                                    if (!challengeToken) {
-                                      console.warn('[Stellar] Missing challenge_token when signature arrived')
-                                      return
-                                    }
-                                    await completeExternalIdentityChallenge(challengeToken, signature)
-                                    const updatedInfo = await fetchStellarIdentityInfo()
-                                    setStellarExternalIdentityId(updatedInfo.externalId)
-                                    setShowPlayerInfo(true)
-                                    console.log('[Stellar] External identity attached via signature.')
-                                    closeWalletWindow()
-                                    setPendingSignUrl(null)
-                                    setSignatureError(null)
-                                    externalSignatureSubRef.current?.stop?.()
-                                    externalSignatureSubRef.current = null
-                                    console.log('[Stellar] ExternalAuthSignature subscription stopped after successful attachment.')
-                                } catch (err) {
-                                  const message = formatSignatureErrorMessage(err)
-                                  setSignatureError(message)
-                                  console.error('[Stellar] External signature flow error:', (err as any)?.message || err)
-                                }
-                                }
-
-                                externalAddressSubRef.current = await subscribeToExternalContext(EXTERNAL_AUTH_CONTEXT, handleAddress, {
-                                  intervalMs: 2000,
-                                })
-                                console.log('[Stellar] Subscribed to ExternalAuthAddress notifications.')
-                                externalSignatureSubRef.current = await subscribeToExternalContext(EXTERNAL_SIGN_CONTEXT, handleSignature, {
-                                  intervalMs: 2000,
-                                })
-                                console.log('[Stellar] Subscribed to ExternalAuthSignature notifications.')
-                              } catch (e) {
-                                console.error('[Stellar] Failed to open External ID attach flow:', (e as any)?.message || e)
-                              }
-                            })()
-                          }}
-                        >
-                          {pendingSignUrl ? 'Sign Stellar Wallet' : 'Attach External Id'}
-                        </Button>
-                        {walletPopupBlocked && (
-                          <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-3">
-                            <p>
-                              Your browser blocked the {walletPopupContext || "Stellar wallet"} popup. Please allow
-                              popups for this site and click the button again.
-                            </p>
-                            {walletPopupBlockedUrl && (
-                              <p className="mt-2">
-                                Or open the wallet manually:&nbsp;
-                                <a
-                                  href={walletPopupBlockedUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="underline font-semibold"
-                                >
-                                  Open Stellar Wallet
-                                </a>
-                              </p>
-                            )}
-                          </div>
-                        )}
-                        {signatureError && (
-                          <div
-                            role="alert"
-                            className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 flex items-start gap-3"
-                          >
-                            <span className="flex-1">{signatureError}</span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-700 border-red-300 hover:bg-red-100 px-2 py-1 text-xs"
-                              onClick={() => {
-                                setSignatureError(null)
-                                setPendingSignUrl(null)
-                                closeWalletWindow()
-                              }}
-                            >
-                              Retry
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center justify-center gap-3 mt-5">
-                  <Button onClick={handleResetPlayer} variant="destructive" size="sm">Reset Player</Button>
-                  <Button className="bg-primary hover:bg-primary/90" size="sm" onClick={() => setShowPlayerInfo(false)}>Play Game</Button>
-                </div>
-              </div>
-            </div>
+            <PlayerInfoOverlay
+              playerId={playerId}
+              alias={alias}
+              stellarExternalId={stellarExternalId}
+              stellarExternalIdentityId={stellarExternalIdentityId}
+              pendingSignUrl={pendingSignUrl}
+              signatureError={signatureError}
+              walletPopupBlocked={walletPopupBlocked}
+              walletPopupBlockedUrl={walletPopupBlockedUrl}
+              walletPopupContext={walletPopupContext}
+              onAttachClick={handleAttachExternalId}
+              onRetryAttach={handleRetryAttach}
+              onResetPlayer={handleResetPlayer}
+              onClose={() => setShowPlayerInfo(false)}
+            />
           )}
           {beamReady && (!alias || alias.length === 0 || aliasModalOpen) && (
-            <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-              <div className="bg-card p-6 rounded-lg border-2 border-primary/30 text-center max-w-md w-full">
-                <h2 className="text-2xl font-bold text-primary mb-4">Set Your Alias</h2>
-                <p className="text-sm text-muted-foreground mb-3">Alphabet letters only, minimum 3 characters.</p>
-                <input
-                  type="text"
-                  value={aliasInput}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    const filtered = v.replace(/[^A-Za-z]/g, "")
-                    setAliasInput(filtered)
-                  }}
-                  className="w-full p-2 border rounded mb-3 bg-background text-foreground border-primary/30"
-                  placeholder="Enter alias"
-                />
-                {aliasError && <p className="text-destructive text-sm mb-2">{aliasError}</p>}
-                <div className="flex gap-2 justify-center">
-                  <Button
-                    onClick={async () => {
-                      setAliasError(null)
-                      const valid = /^[A-Za-z]{3,}$/.test(aliasInput)
-                      if (!valid) {
-                        setAliasError('Alias must be letters only, at least 3 characters.')
-                        return
-                      }
-                      setAliasSaving(true)
-                      try {
-                        const { stellarId } = await saveAliasAndAttachWallet(aliasInput)
-                        if (stellarId) {
-                          console.log("[Stellar] Custodial wallet attached. Stellar ID:", stellarId)
-                          setStellarExternalId(stellarId)
-                        } else {
-                          console.log("[Stellar] Custodial wallet attached (no external userId found).")
-                        }
-
-                        // 3) Success — close alias modal and start game
-                        setAlias(aliasInput)
-                        setAliasModalOpen(false)
-                        setShowPlayerInfo(true)
-                      } catch (e: any) {
-                        setAliasError(e?.message || 'Failed to save alias. Try again.')
-                      } finally {
-                        setAliasSaving(false)
-                      }
-                    }}
-                    disabled={aliasSaving || !/^[A-Za-z]{3,}$/.test(aliasInput)}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    {aliasSaving ? 'Saving...' : 'Save Alias'}
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <AliasSetupOverlay
+              aliasInput={aliasInput}
+              aliasError={aliasError}
+              aliasSaving={aliasSaving}
+              canSave={aliasCanSave}
+              onAliasChange={handleAliasInputChange}
+              onSaveAlias={handleAliasSave}
+            />
           )}
           {showResetConfirm && (
             <div className="absolute inset-0 bg-black/60 z-50 rounded-lg flex items-center justify-center">
@@ -1413,5 +1498,12 @@ export default function TowerDestroyer() {
   );
 
 }
+
+
+
+
+
+
+
 
 
