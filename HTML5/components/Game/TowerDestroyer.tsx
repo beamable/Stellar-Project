@@ -325,6 +325,23 @@ export default function TowerDestroyer() {
     externalSignatureSubRef.current = null
     setPendingSignUrl(null)
     setSignatureError(null)
+    clearWalletPopupWarning()
+  }, [aliasModalOpen, clearWalletPopupWarning])
+
+  useEffect(() => {
+    if (aliasModalOpen) {
+      return
+    }
+    try {
+      externalAddressSubRef.current?.stop?.()
+    } catch {}
+    externalAddressSubRef.current = null
+    try {
+      externalSignatureSubRef.current?.stop?.()
+    } catch {}
+    externalSignatureSubRef.current = null
+    setPendingSignUrl(null)
+    setSignatureError(null)
   }, [aliasModalOpen])
 
   useEffect(() => {
