@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, type MutableRefObject, type Dispatch, type SetStateAction } from "react"
 import {
   initBeamPlayer,
   fetchPlayerAlias,
@@ -8,14 +8,14 @@ import {
 } from "@/lib/beam/player"
 
 type RefreshArgs = {
-  stellarLoggedOnceRef: React.MutableRefObject<boolean>
-  setPlayerId: React.Dispatch<React.SetStateAction<string | null>>
-  setAlias: React.Dispatch<React.SetStateAction<string | null>>
-  setAliasInput: React.Dispatch<React.SetStateAction<string>>
-  setAliasModalOpen: React.Dispatch<React.SetStateAction<boolean>>
-  setShowPlayerInfo: React.Dispatch<React.SetStateAction<boolean>>
-  setStellarExternalId: React.Dispatch<React.SetStateAction<string | null>>
-  setStellarExternalIdentityId: React.Dispatch<React.SetStateAction<string | null>>
+  stellarLoggedOnceRef: MutableRefObject<boolean>
+  setPlayerId: Dispatch<SetStateAction<string | null>>
+  setAlias: Dispatch<SetStateAction<string | null>>
+  setAliasInput: Dispatch<SetStateAction<string>>
+  setAliasModalOpen: Dispatch<SetStateAction<boolean>>
+  setShowPlayerInfo: Dispatch<SetStateAction<boolean>>
+  setStellarExternalId: Dispatch<SetStateAction<string | null>>
+  setStellarExternalIdentityId: Dispatch<SetStateAction<string | null>>
 }
 
 export default function useRefreshPlayerProfile({
