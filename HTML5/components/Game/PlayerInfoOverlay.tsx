@@ -16,6 +16,7 @@ type PlayerInfoOverlayProps = {
   onAttachClick: () => void
   onRetryAttach: () => void
   onResetPlayer: () => void
+  onManualWalletOpen: () => void
   onClose: () => void
 }
 
@@ -32,78 +33,95 @@ export default function PlayerInfoOverlay({
   onAttachClick,
   onRetryAttach,
   onResetPlayer,
+  onManualWalletOpen,
   onClose,
 }: PlayerInfoOverlayProps) {
   return (
-    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-      <div className="bg-card p-6 rounded-lg border-2 border-primary/30 text-center max-w-lg w-full">
-        <h2 className="text-2xl font-bold text-primary mb-4">Player Info</h2>
-        <div className="space-y-3 text-left">
-          <InfoRow label="GamerTag ID" value={playerId} copyable />
-          <InfoRow label="Alias" value={alias || "-"} />
-          <InfoRow label="Stellar Custodial ID" value={stellarExternalId} copyable />
+    <div className="absolute inset-0 rounded-[22px] bg-black/70 backdrop-blur flex items-center justify-center z-40">
+      <div className="w-full max-w-3xl rounded-[32px] border border-white/10 bg-gradient-to-br from-slate-900/95 via-indigo-950/90 to-slate-900/95 p-8 text-white shadow-[0_35px_140px_rgba(2,6,23,0.85)]">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-white/50">Command Deck</p>
+            <h2 className="text-3xl font-black">Player Identity</h2>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button
+              onClick={onResetPlayer}
+              size="sm"
+              className="rounded-full bg-rose-500 text-white hover:bg-rose-400 text-xs shadow-md shadow-rose-900/50"
+            >
+              Reset Player
+            </Button>
+            <Button
+              size="sm"
+              onClick={onClose}
+              className="rounded-full bg-emerald-400 text-slate-900 hover:bg-emerald-300 text-xs"
+            >
+              Play Game
+            </Button>
+          </div>
+        </div>
 
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="text-sm text-muted-foreground">Stellar External ID</div>
-              <div className="font-mono break-all">{stellarExternalIdentityId || "-"}</div>
-            </div>
-            {stellarExternalIdentityId ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(stellarExternalIdentityId || "")
-                  } catch {}
-                }}
-              >
-                Copy
-              </Button>
-            ) : (
-              <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 text-left">
+          <div className="space-y-3">
+            <InfoRow label="GamerTag ID" value={playerId} copyable />
+            <InfoRow label="Alias" value={alias || "-"} />
+            <InfoRow label="Stellar Custodial ID" value={stellarExternalId} copyable />
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="text-xs uppercase tracking-wide text-white/60 mb-2">External Stellar Identity</div>
+            <div className="flex items-start gap-3">
+              <p className="flex-1 font-mono break-all text-sm">
+                {stellarExternalIdentityId || "Not linked yet"}
+              </p>
+              {stellarExternalIdentityId ? (
                 <Button
                   size="sm"
-                  variant={pendingSignUrl ? "default" : "outline"}
-                  className={
-                    pendingSignUrl ? "bg-orange-500 text-white hover:bg-orange-600 border-orange-500" : undefined
-                  }
+                  className="rounded-full bg-white/10 text-white hover:bg-white/20 text-xs"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(stellarExternalIdentityId || "")
+                    } catch {}
+                  }}
+                >
+                  Copy
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  className={`rounded-full text-xs ${
+                    pendingSignUrl
+                      ? "bg-amber-400 text-slate-900 hover:bg-amber-300"
+                      : "bg-white/10 text-white hover:bg-white/20"
+                  }`}
                   onClick={onAttachClick}
                 >
-                  {pendingSignUrl ? "Sign Stellar Wallet" : "Attach External Id"}
+                  {pendingSignUrl ? "Sign Stellar Wallet" : "Attach External ID"}
                 </Button>
-                <WalletPopupWarning
-                  blocked={walletPopupBlocked}
-                  blockedUrl={walletPopupBlockedUrl}
-                  context={walletPopupContext}
-                />
-                {signatureError && (
-                  <div
-                    role="alert"
-                    className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 flex items-start gap-3"
-                  >
-                    <span className="flex-1">{signatureError}</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-700 border-red-300 hover:bg-red-100 px-2 py-1 text-xs"
-                      onClick={onRetryAttach}
-                    >
-                      Retry
-                    </Button>
-                  </div>
-                )}
+              )}
+            </div>
+            <WalletPopupWarning
+              blocked={walletPopupBlocked}
+              blockedUrl={walletPopupBlockedUrl}
+              context={walletPopupContext}
+              onManualOpen={onManualWalletOpen}
+            />
+            {signatureError && (
+              <div
+                role="alert"
+                className="mt-3 rounded-2xl border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100 flex items-start gap-3"
+              >
+                <span className="flex-1">{signatureError}</span>
+                <Button
+                  size="sm"
+                  className="rounded-full bg-white/10 text-white hover:bg-white/20 text-xs"
+                  onClick={onRetryAttach}
+                >
+                  Retry
+                </Button>
               </div>
             )}
           </div>
-        </div>
-        <div className="flex items-center justify-center gap-3 mt-5">
-          <Button onClick={onResetPlayer} variant="destructive" size="sm">
-            Reset Player
-          </Button>
-          <Button className="bg-primary hover:bg-primary/90" size="sm" onClick={onClose}>
-            Play Game
-          </Button>
         </div>
       </div>
     </div>
@@ -118,15 +136,15 @@ type InfoRowProps = {
 
 function InfoRow({ label, value, copyable }: InfoRowProps) {
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 flex items-center justify-between gap-3">
       <div>
-        <div className="text-sm text-muted-foreground">{label}</div>
-        <div className="font-mono break-all">{value || "-"}</div>
+        <div className="text-xs uppercase tracking-wide text-white/60">{label}</div>
+        <div className="font-mono break-all text-white">{value || "-"}</div>
       </div>
       {copyable && (
         <Button
           size="sm"
-          variant="outline"
+          className="rounded-full bg-white/10 text-white hover:bg-white/20 text-xs"
           onClick={async () => {
             try {
               await navigator.clipboard.writeText(value || "")

@@ -1,0 +1,38 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`BALL_TYPES > matches the documented configuration 1`] = `
+[
+  {
+    "baseSpeedMultiplier": 1,
+    "color": "#8B4513",
+    "description": "Standard ball with balanced physics and collision",
+    "icon": "⚪",
+    "name": "Normal Ball",
+    "type": "normal",
+  },
+  {
+    "baseSpeedMultiplier": 0.9,
+    "color": "#FF6B35",
+    "description": "Splits into 3 balls with different angles",
+    "icon": "🔱",
+    "name": "Multishot",
+    "type": "multishot",
+  },
+  {
+    "baseSpeedMultiplier": 1.15,
+    "color": "#FF4500",
+    "description": "Passes through towers for 5 hits, then becomes normal",
+    "icon": "🔥",
+    "name": "Fire Ball",
+    "type": "fire",
+  },
+  {
+    "baseSpeedMultiplier": 0.85,
+    "color": "#8A2BE2",
+    "description": "Shoots 2 lasers that can destroy 3 towers each",
+    "icon": "⚡",
+    "name": "Laser Ball",
+    "type": "laser",
+  },
+]
+`;
