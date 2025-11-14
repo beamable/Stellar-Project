@@ -30,42 +30,72 @@ export default function GameHud({
   canShowRestart,
   onRestart,
 }: GameHudProps) {
+  const identityLabel = alias ?? playerId ?? "Guest"
+  const selectedBallIcon = selectedBallInfo?.icon ?? "🎯"
+  const powerPercent = Math.min(100, Math.max(0, powerSnapshot))
+  const stats = [
+    { label: "Score", value: score.toLocaleString(), accent: "text-cyan-100", icon: "🏆" },
+    { label: "Balls", value: ballsLeft.toString(), accent: "text-emerald-100", icon: selectedBallIcon },
+    { label: "Towers", value: `${remainingTowers}/${towerCount}`, accent: "text-amber-100", icon: "🗼" },
+    { label: "Identity", value: identityLabel, accent: "text-pink-100", icon: "👤" },
+  ]
+
   return (
-    <div className="text-center mb-4">
-      <h1 className="text-4xl font-bold text-primary mb-2 font-mono">Tower Destroyer</h1>
-      <div className="flex items-center justify-between gap-4 text-lg font-semibold">
-        <div className="flex justify-center gap-8 grow">
-          <span className="text-accent">Score: {score}</span>
-          <span className="text-secondary flex items-center gap-1">
-            {selectedBallInfo && <span className="text-base">{selectedBallInfo.icon}</span>}
-            Balls: {ballsLeft}
-          </span>
-          <span className="text-muted-foreground">
-            Towers: {remainingTowers}/{towerCount}
-          </span>
-          {alias ? (
-            <span className="text-muted-foreground">Alias: {alias}</span>
-          ) : (
-            playerId && <span className="text-muted-foreground">Player: {playerId}</span>
-          )}
-          {isCharging && <span className="text-destructive">Power: {powerSnapshot}%</span>}
+    <section className="mb-6">
+      <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 text-white shadow-2xl shadow-indigo-900/40 px-6 py-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-white/50">Beamable Presents</p>
+            <h1 className="text-3xl font-black tracking-wider drop-shadow-md">Tower Destroyer</h1>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {canShowRestart && (
+              <Button
+                onClick={onRestart}
+                size="sm"
+                className="bg-white/10 text-white hover:bg-white/20 border border-white/10 rounded-full text-xs"
+              >
+                Restart Run
+              </Button>
+            )}
+            <Button
+              onClick={onResetPlayer}
+              size="sm"
+              className="bg-rose-500 text-white hover:bg-rose-400 rounded-full text-xs shadow-lg shadow-rose-900/40"
+            >
+              Reset Player
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={onResetPlayer}
-          variant="destructive"
-          size="sm"
-          className="text-xs transition-transform duration-150 hover:scale-105 hover:shadow-lg"
-        >
-          Reset Player
-        </Button>
+
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left backdrop-blur-[2px]"
+            >
+              <div className="text-xs uppercase tracking-wide text-white/60 flex items-center gap-1">
+                <span>{stat.icon}</span>
+                {stat.label}
+              </div>
+              <p className={`text-xl font-semibold ${stat.accent}`}>{stat.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5">
+          <div className="flex items-center justify-between text-xs uppercase tracking-wide text-white/60 mb-1">
+            <span>{isCharging ? "Charging Shot" : "Ready to Fire"}</span>
+            <span className="text-white">{powerPercent}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${isCharging ? "bg-amber-300" : "bg-emerald-300"}`}
+              style={{ width: `${powerPercent}%` }}
+            />
+          </div>
+        </div>
       </div>
-      {canShowRestart && (
-        <div className="mt-2 flex gap-2">
-          <Button onClick={onRestart} variant="outline" size="sm" className="text-xs bg-transparent">
-            Restart Game
-          </Button>
-        </div>
-      )}
-    </div>
+    </section>
   )
 }

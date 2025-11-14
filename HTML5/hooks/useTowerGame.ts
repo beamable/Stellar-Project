@@ -44,6 +44,27 @@ const SPECIAL_OUTLINE_COLOR = "#FFD700"
 const SPECIAL_CRACK_COLOR = "rgba(255, 215, 0, 0.75)"
 const SPECIAL_CRACK_COUNT = 3
 
+type BackgroundTheme = {
+  id: string
+  skyTop: string
+  skyBottom: string
+  ground: string
+  grass: string
+}
+
+const BACKGROUND_THEMES: BackgroundTheme[] = [
+  { id: "sunrise", skyTop: "#87CEEB", skyBottom: "#F0E68C", ground: "#8B4513", grass: "#228B22" },
+  { id: "sunset", skyTop: "#FF7E5F", skyBottom: "#FCD283", ground: "#6B2C1A", grass: "#D16A5C" },
+  { id: "twilight", skyTop: "#0F2027", skyBottom: "#203A43", ground: "#1F130A", grass: "#0D4B2F" },
+  { id: "desert", skyTop: "#F8C978", skyBottom: "#F5E4B7", ground: "#B2732B", grass: "#C99E53" },
+  { id: "aurora", skyTop: "#1A2980", skyBottom: "#26D0CE", ground: "#2D1E2F", grass: "#1CAF8F" },
+]
+
+const getRandomBackgroundTheme = () => {
+  const index = Math.floor(Math.random() * BACKGROUND_THEMES.length)
+  return BACKGROUND_THEMES[index] ?? BACKGROUND_THEMES[0]
+}
+
 const pseudoRandomFromTower = (tower: Tower, salt: number) => {
   const seed = Math.sin(tower.x * 12.9898 + tower.y * 78.233 + salt) * 43758.5453
   return seed - Math.floor(seed)
@@ -96,6 +117,7 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
   const remainingTowersRef = useRef(0)
   const lastPhysicsTimeRef = useRef(0)
   const lastChargeUpdateRef = useRef(0)
+  const backgroundThemeRef = useRef<BackgroundTheme>(getRandomBackgroundTheme())
 
   const [gameState, setGameState] = useState<"playing" | "won" | "gameOver">("playing")
   const [score, setScore] = useState(0)
@@ -274,16 +296,17 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
       lastPhysicsTimeRef.current = now
     }
 
+    const backgroundTheme = backgroundThemeRef.current
     const gradient = ctx.createLinearGradient(0, 0, 0, CONST.CANVAS_HEIGHT)
-    gradient.addColorStop(0, "#87CEEB")
-    gradient.addColorStop(1, "#F0E68C")
+    gradient.addColorStop(0, backgroundTheme.skyTop)
+    gradient.addColorStop(1, backgroundTheme.skyBottom)
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, CONST.CANVAS_WIDTH, CONST.CANVAS_HEIGHT)
 
-    ctx.fillStyle = "#8B4513"
+    ctx.fillStyle = backgroundTheme.ground
     ctx.fillRect(0, CONST.GROUND_Y, CONST.CANVAS_WIDTH, CONST.CANVAS_HEIGHT - CONST.GROUND_Y)
 
-    ctx.fillStyle = "#228B22"
+    ctx.fillStyle = backgroundTheme.grass
     for (let i = 0; i < CONST.CANVAS_WIDTH; i += 5) {
       const height = 3 + Math.sin(i * 0.1) * 2
       ctx.fillRect(i, CONST.GROUND_Y - height, 3, height)
@@ -474,6 +497,10 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
     [readyForGame, shootBall, isCharging],
   )
 
+  const refreshBackgroundTheme = useCallback(() => {
+    backgroundThemeRef.current = getRandomBackgroundTheme()
+  }, [])
+
   const resetGame = useCallback(() => {
     dlog("[v0] Resetting game")
     Audio.playRestartSound(audioContextRef)
@@ -488,9 +515,10 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
     resetBall("normal")
     particlesRef.current = []
     collisionCooldownRef.current.clear()
+    refreshBackgroundTheme()
 
     initializeTowers()
-  }, [initializeTowers, resetBall])
+  }, [initializeTowers, resetBall, refreshBackgroundTheme])
 
   const startFirstShot = useCallback(() => {
     Audio.playStartSound(audioContextRef)
