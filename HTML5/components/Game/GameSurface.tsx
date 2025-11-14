@@ -25,12 +25,12 @@ export default function GameSurface({
   overlayProps,
 }: GameSurfaceProps) {
   return (
-    <div className="relative">
+    <div className="relative mx-auto">
       <canvas
         ref={canvasRef}
         width={canvasWidth}
         height={canvasHeight}
-        className={`${!readyForGame ? "pointer-events-none" : ""} border-4 border-primary/30 rounded-lg cursor-crosshair bg-gradient-to-b from-blue-200 to-yellow-200`}
+        className={`${!readyForGame ? "pointer-events-none" : ""} rounded-[22px] border-2 border-white/20 cursor-crosshair bg-transparent shadow-[0_20px_60px_rgba(0,0,0,0.65)]`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
