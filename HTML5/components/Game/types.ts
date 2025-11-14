@@ -58,4 +58,5 @@ export interface BallTypeConfig {
   icon: string
   description: string
   color: string
+  baseSpeedMultiplier: number
 }

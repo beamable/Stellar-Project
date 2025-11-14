@@ -9,6 +9,7 @@ import { generateTowers } from "@/components/Game/towers"
 import { checkCollision } from "@/components/Game/physics"
 import * as Audio from "@/components/Game/audio"
 import stepPhysics from "@/components/Game/engine/stepPhysics"
+import { BALL_TYPE_MAP } from "@/components/Game/ballTypes"
 
 type UseTowerGameOptions = {
   readyForGame: boolean
@@ -37,6 +38,45 @@ const PHYSICS_TIMESTEP = 1000 / 60
 const DEBUG = false
 const dlog = (...args: any[]) => {
   if (DEBUG) console.log(...args)
+}
+
+const SPECIAL_OUTLINE_COLOR = "#FFD700"
+const SPECIAL_CRACK_COLOR = "rgba(255, 215, 0, 0.75)"
+const SPECIAL_CRACK_COUNT = 3
+
+const pseudoRandomFromTower = (tower: Tower, salt: number) => {
+  const seed = Math.sin(tower.x * 12.9898 + tower.y * 78.233 + salt) * 43758.5453
+  return seed - Math.floor(seed)
+}
+
+const drawSpecialTowerCracks = (ctx: CanvasRenderingContext2D, tower: Tower) => {
+  ctx.save()
+  ctx.strokeStyle = SPECIAL_CRACK_COLOR
+  ctx.lineWidth = 1.5
+  ctx.setLineDash([2, 3])
+
+  for (let i = 0; i < SPECIAL_CRACK_COUNT; i++) {
+    const offsetRatio = (i + 1) / (SPECIAL_CRACK_COUNT + 1)
+    const startX = tower.x + offsetRatio * tower.width
+    const randomStartY = pseudoRandomFromTower(tower, i * 13.37)
+    const startY = tower.y + randomStartY * tower.height * 0.3
+    const jaggedness = tower.width * 0.2
+    const crackLengthRatio = 0.4 + pseudoRandomFromTower(tower, i * 23.77) * 0.4
+    const segmentCount = 2
+
+    ctx.beginPath()
+    ctx.moveTo(startX, startY)
+    for (let segment = 1; segment <= segmentCount; segment++) {
+      const progress = (segment / segmentCount) * crackLengthRatio
+      const offsetX = (pseudoRandomFromTower(tower, i * 41.31 + segment) - 0.5) * jaggedness
+      const targetX = startX + offsetX
+      const targetY = startY + tower.height * progress
+      ctx.lineTo(targetX, targetY)
+    }
+    ctx.stroke()
+  }
+
+  ctx.restore()
 }
 
 export default function useTowerGame({ readyForGame }: UseTowerGameOptions): UseTowerGameResult {
@@ -137,8 +177,9 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
       }
 
       Audio.playShootSound(audioContextRef, selectedBallType)
-
-      const force = Math.min(power / CONST.MAX_POWER, 1) * CONST.SHOT_FORCE_MULTIPLIER
+      const typeConfig = BALL_TYPE_MAP[selectedBallType] ?? BALL_TYPE_MAP.normal
+      const powerRatio = Math.min(power / CONST.MAX_POWER, 1)
+      const force = powerRatio * CONST.SHOT_FORCE_MULTIPLIER * typeConfig.baseSpeedMultiplier
       const baseVx = (dx / distance) * force
       const baseVy = (dy / distance) * force
 
@@ -274,10 +315,12 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
       ctx.fillStyle = tower.color
       ctx.fillRect(tower.x, tower.y, tower.width, tower.height)
 
-      if (tower.isSpecial) {
-        ctx.strokeStyle = "#FFD700"
+      if (tower.isSpecial && tower.hits === 0) {
+        ctx.strokeStyle = SPECIAL_OUTLINE_COLOR
         ctx.lineWidth = 2
         ctx.strokeRect(tower.x - 1, tower.y - 1, tower.width + 2, tower.height + 2)
+      } else if (tower.isSpecial && tower.hits > 0) {
+        drawSpecialTowerCracks(ctx, tower)
       }
     })
 

@@ -279,4 +279,98 @@ describe("stepPhysics", () => {
     expect(AudioModule.playLoseSound).toHaveBeenCalled()
     expect(ParticlesModule.createLoseParticles).toHaveBeenCalled()
   })
+
+  it("allows fire balls to destroy five towers before reverting to normal collisions", () => {
+    const fireBall = createBall({
+      type: "fire",
+      fireDestroyCount: 0,
+      vx: 5,
+      id: 42,
+    })
+    const towers = [
+      ...Array.from({ length: CONST.FIRE_BALL_DESTROY_THRESHOLD }, (_, idx) =>
+        createTower({ x: 500 + idx * 2 }),
+      ),
+      createTower({ x: 500 + CONST.FIRE_BALL_DESTROY_THRESHOLD * 2, maxHits: 2 }),
+    ]
+
+    const ballsRef = makeRef<Ball[]>([fireBall])
+    const lasersRef = makeRef<Laser[]>([])
+    const towersRef = makeRef<Tower[]>(towers)
+    const particlesRef = makeRef<Particle[]>([])
+    const collisionCooldownRef = makeRef<Set<string>>(new Set())
+    const remainingTowersRef = makeRef<number>(towers.length)
+    const audioContextRef = makeRef<AudioContext | null>(null)
+    const setScore = vi.fn()
+    const setGameState = vi.fn()
+    const setRemainingTowers = vi.fn()
+    const resetBall = vi.fn()
+
+    stepPhysics({
+      ballsRef,
+      lasersRef,
+      towersRef,
+      particlesRef,
+      collisionCooldownRef,
+      audioContextRef,
+      ballsLeft: CONST.BALLS_FOR_LOW_TOWER_COUNT,
+      gameState: "playing",
+      setScore,
+      setGameState,
+      resetBall,
+      setRemainingTowers,
+      remainingTowersRef,
+    })
+
+    const destroyedBeforeRevert = towersRef.current.slice(0, CONST.FIRE_BALL_DESTROY_THRESHOLD)
+    destroyedBeforeRevert.forEach((tower) => expect(tower.destroyed).toBe(true))
+
+    const finalTower = towersRef.current[CONST.FIRE_BALL_DESTROY_THRESHOLD]
+    expect(finalTower.destroyed).toBe(false)
+    expect(finalTower.hits).toBe(1)
+
+    const [updatedBall] = ballsRef.current
+    expect(updatedBall.type).toBe("normal")
+    expect(updatedBall.fireDestroyCount).toBeUndefined()
+  })
+
+  it("emits VFX on the first hit of special towers", () => {
+    const ballsRef = makeRef<Ball[]>([createBall()])
+    const specialTower = createTower({ isSpecial: true, maxHits: 2 })
+    const towersRef = makeRef<Tower[]>([specialTower])
+    const lasersRef = makeRef<Laser[]>([])
+    const particlesRef = makeRef<Particle[]>([])
+    const collisionCooldownRef = makeRef<Set<string>>(new Set())
+    const remainingTowersRef = makeRef<number>(1)
+    const audioContextRef = makeRef<AudioContext | null>(null)
+    const setScore = vi.fn()
+    const setGameState = vi.fn()
+    const setRemainingTowers = vi.fn()
+    const resetBall = vi.fn()
+
+    stepPhysics({
+      ballsRef,
+      lasersRef,
+      towersRef,
+      particlesRef,
+      collisionCooldownRef,
+      audioContextRef,
+      ballsLeft: CONST.BALLS_FOR_LOW_TOWER_COUNT,
+      gameState: "playing",
+      setScore,
+      setGameState,
+      resetBall,
+      setRemainingTowers,
+      remainingTowersRef,
+    })
+
+    expect(specialTower.hits).toBe(1)
+    expect(ParticlesModule.createParticles).toHaveBeenCalledWith(
+      particlesRef,
+      specialTower.x + specialTower.width / 2,
+      specialTower.y + specialTower.height / 2,
+      "multishot",
+      specialTower.color,
+    )
+  })
 })

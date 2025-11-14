@@ -17,6 +17,7 @@ describe("BALL_TYPES", () => {
       expect(typeof ball.description).toBe("string")
       expect(ball.description.length).toBeGreaterThan(0)
       expect(ball.color.startsWith("#")).toBe(true)
+      expect(ball.baseSpeedMultiplier).toBeGreaterThan(0)
     })
   })
 

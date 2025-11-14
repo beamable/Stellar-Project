@@ -20,7 +20,7 @@ export default function ResultOverlay({
   }
 
   const isWin = gameState === "won"
-  const title = isWin ? "dYZ% Victory! dYZ%" : "Game Over"
+  const title = isWin ? "🏆 Victory! 🏆" : "Game Over"
   const description = isWin ? "All towers destroyed!" : "No balls left!"
   const bonusText =
     isWin && ballsLeft > 0
