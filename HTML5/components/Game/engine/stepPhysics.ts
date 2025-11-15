@@ -3,7 +3,8 @@
 import type { MutableRefObject, Dispatch, SetStateAction } from "react"
 import type { Ball, Laser, Particle, Tower } from "@/components/Game/types"
 import * as CONST from "@/components/Game/constants"
-import { checkCollision } from "@/components/Game/physics"
+import type { ConfirmedCollisionResult } from "@/components/Game/physics"
+import { detectBallTowerCollision } from "@/components/Game/physics"
 import {
   createParticles,
   createLaserParticles,
@@ -29,63 +30,41 @@ type StepPhysicsOptions = {
   remainingTowersRef: MutableRefObject<number>
 }
 
-type CollisionOverlap = {
-  axis: "x" | "y"
-  amount: number
-  direction: -1 | 1
-}
-
 const COLLISION_EXIT_EPSILON = 0.5
+const SWEEP_PENETRATION_EPSILON = 0.5
+const MIN_NORMAL_BOUNCE_SPEED = 0.5
 
-function resolveBallTowerCollision(ball: Ball, tower: Tower) {
-  const overlaps: CollisionOverlap[] = []
-
-  const overlapLeft = ball.x + ball.radius - tower.x
-  if (overlapLeft > 0) {
-    overlaps.push({ axis: "x", amount: overlapLeft, direction: -1 })
-  }
-
-  const overlapRight = tower.x + tower.width - (ball.x - ball.radius)
-  if (overlapRight > 0) {
-    overlaps.push({ axis: "x", amount: overlapRight, direction: 1 })
-  }
-
-  const overlapTop = ball.y + ball.radius - tower.y
-  if (overlapTop > 0) {
-    overlaps.push({ axis: "y", amount: overlapTop, direction: -1 })
-  }
-
-  const overlapBottom = tower.y + tower.height - (ball.y - ball.radius)
-  if (overlapBottom > 0) {
-    overlaps.push({ axis: "y", amount: overlapBottom, direction: 1 })
-  }
-
-  if (overlaps.length === 0) {
-    return
-  }
-
-  overlaps.sort((a, b) => a.amount - b.amount)
-  const smallestOverlap = overlaps[0]
-  const correction = smallestOverlap.amount + COLLISION_EXIT_EPSILON
-
-  if (smallestOverlap.axis === "x") {
-    ball.x += smallestOverlap.direction * correction
-    const incomingSpeed = Math.max(Math.abs(ball.vx), 0.5)
-    ball.vx = incomingSpeed * smallestOverlap.direction * CONST.BOUNCE_DAMPING
-    ball.vy *= CONST.FRICTION
+function resolveBallTowerCollision(ball: Ball, collision: ConfirmedCollisionResult) {
+  if (collision.wasSwept) {
+    ball.x = collision.impactPoint.x - collision.normal.x * SWEEP_PENETRATION_EPSILON
+    ball.y = collision.impactPoint.y - collision.normal.y * SWEEP_PENETRATION_EPSILON
   } else {
-    ball.y += smallestOverlap.direction * correction
-    const incomingSpeed = Math.max(Math.abs(ball.vy), 0.5)
-    ball.vy = incomingSpeed * smallestOverlap.direction * CONST.BOUNCE_DAMPING
-    ball.vx *= CONST.FRICTION
+    const separation = Math.max(collision.penetration + COLLISION_EXIT_EPSILON, COLLISION_EXIT_EPSILON)
+    ball.x += collision.normal.x * separation
+    ball.y += collision.normal.y * separation
   }
+
+  const normalVelocity = ball.vx * collision.normal.x + ball.vy * collision.normal.y
+  const tangentVx = ball.vx - collision.normal.x * normalVelocity
+  const tangentVy = ball.vy - collision.normal.y * normalVelocity
+
+  let resolvedNormalVelocity = normalVelocity
+  if (normalVelocity < 0) {
+    const clamped = Math.min(normalVelocity, -MIN_NORMAL_BOUNCE_SPEED)
+    resolvedNormalVelocity = -clamped * CONST.BOUNCE_DAMPING
+  }
+
+  const resolvedNormalVx = collision.normal.x * resolvedNormalVelocity
+  const resolvedNormalVy = collision.normal.y * resolvedNormalVelocity
+  const resolvedTangentVx = tangentVx * CONST.FRICTION
+  const resolvedTangentVy = tangentVy * CONST.FRICTION
+
+  ball.vx = resolvedNormalVx + resolvedTangentVx
+  ball.vy = resolvedNormalVy + resolvedTangentVy
 
   const push = CONST.COLLISION_PUSH_FORCE * 0.3
-  if (smallestOverlap.axis === "x") {
-    ball.vx += smallestOverlap.direction * push
-  } else {
-    ball.vy += smallestOverlap.direction * push
-  }
+  ball.vx += collision.normal.x * push
+  ball.vy += collision.normal.y * push
 }
 
 export default function stepPhysics({
@@ -104,6 +83,8 @@ export default function stepPhysics({
   remainingTowersRef,
 }: StepPhysicsOptions) {
   ballsRef.current.forEach((ball) => {
+    ball.lastX = ball.x
+    ball.lastY = ball.y
     if (!ball.active) return
 
     ball.x += ball.vx
@@ -178,8 +159,8 @@ export default function stepPhysics({
         return
       }
 
-      const isColliding = checkCollision(ball, tower)
-      if (!isColliding) {
+      const collision = detectBallTowerCollision(ball, tower)
+      if (!collision.collided) {
         collisionCooldownRef.current.delete(collisionKey)
         return
       }
@@ -210,7 +191,7 @@ export default function stepPhysics({
         delete (ball as any).fireDestroyCount
       }
 
-      resolveBallTowerCollision(ball, tower)
+      resolveBallTowerCollision(ball, collision)
 
       tower.hits++
 

@@ -7,6 +7,8 @@ export type BallType = "normal" | "multishot" | "fire" | "laser"
 export interface Ball {
   x: number
   y: number
+  lastX: number
+  lastY: number
   vx: number
   vy: number
   radius: number

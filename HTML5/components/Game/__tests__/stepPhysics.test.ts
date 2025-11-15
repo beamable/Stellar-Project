@@ -43,17 +43,26 @@ const createTower = (overrides: Partial<Tower> = {}): Tower => ({
   ...overrides,
 })
 
-const createBall = (overrides: Partial<Ball> = {}): Ball => ({
-  x: 500,
-  y: CONST.GROUND_Y - 110,
-  vx: 0,
-  vy: 0,
-  radius: 12,
-  active: true,
-  type: "normal",
-  id: 1,
-  ...overrides,
-})
+const createBall = (overrides: Partial<Ball> = {}): Ball => {
+  const defaultX = 500
+  const defaultY = CONST.GROUND_Y - 110
+  const x = overrides.x ?? defaultX
+  const y = overrides.y ?? defaultY
+
+  return {
+    x,
+    y,
+    lastX: overrides.lastX ?? x,
+    lastY: overrides.lastY ?? y,
+    vx: 0,
+    vy: 0,
+    radius: 12,
+    active: true,
+    type: "normal",
+    id: 1,
+    ...overrides,
+  }
+}
 
 describe("stepPhysics", () => {
   afterEach(() => {
