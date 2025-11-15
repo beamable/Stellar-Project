@@ -5,6 +5,7 @@ import type { Ball, Laser, Particle, Tower } from "@/components/Game/types"
 import * as CONST from "@/components/Game/constants"
 import type { ConfirmedCollisionResult } from "@/components/Game/physics"
 import { detectBallTowerCollision } from "@/components/Game/physics"
+import { DEBUG_COLLISION_MODE } from "@/components/Game/debug"
 import {
   createParticles,
   createLaserParticles,
@@ -163,6 +164,14 @@ export default function stepPhysics({
       if (!collision.collided) {
         collisionCooldownRef.current.delete(collisionKey)
         return
+      }
+
+      if (DEBUG_COLLISION_MODE) {
+        console.debug(
+          `[TowerDebug] Ball ${ball.id} hit tower#${towerIndex} (special=${tower.isSpecial}) ` +
+            `normal=(${collision.normal.x.toFixed(2)}, ${collision.normal.y.toFixed(2)}) ` +
+            `swept=${collision.wasSwept}`,
+        )
       }
 
       const fireDestroyCount = ball.fireDestroyCount ?? 0

@@ -9,6 +9,7 @@ import { generateTowers } from "@/components/Game/towers"
 import * as Audio from "@/components/Game/audio"
 import stepPhysics from "@/components/Game/engine/stepPhysics"
 import { BALL_TYPE_MAP } from "@/components/Game/ballTypes"
+import { createDebugTowers, DEBUG_COLLISION_MODE } from "@/components/Game/debug"
 
 type UseTowerGameOptions = {
   readyForGame: boolean
@@ -132,15 +133,15 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
   const [selectedBallType, setSelectedBallType] = useState<BallType>("normal")
 
   const initializeTowers = useCallback(() => {
-    const { towers, towerCount: count } = generateTowers()
+    const { towers, towerCount: count } = DEBUG_COLLISION_MODE ? createDebugTowers() : generateTowers()
     towersRef.current = towers
     setTowerCount(count)
     remainingTowersRef.current = count
     setRemainingTowers(count)
     const initialBallCount =
-      count > CONST.TOWER_THRESHOLD_FOR_HIGH_SPECIAL
-        ? CONST.BALLS_FOR_HIGH_TOWER_COUNT
-        : CONST.BALLS_FOR_LOW_TOWER_COUNT
+      DEBUG_COLLISION_MODE || count <= CONST.TOWER_THRESHOLD_FOR_HIGH_SPECIAL
+        ? CONST.BALLS_FOR_LOW_TOWER_COUNT
+        : CONST.BALLS_FOR_HIGH_TOWER_COUNT
     setBallsLeft(initialBallCount)
   }, [])
 
