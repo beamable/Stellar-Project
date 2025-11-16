@@ -255,17 +255,22 @@ export default function stepPhysics({
   lasersRef.current.forEach((laser) => {
     if (!laser.active) return
 
-    laser.x += Math.cos(laser.angle) * CONST.LASER_SPEED
-    laser.y += Math.sin(laser.angle) * CONST.LASER_SPEED
+    const dx = Math.cos(laser.angle) * CONST.LASER_SPEED
+    const dy = Math.sin(laser.angle) * CONST.LASER_SPEED
+    laser.x += dx
+    laser.y += dy
+
+    const probeX = laser.x + Math.cos(laser.angle) * laser.length * CONST.LASER_COLLISION_OFFSET
+    const probeY = laser.y + Math.sin(laser.angle) * laser.length * CONST.LASER_COLLISION_OFFSET
 
     towersRef.current.forEach((tower) => {
       if (tower.destroyed || laser.hitCount >= laser.maxHits) return
 
       if (
-        laser.x >= tower.x &&
-        laser.x <= tower.x + tower.width &&
-        laser.y >= tower.y &&
-        laser.y <= tower.y + tower.height
+        probeX >= tower.x &&
+        probeX <= tower.x + tower.width &&
+        probeY >= tower.y &&
+        probeY <= tower.y + tower.height
       ) {
         tower.destroyed = true
         const laserTowerCenterX = tower.x + tower.width / 2
@@ -276,13 +281,18 @@ export default function stepPhysics({
         laser.hitCount++
 
         if (laser.hitCount >= laser.maxHits) {
-          createLaserDestructionParticles(particlesRef, laser.x, laser.y)
+          createLaserDestructionParticles(particlesRef, probeX, probeY)
           laser.active = false
         }
       }
     })
 
-    if (laser.x < 0 || laser.x > CONST.CANVAS_WIDTH || laser.y < 0 || laser.y > CONST.CANVAS_HEIGHT) {
+    if (
+      probeX < 0 ||
+      probeX > CONST.CANVAS_WIDTH ||
+      probeY < 0 ||
+      probeY > CONST.CANVAS_HEIGHT
+    ) {
       laser.active = false
     }
   })

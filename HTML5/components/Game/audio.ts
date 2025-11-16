@@ -20,6 +20,8 @@ const clampPan = (value: number) => Math.min(1, Math.max(-1, value))
 const withVariation = (value: number, variation = 0.08) =>
   value * (1 + (Math.random() * 2 - 1) * variation)
 
+type AudioDestination = { node: AudioNode; dispose: () => void }
+
 const ensureMasterGain = (audioContext: AudioContext): GainNode => {
   if (masterGainNode && masterGainNode.context !== audioContext) {
     try {
@@ -50,15 +52,24 @@ export function getMasterVolume(): number {
   return masterVolume
 }
 
-const createPannedDestination = (audioContext: AudioContext, pan?: number) => {
+const createPannedDestination = (audioContext: AudioContext, pan?: number): AudioDestination => {
   const master = ensureMasterGain(audioContext)
   if (typeof audioContext.createStereoPanner !== "function" || typeof pan !== "number") {
-    return master
+    return { node: master, dispose: () => {} }
   }
   const panner = audioContext.createStereoPanner()
   panner.pan.setValueAtTime(clampPan(pan), audioContext.currentTime)
   panner.connect(master)
-  return panner
+  return {
+    node: panner,
+    dispose: () => {
+      try {
+        panner.disconnect()
+      } catch {
+        /* no-op */
+      }
+    },
+  }
 }
 
 const createNoiseBurst = (
@@ -84,10 +95,17 @@ const createNoiseBurst = (
   gainNode.connect(destination)
   noiseSource.start()
   noiseSource.stop(audioContext.currentTime + duration)
+  noiseSource.addEventListener("ended", () => {
+    try {
+      gainNode.disconnect()
+    } catch {
+      /* no-op */
+    }
+  })
 }
 
-let lastTowerBreakSoundTime = 0
-const TOWER_BREAK_SOUND_INTERVAL = 0.05
+let activeTowerBreakVoices = 0
+const MAX_TOWER_BREAK_VOICES = 4
 let lastWinSoundTime = 0
 let lastLoseSoundTime = 0
 const RESULT_SOUND_INTERVAL = 0.5
@@ -225,10 +243,17 @@ export function playShootSound(
   }
 
   oscillator.connect(gainNode)
-  gainNode.connect(destination)
+  gainNode.connect(destination.node)
 
   oscillator.start()
-  oscillator.stop(audioContext.currentTime + 0.3)
+  const stopTime = audioContext.currentTime + 0.3
+  oscillator.stop(stopTime)
+  oscillator.addEventListener("ended", () => {
+    try {
+      gainNode.disconnect()
+    } catch {}
+    destination.dispose()
+  })
 
   dlog(`[v0] ${ballType} ball shoot sound played`)
 }
@@ -239,11 +264,10 @@ export function playTowerBreakSound(
 ): void {
   const audioContext = initAudioContext(audioContextRef)
   if (!audioContext) return
-
-  if (audioContext.currentTime - lastTowerBreakSoundTime < TOWER_BREAK_SOUND_INTERVAL) {
+  if (activeTowerBreakVoices >= MAX_TOWER_BREAK_VOICES) {
     return
   }
-  lastTowerBreakSoundTime = audioContext.currentTime
+  activeTowerBreakVoices++
 
   const oscillator = audioContext.createOscillator()
   const gainNode = audioContext.createGain()
@@ -257,11 +281,18 @@ export function playTowerBreakSound(
   gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15)
 
   oscillator.connect(gainNode)
-  gainNode.connect(destination)
-  createNoiseBurst(audioContext, destination, 0.12, 0.12)
+  gainNode.connect(destination.node)
+  createNoiseBurst(audioContext, destination.node, 0.12, 0.12)
 
   oscillator.start()
   oscillator.stop(audioContext.currentTime + 0.15)
+  oscillator.addEventListener("ended", () => {
+    activeTowerBreakVoices = Math.max(0, activeTowerBreakVoices - 1)
+    try {
+      gainNode.disconnect()
+    } catch {}
+    destination.dispose()
+  })
 }
 
 export function playLaserShootSound(audioContextRef: React.MutableRefObject<AudioContext | null>): void {
@@ -360,10 +391,16 @@ export function playGroundBounceSound(
   gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
 
   oscillator.connect(gainNode)
-  gainNode.connect(destination)
+  gainNode.connect(destination.node)
 
   oscillator.start()
   oscillator.stop(audioContext.currentTime + 0.1)
+  oscillator.addEventListener("ended", () => {
+    try {
+      gainNode.disconnect()
+    } catch {}
+    destination.dispose()
+  })
 }
 
 export function playRestartSound(audioContextRef: React.MutableRefObject<AudioContext | null>): void {
