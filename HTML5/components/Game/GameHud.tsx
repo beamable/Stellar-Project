@@ -35,14 +35,14 @@ export default function GameHud({
   onToggleAudioSettings,
 }: GameHudProps) {
   const identityLabel = alias ?? playerId ?? "Guest"
-  const selectedBallIcon = selectedBallInfo?.icon ?? "dYZ_"
+  const selectedBallIcon = selectedBallInfo?.icon ?? "⚪️"
   const powerPercent = Math.min(100, Math.max(0, powerSnapshot))
 
   const stats = [
-    { label: "Score", value: score.toLocaleString(), accent: "text-cyan-100", icon: "dY?+" },
+    { label: "Score", value: score.toLocaleString(), accent: "text-cyan-100", icon: "🏆" },
     { label: "Balls", value: ballsLeft.toString(), accent: "text-emerald-100", icon: selectedBallIcon },
-    { label: "Towers", value: `${remainingTowers}/${towerCount}`, accent: "text-amber-100", icon: "dY-�" },
-    { label: "Identity", value: identityLabel, accent: "text-pink-100", icon: "dY`" },
+    { label: "Towers", value: `${remainingTowers}/${towerCount}`, accent: "text-amber-100", icon: "🧱" },
+    { label: "Identity", value: identityLabel, accent: "text-pink-100", icon: "👤" },
   ]
 
   return (

@@ -8,7 +8,7 @@ export const BALL_TYPES: BallTypeConfig[] = [
   {
     type: "normal",
     name: "Normal Ball",
-    icon: "⚪",
+    icon: "⚪️",
     description: "Standard ball with balanced physics and collision",
     color: "#8B4513",
     baseSpeedMultiplier: 1.25,
@@ -32,7 +32,7 @@ export const BALL_TYPES: BallTypeConfig[] = [
   {
     type: "laser",
     name: "Laser Ball",
-    icon: "⚡",
+    icon: "💠",
     description: "Shoots 2 lasers that can destroy 3 towers each",
     color: "#8A2BE2",
     baseSpeedMultiplier: 0.85,
