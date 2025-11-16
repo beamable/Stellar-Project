@@ -5,7 +5,7 @@
 
 // Canvas dimensions
 export const CANVAS_WIDTH = 1200 // total width of the play area
-export const CANVAS_HEIGHT = 600 // total height of the play area
+export const CANVAS_HEIGHT = 400 // total height of the play area
 export const GROUND_Y = CANVAS_HEIGHT - 50 // y-position where the ground sits
 
 // Physics constants

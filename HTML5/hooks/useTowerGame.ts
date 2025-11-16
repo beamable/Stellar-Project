@@ -149,11 +149,13 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
     (typeOverride?: BallType) => {
       const effectiveType = typeOverride ?? selectedBallType
       dlog("[v0] Resetting ball for next shot")
+      const startX = 100
+      const startY = CONST.GROUND_Y - 10 - 12 // keep the 12px radius just above ground
       const newBall: Ball = {
-        x: 100,
-        y: 500,
-        lastX: 100,
-        lastY: 500,
+        x: startX,
+        y: startY,
+        lastX: startX,
+        lastY: startY,
         vx: 0,
         vy: 0,
         radius: 12,
