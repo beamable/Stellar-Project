@@ -6,10 +6,10 @@ import type React from "react"
 import type { Ball, BallType, Laser, Particle, Tower } from "@/components/Game/types"
 import * as CONST from "@/components/Game/constants"
 import { generateTowers } from "@/components/Game/towers"
-import { checkCollision } from "@/components/Game/physics"
 import * as Audio from "@/components/Game/audio"
 import stepPhysics from "@/components/Game/engine/stepPhysics"
 import { BALL_TYPE_MAP } from "@/components/Game/ballTypes"
+import { createDebugTowers, DEBUG_COLLISION_MODE } from "@/components/Game/debug"
 
 type UseTowerGameOptions = {
   readyForGame: boolean
@@ -35,6 +35,7 @@ export type UseTowerGameResult = {
 }
 
 const PHYSICS_TIMESTEP = 1000 / 60
+const MAX_PHYSICS_ACCUMULATION = PHYSICS_TIMESTEP * 5
 const DEBUG = false
 const dlog = (...args: any[]) => {
   if (DEBUG) console.log(...args)
@@ -116,6 +117,7 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
   const mousePosRef = useRef({ x: 0, y: 0 })
   const remainingTowersRef = useRef(0)
   const lastPhysicsTimeRef = useRef(0)
+  const physicsAccumulatorRef = useRef(0)
   const lastChargeUpdateRef = useRef(0)
   const backgroundThemeRef = useRef<BackgroundTheme>(getRandomBackgroundTheme())
 
@@ -131,15 +133,15 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
   const [selectedBallType, setSelectedBallType] = useState<BallType>("normal")
 
   const initializeTowers = useCallback(() => {
-    const { towers, towerCount: count } = generateTowers()
+    const { towers, towerCount: count } = DEBUG_COLLISION_MODE ? createDebugTowers() : generateTowers()
     towersRef.current = towers
     setTowerCount(count)
     remainingTowersRef.current = count
     setRemainingTowers(count)
     const initialBallCount =
-      count > CONST.TOWER_THRESHOLD_FOR_HIGH_SPECIAL
-        ? CONST.BALLS_FOR_HIGH_TOWER_COUNT
-        : CONST.BALLS_FOR_LOW_TOWER_COUNT
+      DEBUG_COLLISION_MODE || count <= CONST.TOWER_THRESHOLD_FOR_HIGH_SPECIAL
+        ? CONST.BALLS_FOR_LOW_TOWER_COUNT
+        : CONST.BALLS_FOR_HIGH_TOWER_COUNT
     setBallsLeft(initialBallCount)
   }, [])
 
@@ -147,9 +149,13 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
     (typeOverride?: BallType) => {
       const effectiveType = typeOverride ?? selectedBallType
       dlog("[v0] Resetting ball for next shot")
+      const startX = 100
+      const startY = CONST.GROUND_Y - 10 - 12 // keep the 12px radius just above ground
       const newBall: Ball = {
-        x: 100,
-        y: 500,
+        x: startX,
+        y: startY,
+        lastX: startX,
+        lastY: startY,
         vx: 0,
         vy: 0,
         radius: 12,
@@ -198,7 +204,8 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
         return
       }
 
-      Audio.playShootSound(audioContextRef, selectedBallType)
+      const shootPan = toStereoPan(currentBall.x)
+      Audio.playShootSound(audioContextRef, selectedBallType, shootPan)
       const typeConfig = BALL_TYPE_MAP[selectedBallType] ?? BALL_TYPE_MAP.normal
       const powerRatio = Math.min(power / CONST.MAX_POWER, 1)
       const force = powerRatio * CONST.SHOT_FORCE_MULTIPLIER * typeConfig.baseSpeedMultiplier
@@ -218,6 +225,8 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
           ballsRef.current.push({
             x: currentBall.x,
             y: currentBall.y,
+            lastX: currentBall.x,
+            lastY: currentBall.y,
             vx: rotatedVx,
             vy: rotatedVy,
             radius: CONST.MULTISHOT_BALL_RADIUS,
@@ -276,8 +285,16 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
     }
 
     lastChargeUpdateRef.current = now
-    const shouldSimulate = now - lastPhysicsTimeRef.current >= PHYSICS_TIMESTEP
-    if (shouldSimulate) {
+    const previousPhysicsTime = lastPhysicsTimeRef.current || now
+    const deltaPhysics = Math.max(0, now - previousPhysicsTime)
+    lastPhysicsTimeRef.current = now
+
+    physicsAccumulatorRef.current = Math.min(
+      physicsAccumulatorRef.current + deltaPhysics,
+      MAX_PHYSICS_ACCUMULATION,
+    )
+
+    while (physicsAccumulatorRef.current >= PHYSICS_TIMESTEP) {
       stepPhysics({
         ballsRef,
         lasersRef,
@@ -293,7 +310,7 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
         setRemainingTowers,
         remainingTowersRef,
       })
-      lastPhysicsTimeRef.current = now
+      physicsAccumulatorRef.current -= PHYSICS_TIMESTEP
     }
 
     const backgroundTheme = backgroundThemeRef.current
@@ -556,3 +573,4 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
     startFirstShot,
   }
 }
+const toStereoPan = (x: number) => Math.max(-1, Math.min(1, (x / CONST.CANVAS_WIDTH) * 2 - 1))

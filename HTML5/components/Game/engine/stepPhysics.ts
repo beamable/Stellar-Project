@@ -3,7 +3,9 @@
 import type { MutableRefObject, Dispatch, SetStateAction } from "react"
 import type { Ball, Laser, Particle, Tower } from "@/components/Game/types"
 import * as CONST from "@/components/Game/constants"
-import { checkCollision } from "@/components/Game/physics"
+import type { ConfirmedCollisionResult } from "@/components/Game/physics"
+import { detectBallTowerCollision } from "@/components/Game/physics"
+import { DEBUG_COLLISION_MODE } from "@/components/Game/debug"
 import {
   createParticles,
   createLaserParticles,
@@ -29,63 +31,42 @@ type StepPhysicsOptions = {
   remainingTowersRef: MutableRefObject<number>
 }
 
-type CollisionOverlap = {
-  axis: "x" | "y"
-  amount: number
-  direction: -1 | 1
-}
-
 const COLLISION_EXIT_EPSILON = 0.5
+const SWEEP_PENETRATION_EPSILON = 0.5
+const MIN_NORMAL_BOUNCE_SPEED = 0.5
+const toStereoPan = (x: number) => Math.max(-1, Math.min(1, (x / CONST.CANVAS_WIDTH) * 2 - 1))
 
-function resolveBallTowerCollision(ball: Ball, tower: Tower) {
-  const overlaps: CollisionOverlap[] = []
-
-  const overlapLeft = ball.x + ball.radius - tower.x
-  if (overlapLeft > 0) {
-    overlaps.push({ axis: "x", amount: overlapLeft, direction: -1 })
-  }
-
-  const overlapRight = tower.x + tower.width - (ball.x - ball.radius)
-  if (overlapRight > 0) {
-    overlaps.push({ axis: "x", amount: overlapRight, direction: 1 })
-  }
-
-  const overlapTop = ball.y + ball.radius - tower.y
-  if (overlapTop > 0) {
-    overlaps.push({ axis: "y", amount: overlapTop, direction: -1 })
-  }
-
-  const overlapBottom = tower.y + tower.height - (ball.y - ball.radius)
-  if (overlapBottom > 0) {
-    overlaps.push({ axis: "y", amount: overlapBottom, direction: 1 })
-  }
-
-  if (overlaps.length === 0) {
-    return
-  }
-
-  overlaps.sort((a, b) => a.amount - b.amount)
-  const smallestOverlap = overlaps[0]
-  const correction = smallestOverlap.amount + COLLISION_EXIT_EPSILON
-
-  if (smallestOverlap.axis === "x") {
-    ball.x += smallestOverlap.direction * correction
-    const incomingSpeed = Math.max(Math.abs(ball.vx), 0.5)
-    ball.vx = incomingSpeed * smallestOverlap.direction * CONST.BOUNCE_DAMPING
-    ball.vy *= CONST.FRICTION
+function resolveBallTowerCollision(ball: Ball, collision: ConfirmedCollisionResult) {
+  if (collision.wasSwept) {
+    ball.x = collision.impactPoint.x - collision.normal.x * SWEEP_PENETRATION_EPSILON
+    ball.y = collision.impactPoint.y - collision.normal.y * SWEEP_PENETRATION_EPSILON
   } else {
-    ball.y += smallestOverlap.direction * correction
-    const incomingSpeed = Math.max(Math.abs(ball.vy), 0.5)
-    ball.vy = incomingSpeed * smallestOverlap.direction * CONST.BOUNCE_DAMPING
-    ball.vx *= CONST.FRICTION
+    const separation = Math.max(collision.penetration + COLLISION_EXIT_EPSILON, COLLISION_EXIT_EPSILON)
+    ball.x += collision.normal.x * separation
+    ball.y += collision.normal.y * separation
   }
+
+  const normalVelocity = ball.vx * collision.normal.x + ball.vy * collision.normal.y
+  const tangentVx = ball.vx - collision.normal.x * normalVelocity
+  const tangentVy = ball.vy - collision.normal.y * normalVelocity
+
+  let resolvedNormalVelocity = normalVelocity
+  if (normalVelocity < 0) {
+    const clamped = Math.min(normalVelocity, -MIN_NORMAL_BOUNCE_SPEED)
+    resolvedNormalVelocity = -clamped * CONST.BOUNCE_DAMPING
+  }
+
+  const resolvedNormalVx = collision.normal.x * resolvedNormalVelocity
+  const resolvedNormalVy = collision.normal.y * resolvedNormalVelocity
+  const resolvedTangentVx = tangentVx * CONST.FRICTION
+  const resolvedTangentVy = tangentVy * CONST.FRICTION
+
+  ball.vx = resolvedNormalVx + resolvedTangentVx
+  ball.vy = resolvedNormalVy + resolvedTangentVy
 
   const push = CONST.COLLISION_PUSH_FORCE * 0.3
-  if (smallestOverlap.axis === "x") {
-    ball.vx += smallestOverlap.direction * push
-  } else {
-    ball.vy += smallestOverlap.direction * push
-  }
+  ball.vx += collision.normal.x * push
+  ball.vy += collision.normal.y * push
 }
 
 export default function stepPhysics({
@@ -104,6 +85,8 @@ export default function stepPhysics({
   remainingTowersRef,
 }: StepPhysicsOptions) {
   ballsRef.current.forEach((ball) => {
+    ball.lastX = ball.x
+    ball.lastY = ball.y
     if (!ball.active) return
 
     ball.x += ball.vx
@@ -112,11 +95,14 @@ export default function stepPhysics({
 
     if (ball.y + ball.radius > CONST.GROUND_Y) {
       ball.y = CONST.GROUND_Y - ball.radius
+      const impactVelocity = Math.abs(ball.vy)
       ball.vy *= -CONST.BOUNCE_DAMPING
       ball.vx *= CONST.FRICTION
 
-      if (Math.abs(ball.vy) > CONST.BOUNCE_VELOCITY_THRESHOLD) {
-        Audio.playGroundBounceSound(audioContextRef)
+      if (impactVelocity > CONST.BOUNCE_VELOCITY_THRESHOLD) {
+        const pan = toStereoPan(ball.x)
+        const intensity = Math.min(impactVelocity / 20, 1)
+        Audio.playGroundBounceSound(audioContextRef, { pan, intensity })
       }
 
       if (Math.abs(ball.vy) < CONST.BOUNCE_VELOCITY_THRESHOLD && Math.abs(ball.vx) < 1) {
@@ -172,16 +158,27 @@ export default function stepPhysics({
 
     towersRef.current.forEach((tower, towerIndex) => {
       const collisionKey = `${ball.id}-${towerIndex}`
+      const towerCenterX = tower.x + tower.width / 2
+      const towerCenterY = tower.y + tower.height / 2
+      const towerPan = toStereoPan(towerCenterX)
 
       if (tower.destroyed) {
         collisionCooldownRef.current.delete(collisionKey)
         return
       }
 
-      const isColliding = checkCollision(ball, tower)
-      if (!isColliding) {
+      const collision = detectBallTowerCollision(ball, tower)
+      if (!collision.collided) {
         collisionCooldownRef.current.delete(collisionKey)
         return
+      }
+
+      if (DEBUG_COLLISION_MODE) {
+        console.debug(
+          `[TowerDebug] Ball ${ball.id} hit tower#${towerIndex} (special=${tower.isSpecial}) ` +
+            `normal=(${collision.normal.x.toFixed(2)}, ${collision.normal.y.toFixed(2)}) ` +
+            `swept=${collision.wasSwept}`,
+        )
       }
 
       const fireDestroyCount = ball.fireDestroyCount ?? 0
@@ -195,7 +192,7 @@ export default function stepPhysics({
       if (hasPassThroughCharge) {
         ball.fireDestroyCount = fireDestroyCount + 1
         tower.destroyed = true
-        Audio.playTowerBreakSound(audioContextRef)
+        Audio.playTowerBreakSound(audioContextRef, towerPan)
         createParticles(particlesRef, tower.x + tower.width / 2, tower.y + tower.height / 2, "fire", tower.color)
         const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
         setScore((prev) => prev + points)
@@ -210,7 +207,7 @@ export default function stepPhysics({
         delete (ball as any).fireDestroyCount
       }
 
-      resolveBallTowerCollision(ball, tower)
+      resolveBallTowerCollision(ball, collision)
 
       tower.hits++
 
@@ -232,7 +229,7 @@ export default function stepPhysics({
 
       if (tower.hits >= tower.maxHits) {
         tower.destroyed = true
-        Audio.playTowerBreakSound(audioContextRef)
+        Audio.playTowerBreakSound(audioContextRef, towerPan)
         createParticles(
           particlesRef,
           tower.x + tower.width / 2,
@@ -243,10 +240,8 @@ export default function stepPhysics({
         const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
         setScore((prev) => prev + points)
       } else {
-        const centerX = tower.x + tower.width / 2
-        const centerY = tower.y + tower.height / 2
-        const dx = ball.x - centerX
-        const dy = ball.y - centerY
+        const dx = ball.x - towerCenterX
+        const dy = ball.y - towerCenterY
         const distance = Math.sqrt(dx * dx + dy * dy)
 
         if (distance > 0) {
@@ -260,33 +255,44 @@ export default function stepPhysics({
   lasersRef.current.forEach((laser) => {
     if (!laser.active) return
 
-    laser.x += Math.cos(laser.angle) * CONST.LASER_SPEED
-    laser.y += Math.sin(laser.angle) * CONST.LASER_SPEED
+    const dx = Math.cos(laser.angle) * CONST.LASER_SPEED
+    const dy = Math.sin(laser.angle) * CONST.LASER_SPEED
+    laser.x += dx
+    laser.y += dy
+
+    const probeX = laser.x + Math.cos(laser.angle) * laser.length * CONST.LASER_COLLISION_OFFSET
+    const probeY = laser.y + Math.sin(laser.angle) * laser.length * CONST.LASER_COLLISION_OFFSET
 
     towersRef.current.forEach((tower) => {
       if (tower.destroyed || laser.hitCount >= laser.maxHits) return
 
       if (
-        laser.x >= tower.x &&
-        laser.x <= tower.x + tower.width &&
-        laser.y >= tower.y &&
-        laser.y <= tower.y + tower.height
+        probeX >= tower.x &&
+        probeX <= tower.x + tower.width &&
+        probeY >= tower.y &&
+        probeY <= tower.y + tower.height
       ) {
         tower.destroyed = true
-        Audio.playTowerBreakSound(audioContextRef)
-        createLaserParticles(particlesRef, tower.x + tower.width / 2, tower.y + tower.height / 2)
+        const laserTowerCenterX = tower.x + tower.width / 2
+        Audio.playTowerBreakSound(audioContextRef, toStereoPan(laserTowerCenterX))
+        createLaserParticles(particlesRef, laserTowerCenterX, tower.y + tower.height / 2)
         const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
         setScore((prev) => prev + points)
         laser.hitCount++
 
         if (laser.hitCount >= laser.maxHits) {
-          createLaserDestructionParticles(particlesRef, laser.x, laser.y)
+          createLaserDestructionParticles(particlesRef, probeX, probeY)
           laser.active = false
         }
       }
     })
 
-    if (laser.x < 0 || laser.x > CONST.CANVAS_WIDTH || laser.y < 0 || laser.y > CONST.CANVAS_HEIGHT) {
+    if (
+      probeX < 0 ||
+      probeX > CONST.CANVAS_WIDTH ||
+      probeY < 0 ||
+      probeY > CONST.CANVAS_HEIGHT
+    ) {
       laser.active = false
     }
   })

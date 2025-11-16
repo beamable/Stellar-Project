@@ -5,8 +5,10 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import useBeamIdentity from "@/hooks/useBeamIdentity"
 import useWalletBridge from "@/hooks/useWalletBridge"
 import GameShell from "@/components/Game/GameShell"
+import { getMasterVolume, setMasterVolume } from "@/components/Game/audio"
 
 const SHOULD_LOG_RENDERS = process.env.NEXT_PUBLIC_TD_RENDER_DEBUG === "true"
+const VOLUME_STORAGE_KEY = "tower-destroyer-volume"
 
 function useRenderCounter(label: string, enabled: boolean) {
   const renderCountRef = useRef(0)
@@ -62,6 +64,8 @@ function formatSignatureErrorMessage(err: unknown): string {
 export default function TowerDestroyer() {
   useRenderCounter("TowerDestroyer", SHOULD_LOG_RENDERS)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [volume, setVolume] = useState(1)
+  const [showAudioSettings, setShowAudioSettings] = useState(false)
   const {
     beamReady,
     playerId,
@@ -356,6 +360,36 @@ export default function TowerDestroyer() {
     window.location.reload()
   }
 
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const stored = window.localStorage.getItem(VOLUME_STORAGE_KEY)
+    const parsed = stored !== null ? Number.parseFloat(stored) : Number.NaN
+    const initial = Number.isFinite(parsed) ? Math.min(1, Math.max(0, parsed)) : getMasterVolume()
+    setVolume(initial)
+    setMasterVolume(initial)
+  }, [])
+
+  const handleVolumeChange = useCallback((next: number) => {
+    const clamped = Math.min(1, Math.max(0, next))
+    setVolume(clamped)
+    setMasterVolume(clamped)
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(VOLUME_STORAGE_KEY, clamped.toString())
+      } catch {
+        // Ignore write failures
+      }
+    }
+  }, [])
+
+  const handleToggleAudioSettings = useCallback(() => {
+    setShowAudioSettings((prev) => !prev)
+  }, [])
+
+  const handleCloseAudioSettings = useCallback(() => {
+    setShowAudioSettings(false)
+  }, [])
+
 
   // ============================================================================
   // UI RENDERING
@@ -375,6 +409,8 @@ export default function TowerDestroyer() {
         onResetPlayer: handleResetPlayer,
         canShowRestart: hasShot && gameState === "playing",
         onRestart: resetGame,
+        isAudioSettingsOpen: showAudioSettings,
+        onToggleAudioSettings: handleToggleAudioSettings,
       }}
       surfaceProps={{
         canvasRef,
@@ -423,6 +459,10 @@ export default function TowerDestroyer() {
           onManualWalletOpen: handleManualWalletOpen,
           onClosePlayerInfo: () => setShowPlayerInfo(false),
           onPlayAgain: resetGame,
+          showAudioSettings,
+          onCloseAudioSettings: handleCloseAudioSettings,
+          volume,
+          onVolumeChange: handleVolumeChange,
         },
       }}
     />

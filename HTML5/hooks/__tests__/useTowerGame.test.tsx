@@ -1,5 +1,5 @@
 import type React from "react"
-import { act, renderHook } from "@testing-library/react"
+import { act, renderHook, type RenderHookResult } from "@testing-library/react"
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest"
 import useTowerGame from "@/hooks/useTowerGame"
 
@@ -84,7 +84,9 @@ const createMockContext = () => ({
   })),
 })
 
-const attachCanvasToHook = (result: ReturnType<typeof renderHook>["result"]) => {
+type TowerGameHookResult = ReturnType<typeof useTowerGame>
+
+const attachCanvasToHook = (result: RenderHookResult<TowerGameHookResult, undefined>["result"]) => {
   const canvas = document.createElement("canvas")
   Object.defineProperty(canvas, "getContext", {
     value: vi.fn(() => createMockContext()),
@@ -100,7 +102,8 @@ const attachCanvasToHook = (result: ReturnType<typeof renderHook>["result"]) => 
   })
 
   act(() => {
-    result.current.canvasRef.current = canvas as HTMLCanvasElement
+    const canvasRef = result.current.canvasRef as React.MutableRefObject<HTMLCanvasElement | null>
+    canvasRef.current = canvas as HTMLCanvasElement
   })
 
   return canvas
@@ -130,7 +133,7 @@ describe("useTowerGame", () => {
   })
 
   it("allows selecting a different ball type", () => {
-    const { result } = renderHook(() => useTowerGame({ readyForGame: true }))
+    const { result } = renderHook<TowerGameHookResult, undefined>(() => useTowerGame({ readyForGame: true }))
 
     expect(result.current.selectedBallType).toBe("normal")
 
@@ -143,7 +146,7 @@ describe("useTowerGame", () => {
   })
 
   it("marks the game as started when startFirstShot is invoked", () => {
-    const { result } = renderHook(() => useTowerGame({ readyForGame: true }))
+    const { result } = renderHook<TowerGameHookResult, undefined>(() => useTowerGame({ readyForGame: true }))
 
     expect(result.current.hasShot).toBe(false)
 
@@ -156,7 +159,7 @@ describe("useTowerGame", () => {
   })
 
   it("handles pointer interactions to shoot a ball when ready", () => {
-    const { result } = renderHook(() => useTowerGame({ readyForGame: true }))
+    const { result } = renderHook<TowerGameHookResult, undefined>(() => useTowerGame({ readyForGame: true }))
     attachCanvasToHook(result)
 
     act(() => {
