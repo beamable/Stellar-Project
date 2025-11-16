@@ -14,6 +14,8 @@ type GameHudProps = {
   onResetPlayer: () => void
   canShowRestart: boolean
   onRestart: () => void
+  isAudioSettingsOpen: boolean
+  onToggleAudioSettings: () => void
 }
 
 export default function GameHud({
@@ -29,15 +31,18 @@ export default function GameHud({
   onResetPlayer,
   canShowRestart,
   onRestart,
+  isAudioSettingsOpen,
+  onToggleAudioSettings,
 }: GameHudProps) {
   const identityLabel = alias ?? playerId ?? "Guest"
-  const selectedBallIcon = selectedBallInfo?.icon ?? "🎯"
+  const selectedBallIcon = selectedBallInfo?.icon ?? "dYZ_"
   const powerPercent = Math.min(100, Math.max(0, powerSnapshot))
+
   const stats = [
-    { label: "Score", value: score.toLocaleString(), accent: "text-cyan-100", icon: "🏆" },
+    { label: "Score", value: score.toLocaleString(), accent: "text-cyan-100", icon: "dY?+" },
     { label: "Balls", value: ballsLeft.toString(), accent: "text-emerald-100", icon: selectedBallIcon },
-    { label: "Towers", value: `${remainingTowers}/${towerCount}`, accent: "text-amber-100", icon: "🗼" },
-    { label: "Identity", value: identityLabel, accent: "text-pink-100", icon: "👤" },
+    { label: "Towers", value: `${remainingTowers}/${towerCount}`, accent: "text-amber-100", icon: "dY-�" },
+    { label: "Identity", value: identityLabel, accent: "text-pink-100", icon: "dY`" },
   ]
 
   return (
@@ -49,6 +54,13 @@ export default function GameHud({
             <h1 className="text-3xl font-black tracking-wider drop-shadow-md">Tower Destroyer</h1>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={onToggleAudioSettings}
+              size="sm"
+              className="rounded-full border border-white/10 bg-white/10 text-white text-xs hover:bg-white/20"
+            >
+              {isAudioSettingsOpen ? "Close Audio" : "Audio Menu"}
+            </Button>
             {canShowRestart && (
               <Button
                 onClick={onRestart}
@@ -83,8 +95,8 @@ export default function GameHud({
           ))}
         </div>
 
-        <div className="mt-5">
-          <div className="flex items-center justify-between text-xs uppercase tracking-wide text-white/60 mb-1">
+        <div className="mt-5 space-y-4">
+          <div className="flex items-center justify-between text-xs uppercase tracking-wide text-white/60">
             <span>{isCharging ? "Charging Shot" : "Ready to Fire"}</span>
             <span className="text-white">{powerPercent}%</span>
           </div>

@@ -34,6 +34,7 @@ type StepPhysicsOptions = {
 const COLLISION_EXIT_EPSILON = 0.5
 const SWEEP_PENETRATION_EPSILON = 0.5
 const MIN_NORMAL_BOUNCE_SPEED = 0.5
+const toStereoPan = (x: number) => Math.max(-1, Math.min(1, (x / CONST.CANVAS_WIDTH) * 2 - 1))
 
 function resolveBallTowerCollision(ball: Ball, collision: ConfirmedCollisionResult) {
   if (collision.wasSwept) {
@@ -94,11 +95,14 @@ export default function stepPhysics({
 
     if (ball.y + ball.radius > CONST.GROUND_Y) {
       ball.y = CONST.GROUND_Y - ball.radius
+      const impactVelocity = Math.abs(ball.vy)
       ball.vy *= -CONST.BOUNCE_DAMPING
       ball.vx *= CONST.FRICTION
 
-      if (Math.abs(ball.vy) > CONST.BOUNCE_VELOCITY_THRESHOLD) {
-        Audio.playGroundBounceSound(audioContextRef)
+      if (impactVelocity > CONST.BOUNCE_VELOCITY_THRESHOLD) {
+        const pan = toStereoPan(ball.x)
+        const intensity = Math.min(impactVelocity / 20, 1)
+        Audio.playGroundBounceSound(audioContextRef, { pan, intensity })
       }
 
       if (Math.abs(ball.vy) < CONST.BOUNCE_VELOCITY_THRESHOLD && Math.abs(ball.vx) < 1) {
@@ -154,6 +158,9 @@ export default function stepPhysics({
 
     towersRef.current.forEach((tower, towerIndex) => {
       const collisionKey = `${ball.id}-${towerIndex}`
+      const towerCenterX = tower.x + tower.width / 2
+      const towerCenterY = tower.y + tower.height / 2
+      const towerPan = toStereoPan(towerCenterX)
 
       if (tower.destroyed) {
         collisionCooldownRef.current.delete(collisionKey)
@@ -185,7 +192,7 @@ export default function stepPhysics({
       if (hasPassThroughCharge) {
         ball.fireDestroyCount = fireDestroyCount + 1
         tower.destroyed = true
-        Audio.playTowerBreakSound(audioContextRef)
+        Audio.playTowerBreakSound(audioContextRef, towerPan)
         createParticles(particlesRef, tower.x + tower.width / 2, tower.y + tower.height / 2, "fire", tower.color)
         const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
         setScore((prev) => prev + points)
@@ -222,7 +229,7 @@ export default function stepPhysics({
 
       if (tower.hits >= tower.maxHits) {
         tower.destroyed = true
-        Audio.playTowerBreakSound(audioContextRef)
+        Audio.playTowerBreakSound(audioContextRef, towerPan)
         createParticles(
           particlesRef,
           tower.x + tower.width / 2,
@@ -233,10 +240,8 @@ export default function stepPhysics({
         const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
         setScore((prev) => prev + points)
       } else {
-        const centerX = tower.x + tower.width / 2
-        const centerY = tower.y + tower.height / 2
-        const dx = ball.x - centerX
-        const dy = ball.y - centerY
+        const dx = ball.x - towerCenterX
+        const dy = ball.y - towerCenterY
         const distance = Math.sqrt(dx * dx + dy * dy)
 
         if (distance > 0) {
@@ -263,8 +268,9 @@ export default function stepPhysics({
         laser.y <= tower.y + tower.height
       ) {
         tower.destroyed = true
-        Audio.playTowerBreakSound(audioContextRef)
-        createLaserParticles(particlesRef, tower.x + tower.width / 2, tower.y + tower.height / 2)
+        const laserTowerCenterX = tower.x + tower.width / 2
+        Audio.playTowerBreakSound(audioContextRef, toStereoPan(laserTowerCenterX))
+        createLaserParticles(particlesRef, laserTowerCenterX, tower.y + tower.height / 2)
         const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
         setScore((prev) => prev + points)
         laser.hitCount++

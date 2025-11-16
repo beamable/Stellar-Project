@@ -202,7 +202,8 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
         return
       }
 
-      Audio.playShootSound(audioContextRef, selectedBallType)
+      const shootPan = toStereoPan(currentBall.x)
+      Audio.playShootSound(audioContextRef, selectedBallType, shootPan)
       const typeConfig = BALL_TYPE_MAP[selectedBallType] ?? BALL_TYPE_MAP.normal
       const powerRatio = Math.min(power / CONST.MAX_POWER, 1)
       const force = powerRatio * CONST.SHOT_FORCE_MULTIPLIER * typeConfig.baseSpeedMultiplier
@@ -570,3 +571,4 @@ export default function useTowerGame({ readyForGame }: UseTowerGameOptions): Use
     startFirstShot,
   }
 }
+const toStereoPan = (x: number) => Math.max(-1, Math.min(1, (x / CONST.CANVAS_WIDTH) * 2 - 1))

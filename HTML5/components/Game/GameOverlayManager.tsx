@@ -6,6 +6,7 @@ import PlayerIdentityOverlays from "@/components/Game/PlayerIdentityOverlays"
 import BeamInitializingOverlay from "@/components/Game/BeamInitializingOverlay"
 import ResetConfirmOverlay from "@/components/Game/ResetConfirmOverlay"
 import ResultOverlay from "@/components/Game/ResultOverlay"
+import AudioSettingsOverlay from "@/components/Game/AudioSettingsOverlay"
 
 type GameOverlayManagerProps = {
   beamReady: boolean
@@ -46,6 +47,10 @@ type GameOverlayManagerProps = {
   onManualWalletOpen: () => void
   onClosePlayerInfo: () => void
   onPlayAgain: () => void
+  showAudioSettings: boolean
+  onCloseAudioSettings: () => void
+  volume: number
+  onVolumeChange: (volume: number) => void
 }
 
 export default function GameOverlayManager({
@@ -87,6 +92,10 @@ export default function GameOverlayManager({
   onManualWalletOpen,
   onClosePlayerInfo,
   onPlayAgain,
+  showAudioSettings,
+  onCloseAudioSettings,
+  volume,
+  onVolumeChange,
 }: GameOverlayManagerProps) {
   return (
     <>
@@ -138,6 +147,14 @@ export default function GameOverlayManager({
         victoryBonusMultiplier={victoryBonusMultiplier}
         onPlayAgain={onPlayAgain}
       />
+
+      {showAudioSettings && (
+        <AudioSettingsOverlay
+          volume={volume}
+          onVolumeChange={onVolumeChange}
+          onClose={onCloseAudioSettings}
+        />
+      )}
     </>
   )
 }
