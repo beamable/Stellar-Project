@@ -8,6 +8,7 @@ import {
 } from "@/components/Game/campaign"
 
 const STORAGE_KEY = "tower-destroyer-campaign-progress"
+const DEFAULT_PROFILE_ID = "default"
 
 type StoredCampaignState = {
   selectedStageId: string
@@ -40,14 +41,19 @@ const defaultState: StoredCampaignState = {
 
 const finalStageId = CAMPAIGN_STAGES[CAMPAIGN_STAGES.length - 1]?.id ?? DEFAULT_STAGE_ID
 
-export default function useCampaignProgress() {
+export default function useCampaignProgress(profileId?: string | null) {
+  const resolvedProfileId =
+    profileId && profileId.length > 0 ? `player-${profileId}` : DEFAULT_PROFILE_ID
   const [state, setState] = useState<StoredCampaignState>(defaultState)
-  const [hydrated, setHydrated] = useState(false)
+  const [hydratedKey, setHydratedKey] = useState<string | null>(null)
+  const hydrated = hydratedKey === resolvedProfileId
 
   useEffect(() => {
     if (typeof window === "undefined") return
+    setHydratedKey(null)
+    setState(defaultState)
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
+      const raw = window.localStorage.getItem(`${STORAGE_KEY}:${resolvedProfileId}`)
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<StoredCampaignState>
         setState((prev) => ({
@@ -68,18 +74,18 @@ export default function useCampaignProgress() {
     } catch {
       // Ignore malformed stored state
     } finally {
-      setHydrated(true)
+      setHydratedKey(resolvedProfileId)
     }
-  }, [])
+  }, [resolvedProfileId])
 
   useEffect(() => {
     if (!hydrated || typeof window === "undefined") return
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      window.localStorage.setItem(`${STORAGE_KEY}:${resolvedProfileId}`, JSON.stringify(state))
     } catch {
       // ignore persistence failures
     }
-  }, [state, hydrated])
+  }, [state, hydrated, resolvedProfileId])
 
   const completedSet = useMemo(() => new Set(state.completedStageIds), [state.completedStageIds])
 

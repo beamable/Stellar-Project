@@ -99,7 +99,7 @@ export default function TowerDestroyer() {
     campaignComplete,
     loopCount,
     startNextLoop,
-  } = useCampaignProgress()
+  } = useCampaignProgress(playerId)
   const activeStage = selectedStage ?? CAMPAIGN_STAGE_MAP.get(DEFAULT_STAGE_ID)!
   const totalStages = CAMPAIGN_STAGES.length
   const [campaignUnlocked, setCampaignUnlocked] = useState(false)
@@ -484,10 +484,12 @@ export default function TowerDestroyer() {
       }
     : undefined
 
+  const loopAdvanceRef = useRef(false)
   useEffect(() => {
     if (gameState !== "won") {
       if (gameState === "playing") {
         campaignWinStageRef.current = null
+        loopAdvanceRef.current = false
       }
       return
     }
@@ -496,7 +498,13 @@ export default function TowerDestroyer() {
     }
     markStageComplete(activeStage.id)
     campaignWinStageRef.current = activeStage.id
-  }, [gameState, activeStage.id, markStageComplete])
+    if (activeStage.order === totalStages - 1 && campaignComplete && !loopAdvanceRef.current) {
+      loopAdvanceRef.current = true
+      startNextLoop()
+      setCampaignConfirmed(false)
+      setShowPlayerInfo(true)
+    }
+  }, [gameState, activeStage.id, markStageComplete, activeStage.order, totalStages, campaignComplete, startNextLoop, setShowPlayerInfo])
 
 
   // ============================================================================

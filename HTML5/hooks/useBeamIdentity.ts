@@ -129,7 +129,7 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
 
   const debugFakeLogin = useCallback(() => {
     setBeamReady(true)
-    setPlayerId((prev) => prev ?? "DEV-PLAYER")
+    setPlayerId("DEV-PLAYER")
     setAlias("guest")
     setAliasInput("guest")
     setAliasModalOpen(false)
