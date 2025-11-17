@@ -67,6 +67,48 @@ namespace Beamable.Server.Clients
         }
         
         /// <summary>
+        /// Call the UpdateCurrency method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.UpdateCurrency"/>
+        /// </summary>
+        public Beamable.Common.Promise<Beamable.Common.Unit> UpdateCurrency(string currencyContentId, int amount)
+        {
+            object raw_currencyContentId = currencyContentId;
+            object raw_amount = amount;
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            serializedFields.Add("currencyContentId", raw_currencyContentId);
+            serializedFields.Add("amount", raw_amount);
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "UpdateCurrency", serializedFields);
+        }
+        
+        /// <summary>
+        /// Call the AddItem method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.AddItem"/>
+        /// </summary>
+        public Beamable.Common.Promise<Beamable.Common.Unit> AddItem(string itemContentId, System.Collections.Generic.Dictionary<System.String, System.String> properties)
+        {
+            object raw_itemContentId = itemContentId;
+            object raw_properties = properties;
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            serializedFields.Add("itemContentId", raw_itemContentId);
+            serializedFields.Add("properties", raw_properties);
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "AddItem", serializedFields);
+        }
+        
+        /// <summary>
+        /// Call the RemoveItem method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.RemoveItem"/>
+        /// </summary>
+        public Beamable.Common.Promise<Beamable.Common.Unit> RemoveItem(string itemContentId, long instanceId)
+        {
+            object raw_itemContentId = itemContentId;
+            object raw_instanceId = instanceId;
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            serializedFields.Add("itemContentId", raw_itemContentId);
+            serializedFields.Add("instanceId", raw_instanceId);
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "RemoveItem", serializedFields);
+        }
+        
+        /// <summary>
         /// Call the ExternalAddress method on the StellarFederation microservice
         /// <see cref="Beamable.StellarFederation.StellarFederation.ExternalAddress"/>
         /// </summary>
@@ -89,6 +131,26 @@ namespace Beamable.Server.Clients
     
     internal sealed class MicroserviceParametersStellarFederationClient
     {
+        
+        [System.SerializableAttribute()]
+        internal sealed class ParameterSystem_String : MicroserviceClientDataWrapper<string>
+        {
+        }
+        
+        [System.SerializableAttribute()]
+        internal sealed class ParameterSystem_Int32 : MicroserviceClientDataWrapper<int>
+        {
+        }
+        
+        [System.SerializableAttribute()]
+        internal sealed class ParameterSystem_Collections_Generic_Dictionary_System_String_System_String : MicroserviceClientDataWrapper<System.Collections.Generic.Dictionary<System.String, System.String>>
+        {
+        }
+        
+        [System.SerializableAttribute()]
+        internal sealed class ParameterSystem_Int64 : MicroserviceClientDataWrapper<long>
+        {
+        }
     }
     
     [BeamContextSystemAttribute()]
