@@ -185,7 +185,7 @@ export function stopChargingSound(
     try {
       chargingOscillatorRef.current.stop()
       chargingOscillatorRef.current.disconnect()
-    } catch (e) {
+    } catch {
       // Oscillator might already be stopped
     }
     chargingOscillatorRef.current = null

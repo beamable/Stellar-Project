@@ -5,8 +5,11 @@ import BallSelectionOverlay from "@/components/Game/BallSelectionOverlay"
 import PlayerIdentityOverlays from "@/components/Game/PlayerIdentityOverlays"
 import BeamInitializingOverlay from "@/components/Game/BeamInitializingOverlay"
 import ResetConfirmOverlay from "@/components/Game/ResetConfirmOverlay"
-import ResultOverlay from "@/components/Game/ResultOverlay"
+import ResultOverlay, { type CampaignResultContext } from "@/components/Game/ResultOverlay"
 import AudioSettingsOverlay from "@/components/Game/AudioSettingsOverlay"
+import CampaignSelectionOverlay from "@/components/Game/CampaignSelectionOverlay"
+import type { CampaignStage, MechanicTag } from "@/components/Game/campaign"
+import type { StageProgress } from "@/hooks/useCampaignProgress"
 
 type GameOverlayManagerProps = {
   beamReady: boolean
@@ -46,11 +49,25 @@ type GameOverlayManagerProps = {
   onResetPlayer: () => void
   onManualWalletOpen: () => void
   onClosePlayerInfo: () => void
-  onPlayAgain: () => void
+  onRetry: () => void
   showAudioSettings: boolean
   onCloseAudioSettings: () => void
   volume: number
   onVolumeChange: (volume: number) => void
+  campaignContext?: CampaignResultContext
+  showCampaignOverlay: boolean
+  campaignSelectionProps?: {
+    activeStage: CampaignStage
+    stageProgress: StageProgress[]
+    selectedStageId: string
+    pendingMechanics: MechanicTag[]
+    campaignComplete: boolean
+    loopCount: number
+    onStartNextLoop: () => void
+    onSelectStage: (stageId: string) => void
+    onAcknowledgeMechanics: () => void
+    onConfirm: () => void
+  }
 }
 
 export default function GameOverlayManager({
@@ -91,17 +108,24 @@ export default function GameOverlayManager({
   onResetPlayer,
   onManualWalletOpen,
   onClosePlayerInfo,
-  onPlayAgain,
+  onRetry,
   showAudioSettings,
   onCloseAudioSettings,
   volume,
   onVolumeChange,
+  campaignContext,
+  showCampaignOverlay,
+  campaignSelectionProps,
 }: GameOverlayManagerProps) {
   return (
     <>
       {!beamReady && <BeamInitializingOverlay />}
 
-      {!hasShot && gameState === "playing" && readyForGame && !showPlayerInfo && (
+      {showCampaignOverlay && campaignSelectionProps && (
+        <CampaignSelectionOverlay {...campaignSelectionProps} />
+      )}
+
+      {!hasShot && gameState === "playing" && readyForGame && !showPlayerInfo && !showCampaignOverlay && (
         <BallSelectionOverlay
           ballTypes={ballTypes}
           selectedBallType={selectedBallType}
@@ -145,7 +169,8 @@ export default function GameOverlayManager({
         score={score}
         ballsLeft={ballsLeft}
         victoryBonusMultiplier={victoryBonusMultiplier}
-        onPlayAgain={onPlayAgain}
+        onRetry={onRetry}
+        campaignContext={campaignContext}
       />
 
       {showAudioSettings && (

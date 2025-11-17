@@ -40,6 +40,8 @@ export interface Tower {
   isSpecial: boolean
   hits: number
   maxHits: number
+  baseX?: number
+  motion?: TowerMotion
 }
 
 export interface Particle {
@@ -61,4 +63,22 @@ export interface BallTypeConfig {
   description: string
   color: string
   baseSpeedMultiplier: number
+}
+
+export interface TowerMotion {
+  originX: number
+  amplitude: number
+  speed: number
+  phase: number
+}
+
+export interface WindZone {
+  id: string
+  xStart: number
+  xEnd: number
+  yStart: number
+  yEnd: number
+  force: number
+  pulseMs?: number
+  phase?: number
 }

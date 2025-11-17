@@ -6,6 +6,9 @@ type GameHudProps = {
   ballsLeft: number
   remainingTowers: number
   towerCount: number
+  stageLabel: string
+  stageName: string
+  loopLabel: string
   alias: string | null
   playerId: string | null
   isCharging: boolean
@@ -16,6 +19,7 @@ type GameHudProps = {
   onRestart: () => void
   isAudioSettingsOpen: boolean
   onToggleAudioSettings: () => void
+  onShowCommandDeck: () => void
 }
 
 export default function GameHud({
@@ -23,6 +27,9 @@ export default function GameHud({
   ballsLeft,
   remainingTowers,
   towerCount,
+  stageLabel,
+  stageName,
+  loopLabel,
   alias,
   playerId,
   isCharging,
@@ -33,16 +40,17 @@ export default function GameHud({
   onRestart,
   isAudioSettingsOpen,
   onToggleAudioSettings,
+  onShowCommandDeck,
 }: GameHudProps) {
   const identityLabel = alias ?? playerId ?? "Guest"
-  const selectedBallIcon = selectedBallInfo?.icon ?? "⚪️"
   const powerPercent = Math.min(100, Math.max(0, powerSnapshot))
 
   const stats = [
-    { label: "Score", value: score.toLocaleString(), accent: "text-cyan-100", icon: "🏆" },
-    { label: "Balls", value: ballsLeft.toString(), accent: "text-emerald-100", icon: selectedBallIcon },
-    { label: "Towers", value: `${remainingTowers}/${towerCount}`, accent: "text-amber-100", icon: "🧱" },
-    { label: "Identity", value: identityLabel, accent: "text-pink-100", icon: "👤" },
+    { label: "Stage", value: stageLabel, detail: stageName, accent: "text-indigo-100", icon: "ST" },
+    { label: "Score", value: score.toLocaleString(), accent: "text-cyan-100", icon: "SC" },
+    { label: "Balls", value: ballsLeft.toString(), accent: "text-emerald-100", icon: selectedBallInfo?.icon ?? "BL" },
+    { label: "Towers", value: `${remainingTowers}/${towerCount}`, accent: "text-amber-100", icon: "TW" },
+    { label: "Identity", value: identityLabel, detail: loopLabel, accent: "text-pink-100", icon: "ID" },
   ]
 
   return (
@@ -71,6 +79,13 @@ export default function GameHud({
               </Button>
             )}
             <Button
+              onClick={onShowCommandDeck}
+              size="sm"
+              className="bg-white/10 text-white hover:bg-white/20 border border-white/10 rounded-full text-xs"
+            >
+              Main Screen
+            </Button>
+            <Button
               onClick={onResetPlayer}
               size="sm"
               className="bg-rose-500 text-white hover:bg-rose-400 rounded-full text-xs shadow-lg shadow-rose-900/40"
@@ -80,7 +95,7 @@ export default function GameHud({
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
           {stats.map((stat) => (
             <div
               key={stat.label}
@@ -91,6 +106,7 @@ export default function GameHud({
                 {stat.label}
               </div>
               <p className={`text-xl font-semibold ${stat.accent}`}>{stat.value}</p>
+              {stat.detail && <p className="text-xs text-white/60">{stat.detail}</p>}
             </div>
           ))}
         </div>

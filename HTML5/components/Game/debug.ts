@@ -25,6 +25,7 @@ export function createDebugTowers(): { towers: Tower[]; towerCount: number } {
       isSpecial,
       hits: 0,
       maxHits: isSpecial ? 2 : 1,
+      baseX: baseX + index * spacing,
     }
   })
 
