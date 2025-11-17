@@ -25,6 +25,7 @@ type UseBeamIdentityResult = {
   handleAliasSave: () => Promise<void>
   setShowPlayerInfo: (value: boolean) => void
   refreshPlayerProfile: () => Promise<void>
+  debugFakeLogin: () => void
 }
 
 export default function useBeamIdentity(): UseBeamIdentityResult {
@@ -126,6 +127,17 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
     })()
   }, [beamReady, alias])
 
+  const debugFakeLogin = useCallback(() => {
+    setBeamReady(true)
+    setPlayerId("DEV-PLAYER")
+    setAlias("guest")
+    setAliasInput("guest")
+    setAliasModalOpen(false)
+    setShowPlayerInfo(true)
+    setStellarExternalId("CUSTODIAL-DEV")
+    setStellarExternalIdentityId("EXTERNAL-DEV")
+  }, [])
+
   return {
     beamReady,
     playerId,
@@ -143,5 +155,6 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
     handleAliasSave,
     setShowPlayerInfo,
     refreshPlayerProfile,
+    debugFakeLogin,
   }
 }

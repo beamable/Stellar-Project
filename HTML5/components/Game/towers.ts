@@ -18,17 +18,33 @@ import {
   SPECIAL_TOWER_COLORS,
 } from "./constants"
 
+export type GenerateTowerOptions = {
+  rng?: () => number
+  minTowers?: number
+  maxTowers?: number
+  specialBlockRatio?: number
+  movingTargetChance?: number
+  movingAmplitude?: number
+  movingSpeed?: number
+}
+
 /**
- * Generates a random set of towers with special blocks
- * Tower count ranges from MIN_TOWERS to MAX_TOWERS
- * Special blocks require 2 hits and give double points
+ * Generates a random set of towers with special blocks.
+ * Allows campaign stages to override tower density + special ratios.
  */
-export function generateTowers(rng: () => number = Math.random): { towers: Tower[]; towerCount: number } {
+export function generateTowers(options: GenerateTowerOptions = {}): { towers: Tower[]; towerCount: number } {
+  const rng = options.rng ?? Math.random
   const towers: Tower[] = []
 
-  const newTowerCount = Math.floor(rng() * (MAX_TOWERS - MIN_TOWERS + 1)) + MIN_TOWERS
+  const minTowers = options.minTowers ?? MIN_TOWERS
+  const maxTowers = options.maxTowers ?? MAX_TOWERS
+  const newTowerCount = Math.floor(rng() * (maxTowers - minTowers + 1)) + minTowers
   const specialBlockPercentage =
-    newTowerCount > TOWER_THRESHOLD_FOR_HIGH_SPECIAL ? SPECIAL_BLOCK_PERCENTAGE_HIGH : SPECIAL_BLOCK_PERCENTAGE_LOW
+    typeof options.specialBlockRatio === "number"
+      ? options.specialBlockRatio
+      : newTowerCount > TOWER_THRESHOLD_FOR_HIGH_SPECIAL
+        ? SPECIAL_BLOCK_PERCENTAGE_HIGH
+        : SPECIAL_BLOCK_PERCENTAGE_LOW
   const specialBlockCount = Math.floor(newTowerCount * specialBlockPercentage)
 
   dlog(
@@ -51,6 +67,7 @@ export function generateTowers(rng: () => number = Math.random): { towers: Tower
       isSpecial: false,
       hits: 0,
       maxHits: 1,
+      baseX: x,
     })
   }
 
@@ -66,6 +83,21 @@ export function generateTowers(rng: () => number = Math.random): { towers: Tower
     towers[index].maxHits = 2
     towers[index].color = SPECIAL_TOWER_COLORS[Math.floor(rng() * SPECIAL_TOWER_COLORS.length)]
   })
+
+  if (options.movingTargetChance && options.movingTargetChance > 0) {
+    towers.forEach((tower) => {
+      if (rng() <= options.movingTargetChance!) {
+        const amplitude = options.movingAmplitude ?? 30
+        const speed = options.movingSpeed ?? 0.002
+        tower.motion = {
+          originX: tower.baseX ?? tower.x,
+          amplitude: amplitude * (0.6 + rng() * 0.8),
+          speed: speed * (0.75 + rng() * 0.5),
+          phase: rng() * Math.PI * 2,
+        }
+      }
+    })
+  }
 
   // Shuffle towers for random placement
   for (let i = towers.length - 1; i > 0; i--) {

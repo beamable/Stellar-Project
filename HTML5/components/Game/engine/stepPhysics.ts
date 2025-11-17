@@ -1,7 +1,7 @@
 "use client"
 
 import type { MutableRefObject, Dispatch, SetStateAction } from "react"
-import type { Ball, Laser, Particle, Tower } from "@/components/Game/types"
+import type { Ball, Laser, Particle, Tower, WindZone } from "@/components/Game/types"
 import * as CONST from "@/components/Game/constants"
 import type { ConfirmedCollisionResult } from "@/components/Game/physics"
 import { detectBallTowerCollision } from "@/components/Game/physics"
@@ -29,12 +29,27 @@ type StepPhysicsOptions = {
   resetBall: () => void
   setRemainingTowers: Dispatch<SetStateAction<number>>
   remainingTowersRef: MutableRefObject<number>
+  windZones?: WindZone[]
+  windTimeMs?: number
+  onAllTowersDestroyed?: () => "win" | "phase"
 }
 
 const COLLISION_EXIT_EPSILON = 0.5
 const SWEEP_PENETRATION_EPSILON = 0.5
 const MIN_NORMAL_BOUNCE_SPEED = 0.5
 const toStereoPan = (x: number) => Math.max(-1, Math.min(1, (x / CONST.CANVAS_WIDTH) * 2 - 1))
+const TWO_PI = Math.PI * 2
+
+const computeWindForce = (zone: WindZone, timeMs: number) => {
+  if (!zone.pulseMs || zone.pulseMs <= 0) {
+    return zone.force
+  }
+  const oscillation = Math.sin(((timeMs + (zone.phase ?? 0)) / zone.pulseMs) * TWO_PI)
+  return oscillation > 0 ? zone.force : 0
+}
+
+const pointInsideZone = (zone: WindZone, x: number, y: number) =>
+  x >= zone.xStart && x <= zone.xEnd && y >= zone.yStart && y <= zone.yEnd
 
 function resolveBallTowerCollision(ball: Ball, collision: ConfirmedCollisionResult) {
   if (collision.wasSwept) {
@@ -83,6 +98,9 @@ export default function stepPhysics({
   resetBall,
   setRemainingTowers,
   remainingTowersRef,
+  windZones,
+  windTimeMs,
+  onAllTowersDestroyed,
 }: StepPhysicsOptions) {
   ballsRef.current.forEach((ball) => {
     ball.lastX = ball.x
@@ -114,6 +132,16 @@ export default function stepPhysics({
     if (ball.x - ball.radius < 0 || ball.x + ball.radius > CONST.CANVAS_WIDTH) {
       ball.vx *= -CONST.BOUNCE_DAMPING
       ball.x = ball.x - ball.radius < 0 ? ball.radius : CONST.CANVAS_WIDTH - ball.radius
+    }
+
+    if (windZones?.length && typeof windTimeMs === "number") {
+      windZones.forEach((zone) => {
+        const force = computeWindForce(zone, windTimeMs)
+        if (force === 0) return
+        if (pointInsideZone(zone, ball.x, ball.y)) {
+          ball.vx += force
+        }
+      })
     }
 
     if (
@@ -331,17 +359,22 @@ export default function stepPhysics({
   }
 
   if (remaining === 0 && gameState === "playing") {
-    const ballMultiplier = ballsLeft > 0 ? 1 + ballsLeft * CONST.VICTORY_BONUS_MULTIPLIER : 1
-    setScore((prev) => {
-      if (ballMultiplier <= 1) {
-        return prev
-      }
-      const bonusPoints = Math.floor(prev * (ballMultiplier - 1))
-      return bonusPoints > 0 ? prev + bonusPoints : prev
-    })
-    createWinParticles(particlesRef)
-    Audio.playWinSound(audioContextRef)
-    setGameState("won")
+    const resolution = onAllTowersDestroyed?.() ?? "win"
+    if (resolution === "win") {
+      const ballMultiplier = ballsLeft > 0 ? 1 + ballsLeft * CONST.VICTORY_BONUS_MULTIPLIER : 1
+      setScore((prev) => {
+        if (ballMultiplier <= 1) {
+          return prev
+        }
+        const bonusPoints = Math.floor(prev * (ballMultiplier - 1))
+        return bonusPoints > 0 ? prev + bonusPoints : prev
+      })
+      createWinParticles(particlesRef)
+      Audio.playWinSound(audioContextRef)
+      setGameState("won")
+    } else {
+      collisionCooldownRef.current.clear()
+    }
   } else if (
     ballsLeft === 0 &&
     ballsRef.current.every((ball) => !ball.active) &&

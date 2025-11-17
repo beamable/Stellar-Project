@@ -9,6 +9,7 @@ import { getMasterVolume, setMasterVolume } from "@/components/Game/audio"
 
 const SHOULD_LOG_RENDERS = process.env.NEXT_PUBLIC_TD_RENDER_DEBUG === "true"
 const VOLUME_STORAGE_KEY = "tower-destroyer-volume"
+const IS_DEV = process.env.NODE_ENV !== "production"
 
 function useRenderCounter(label: string, enabled: boolean) {
   const renderCountRef = useRef(0)
@@ -26,6 +27,8 @@ function useRenderCounter(label: string, enabled: boolean) {
 import * as CONST from "./constants"
 import { BALL_TYPES } from "./ballTypes"
 import useTowerGame from "@/hooks/useTowerGame"
+import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_MAP, DEFAULT_STAGE_ID } from "@/components/Game/campaign"
+import useCampaignProgress from "@/hooks/useCampaignProgress"
 import {
   resetBeamSession,
   buildWalletConnectUrl,
@@ -83,7 +86,23 @@ export default function TowerDestroyer() {
     handleAliasInputChange,
     handleAliasSave,
     refreshPlayerProfile,
+    debugFakeLogin,
   } = useBeamIdentity()
+
+  const {
+    stageProgress,
+    selectedStage,
+    selectStage,
+    markStageComplete,
+    pendingMechanics,
+    acknowledgeMechanics,
+    campaignComplete,
+    loopCount,
+    startNextLoop,
+  } = useCampaignProgress(playerId)
+  const activeStage = selectedStage ?? CAMPAIGN_STAGE_MAP.get(DEFAULT_STAGE_ID)!
+  const totalStages = CAMPAIGN_STAGES.length
+  const [campaignUnlocked, setCampaignUnlocked] = useState(false)
   const {
     canvasRef,
     selectedBallType,
@@ -101,7 +120,15 @@ export default function TowerDestroyer() {
     handlePointerUp,
     resetGame,
     startFirstShot,
-  } = useTowerGame({ readyForGame })
+    debugForceWin,
+  } = useTowerGame({ readyForGame, towerProfile: activeStage.towerProfile, stageId: activeStage.id })
+  const stageLabel = `Stage ${activeStage.order + 1}/${totalStages}`
+  const loopLabel = `Loop ${loopCount + 1}`
+  const nextStage = CAMPAIGN_STAGES[activeStage.order + 1] ?? null
+  const nextStageProgress = nextStage
+    ? stageProgress.find((entry) => entry.stage.id === nextStage.id)
+    : null
+  const canAdvanceStage = Boolean(nextStage && nextStageProgress && nextStageProgress.status !== "locked")
   const {
     pendingSignUrl,
     setPendingSignUrl,
@@ -119,6 +146,7 @@ export default function TowerDestroyer() {
   // External auth address subscription handle
   const externalAddressSubRef = useRef<ExternalAddressSubscription | null>(null)
   const externalSignatureSubRef = useRef<ExternalAddressSubscription | null>(null)
+  const campaignWinStageRef = useRef<string | null>(null)
   // ChallengeSolution that we will carry through the process
   const challengeSolutionRef = useRef<{ challenge_token?: string } | null>(null)
   const walletConnectUrlRef = useRef<string | null>(null)
@@ -271,13 +299,10 @@ export default function TowerDestroyer() {
     openWalletWindow,
     setPendingSignUrl,
     primeWalletWindow,
-    buildWalletConnectUrl,
     playerId,
     acknowledgeUserAction,
     clearBlockedState,
-    requestExternalIdentityChallenge,
     buildSignUrlFromChallenge,
-    completeExternalIdentityChallenge,
     refreshPlayerProfile,
     closeWalletWindow,
   ])
@@ -339,7 +364,56 @@ export default function TowerDestroyer() {
     externalSignatureSubRef.current = null
     setPendingSignUrl(null)
     setSignatureError(null)
-  }, [aliasModalOpen])
+  }, [aliasModalOpen, setPendingSignUrl, setSignatureError])
+
+  const handleAcknowledgeMechanics = useCallback(() => {
+    if (pendingMechanics.length === 0) return
+    acknowledgeMechanics(pendingMechanics)
+  }, [acknowledgeMechanics, pendingMechanics])
+
+  const [campaignConfirmed, setCampaignConfirmed] = useState(false)
+  const lastStageRef = useRef(activeStage.id)
+  const commandDeckSeenRef = useRef(false)
+  useEffect(() => {
+    if (showPlayerInfo) {
+      commandDeckSeenRef.current = true
+    } else if (!showPlayerInfo && commandDeckSeenRef.current) {
+      setCampaignUnlocked(true)
+    }
+  }, [showPlayerInfo])
+  useEffect(() => {
+    if (lastStageRef.current !== activeStage.id) {
+      lastStageRef.current = activeStage.id
+      setCampaignConfirmed(false)
+    }
+  }, [activeStage.id])
+  useEffect(() => {
+    if (!readyForGame) {
+      setCampaignUnlocked(false)
+      commandDeckSeenRef.current = false
+      setCampaignConfirmed(false)
+    }
+  }, [readyForGame])
+  const shouldShowCampaignOverlay =
+    campaignUnlocked && readyForGame && !showPlayerInfo && !campaignConfirmed
+
+  const handleConfirmCampaignStage = useCallback(() => {
+    setCampaignConfirmed(true)
+  }, [])
+
+  const handleDebugSkipStage = useCallback(() => {
+    if (!IS_DEV) return
+    debugForceWin()
+  }, [debugForceWin])
+
+  const handleDebugFakeLogin = useCallback(() => {
+    if (!IS_DEV) return
+    debugFakeLogin()
+    commandDeckSeenRef.current = false
+    setCampaignUnlocked(false)
+    setCampaignConfirmed(false)
+    setShowPlayerInfo(true)
+  }, [debugFakeLogin, setShowPlayerInfo])
 
   const selectedBallInfo = BALL_TYPES.find((ball) => ball.type === selectedBallType)
   async function handleResetPlayer() {
@@ -390,6 +464,48 @@ export default function TowerDestroyer() {
     setShowAudioSettings(false)
   }, [])
 
+  const handleAdvanceCampaignStage = useCallback(() => {
+    if (!nextStage || !canAdvanceStage) return
+    selectStage(nextStage.id)
+  }, [nextStage, canAdvanceStage, selectStage])
+
+  const campaignSelectionProps = shouldShowCampaignOverlay
+    ? {
+        activeStage,
+        stageProgress,
+        selectedStageId: activeStage.id,
+        pendingMechanics,
+        campaignComplete,
+        loopCount,
+        onStartNextLoop: startNextLoop,
+        onSelectStage: selectStage,
+        onAcknowledgeMechanics: handleAcknowledgeMechanics,
+        onConfirm: handleConfirmCampaignStage,
+      }
+    : undefined
+
+  const loopAdvanceRef = useRef(false)
+  useEffect(() => {
+    if (gameState !== "won") {
+      if (gameState === "playing") {
+        campaignWinStageRef.current = null
+        loopAdvanceRef.current = false
+      }
+      return
+    }
+    if (campaignWinStageRef.current === activeStage.id) {
+      return
+    }
+    markStageComplete(activeStage.id)
+    campaignWinStageRef.current = activeStage.id
+    if (activeStage.order === totalStages - 1 && campaignComplete && !loopAdvanceRef.current) {
+      loopAdvanceRef.current = true
+      startNextLoop()
+      setCampaignConfirmed(false)
+      setShowPlayerInfo(true)
+    }
+  }, [gameState, activeStage.id, markStageComplete, activeStage.order, totalStages, campaignComplete, startNextLoop, setShowPlayerInfo])
+
 
   // ============================================================================
   // UI RENDERING
@@ -401,6 +517,9 @@ export default function TowerDestroyer() {
         ballsLeft,
         remainingTowers,
         towerCount,
+        stageLabel,
+        stageName: activeStage.name,
+        loopLabel,
         alias,
         playerId,
         isCharging,
@@ -411,7 +530,15 @@ export default function TowerDestroyer() {
         onRestart: resetGame,
         isAudioSettingsOpen: showAudioSettings,
         onToggleAudioSettings: handleToggleAudioSettings,
+        onShowCommandDeck: () => {
+          setCampaignConfirmed(false)
+          setShowPlayerInfo(true)
+        },
+        showDebugControls: IS_DEV,
+        onDebugSkipStage: IS_DEV ? handleDebugSkipStage : undefined,
+        onDebugFakeLogin: IS_DEV ? handleDebugFakeLogin : undefined,
       }}
+      campaignPanel={null}
       surfaceProps={{
         canvasRef,
         canvasWidth: CONST.CANVAS_WIDTH,
@@ -458,11 +585,24 @@ export default function TowerDestroyer() {
           onResetPlayer: handleResetPlayer,
           onManualWalletOpen: handleManualWalletOpen,
           onClosePlayerInfo: () => setShowPlayerInfo(false),
-          onPlayAgain: resetGame,
+          onRetry: resetGame,
           showAudioSettings,
           onCloseAudioSettings: handleCloseAudioSettings,
           volume,
           onVolumeChange: handleVolumeChange,
+          showCampaignOverlay: shouldShowCampaignOverlay,
+          campaignSelectionProps,
+          campaignContext: {
+            stageName: activeStage.name,
+            stageLabel,
+            stageType: activeStage.type,
+            nextStageName: nextStage?.name,
+            canAdvance: canAdvanceStage,
+            onAdvance: handleAdvanceCampaignStage,
+            campaignComplete,
+            loopCount,
+            onStartLoop: startNextLoop,
+          },
         },
       }}
     />
