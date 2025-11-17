@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import type { BallTypeConfig } from "@/components/Game/types"
 
-type GameHudProps = {
+export type GameHudProps = {
   score: number
   ballsLeft: number
   remainingTowers: number

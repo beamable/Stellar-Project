@@ -3,27 +3,12 @@
 import type React from "react"
 import { Card } from "@/components/ui/card"
 import GameHud from "@/components/Game/GameHud"
+import type { GameHudProps } from "@/components/Game/GameHud"
 import type { GameSurfaceProps } from "@/components/Game/GameSurface"
 import GameSurface from "@/components/Game/GameSurface"
-import type { BallTypeConfig } from "@/components/Game/types"
 
 type GameShellProps = {
-  hudProps: {
-    score: number
-    ballsLeft: number
-    remainingTowers: number
-    towerCount: number
-    alias: string | null
-    playerId: string | null
-    isCharging: boolean
-    powerSnapshot: number
-    selectedBallInfo?: BallTypeConfig
-    onResetPlayer: () => void
-    canShowRestart: boolean
-    onRestart: () => void
-    isAudioSettingsOpen: boolean
-    onToggleAudioSettings: () => void
-  }
+  hudProps: GameHudProps
   campaignPanel?: React.ReactNode
   surfaceProps: GameSurfaceProps
 }
