@@ -9458,7 +9458,7 @@ MonoBehaviour:
   coinRef:
     Id: currency.coin.beam_coin
   testCoinRef:
-    Id: currency.coins
+    Id: currency.gems
 --- !u!1 &1069256420
 GameObject:
   m_ObjectHideFlags: 0
