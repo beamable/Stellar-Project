@@ -9,6 +9,7 @@ import { getMasterVolume, setMasterVolume } from "@/components/Game/audio"
 
 const SHOULD_LOG_RENDERS = process.env.NEXT_PUBLIC_TD_RENDER_DEBUG === "true"
 const VOLUME_STORAGE_KEY = "tower-destroyer-volume"
+const IS_DEV = process.env.NODE_ENV !== "production"
 
 function useRenderCounter(label: string, enabled: boolean) {
   const renderCountRef = useRef(0)
@@ -85,6 +86,7 @@ export default function TowerDestroyer() {
     handleAliasInputChange,
     handleAliasSave,
     refreshPlayerProfile,
+    debugFakeLogin,
   } = useBeamIdentity()
 
   const {
@@ -118,6 +120,7 @@ export default function TowerDestroyer() {
     handlePointerUp,
     resetGame,
     startFirstShot,
+    debugForceWin,
   } = useTowerGame({ readyForGame, towerProfile: activeStage.towerProfile, stageId: activeStage.id })
   const stageLabel = `Stage ${activeStage.order + 1}/${totalStages}`
   const loopLabel = `Loop ${loopCount + 1}`
@@ -398,6 +401,20 @@ export default function TowerDestroyer() {
     setCampaignConfirmed(true)
   }, [])
 
+  const handleDebugSkipStage = useCallback(() => {
+    if (!IS_DEV) return
+    debugForceWin()
+  }, [debugForceWin])
+
+  const handleDebugFakeLogin = useCallback(() => {
+    if (!IS_DEV) return
+    debugFakeLogin()
+    commandDeckSeenRef.current = false
+    setCampaignUnlocked(false)
+    setCampaignConfirmed(false)
+    setShowPlayerInfo(true)
+  }, [debugFakeLogin, setShowPlayerInfo])
+
   const selectedBallInfo = BALL_TYPES.find((ball) => ball.type === selectedBallType)
   async function handleResetPlayer() {
     setShowResetConfirm(true)
@@ -509,6 +526,9 @@ export default function TowerDestroyer() {
           setCampaignConfirmed(false)
           setShowPlayerInfo(true)
         },
+        showDebugControls: IS_DEV,
+        onDebugSkipStage: IS_DEV ? handleDebugSkipStage : undefined,
+        onDebugFakeLogin: IS_DEV ? handleDebugFakeLogin : undefined,
       }}
       campaignPanel={null}
       surfaceProps={{

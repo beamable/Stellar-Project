@@ -20,6 +20,9 @@ type GameHudProps = {
   isAudioSettingsOpen: boolean
   onToggleAudioSettings: () => void
   onShowCommandDeck: () => void
+  showDebugControls?: boolean
+  onDebugSkipStage?: () => void
+  onDebugFakeLogin?: () => void
 }
 
 export default function GameHud({
@@ -41,6 +44,9 @@ export default function GameHud({
   isAudioSettingsOpen,
   onToggleAudioSettings,
   onShowCommandDeck,
+  showDebugControls = false,
+  onDebugSkipStage,
+  onDebugFakeLogin,
 }: GameHudProps) {
   const identityLabel = alias ?? playerId ?? "Guest"
   const powerPercent = Math.min(100, Math.max(0, powerSnapshot))
@@ -85,6 +91,24 @@ export default function GameHud({
             >
               Main Screen
             </Button>
+            {showDebugControls && (
+              <>
+                <Button
+                  onClick={onDebugSkipStage}
+                  size="sm"
+                  className="bg-emerald-400 text-slate-900 hover:bg-emerald-300 rounded-full text-xs"
+                >
+                  Skip Stage
+                </Button>
+                <Button
+                  onClick={onDebugFakeLogin}
+                  size="sm"
+                  className="bg-white/10 text-white hover:bg-white/20 border border-white/10 rounded-full text-xs"
+                >
+                  Fake Login
+                </Button>
+              </>
+            )}
             <Button
               onClick={onResetPlayer}
               size="sm"

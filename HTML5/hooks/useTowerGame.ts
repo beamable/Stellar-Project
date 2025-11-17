@@ -35,6 +35,7 @@ export type UseTowerGameResult = {
   handlePointerUp: (event: React.PointerEvent<HTMLCanvasElement>) => void
   resetGame: () => void
   startFirstShot: () => void
+  debugForceWin: () => void
 }
 
 const PHYSICS_TIMESTEP = 1000 / 60
@@ -653,6 +654,23 @@ export default function useTowerGame({ readyForGame, towerProfile, stageId }: Us
     setHasShot(true)
   }, [resetBall])
 
+  const debugForceWin = useCallback(() => {
+    towersRef.current.forEach((tower) => {
+      tower.destroyed = true
+    })
+    remainingTowersRef.current = 0
+    setRemainingTowers(0)
+    const ballMultiplier = ballsLeft > 0 ? 1 + ballsLeft * CONST.VICTORY_BONUS_MULTIPLIER : 1
+    if (ballMultiplier > 1) {
+      setScore((prev) => {
+        const bonusPoints = Math.floor(prev * (ballMultiplier - 1))
+        return bonusPoints > 0 ? prev + bonusPoints : prev
+      })
+    }
+    Audio.playWinSound(audioContextRef)
+    setGameState("won")
+  }, [ballsLeft])
+
   return {
     canvasRef,
     selectedBallType,
@@ -670,6 +688,7 @@ export default function useTowerGame({ readyForGame, towerProfile, stageId }: Us
     handlePointerUp,
     resetGame,
     startFirstShot,
+    debugForceWin,
   }
 }
 const toStereoPan = (x: number) => Math.max(-1, Math.min(1, (x / CONST.CANVAS_WIDTH) * 2 - 1))
