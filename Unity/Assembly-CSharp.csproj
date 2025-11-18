@@ -76,6 +76,7 @@
     <Compile Include="Assets\Game\Input\InputSystem_Actions.cs" />
     <Compile Include="Assets\Game\Scripts\Player\PlayerAnimation.cs" />
     <Compile Include="Assets\Game\Scripts\UI\Fader.cs" />
+    <Compile Include="Assets\Game\Scripts\Beam\BeamInventoryManager.cs" />
     <Compile Include="Assets\Game\Scripts\Time\BedSleepTrigger.cs" />
     <Compile Include="Assets\Game\Scripts\Beam\BeamCommerceManager.cs" />
     <Compile Include="Assets\Game\Scripts\UI\CropsUiController.cs" />

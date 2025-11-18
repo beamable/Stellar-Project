@@ -15,13 +15,13 @@ namespace Farm.Beam
 
         public List<PlantInfo> CropNfContent { get; private set; }
         
-        public async override UniTask InitAsync(CancellationToken ct)
+        public override async UniTask InitAsync(CancellationToken ct)
         {
             await base.InitAsync(ct);
             await SyncContentAsync(ct);
         }
 
-        public async override UniTask ResetAsync(CancellationToken ct)
+        public override async UniTask ResetAsync(CancellationToken ct)
         {
             await base.ResetAsync(ct);
             CropNfContent = new List<PlantInfo>();
@@ -44,6 +44,11 @@ namespace Farm.Beam
                     seedsToPlant = data.startingSeedsAmount,
                 });
             }
+        }
+        
+        public PlantInfo GetCropInfo(string contentId)
+        {
+            return CropNfContent.Find(c => c.contentId == contentId);
         }
     }
 }
