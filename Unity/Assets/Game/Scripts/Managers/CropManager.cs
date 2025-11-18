@@ -7,14 +7,6 @@ using UnityEngine;
 
 namespace Farm.Managers
 {
-    [System.Serializable]
-    public class PlantInfo
-    {
-        public int seedsToPlant;
-        public int yieldAmount;
-        public CropsData cropData;
-    }
-    
     public class CropManager : MonoSingleton<CropManager>
     {
         [SerializeField] private CropsData[] plantsData;

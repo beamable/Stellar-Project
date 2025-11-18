@@ -59,6 +59,7 @@
     <Compile Include="Assets\Game\Scripts\Beam\BeamAccountManager.cs" />
     <Compile Include="Assets\Game\Scripts\Time\TimeManager.cs" />
     <Compile Include="Assets\Game\Scripts\Managers\GameManager.cs" />
+    <Compile Include="Assets\Game\Scripts\Beam\BeamContentManager.cs" />
     <Compile Include="Assets\Game\Scripts\MainMenu\MainMenuUiController.cs" />
     <Compile Include="Assets\Game\Scripts\Managers\CropManager.cs" />
     <Compile Include="Assets\Game\Scripts\UI\BeamButton.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="Assets\Game\Scripts\Beam\BeamCommerceManager.cs" />
     <Compile Include="Assets\Game\Scripts\UI\CropsUiController.cs" />
     <Compile Include="Assets\Game\Scripts\Player\PlayerToolsController.cs" />
+    <Compile Include="Assets\Game\Scripts\Helpers\GameDataStructs.cs" />
     <Compile Include="Assets\Game\Scripts\UI\PauseMenuController.cs" />
     <Compile Include="Assets\Game\Scripts\Planting\CropsData.cs" />
     <Compile Include="Assets\Game\Scripts\Stellar\StellarExternalWalletController.cs" />

@@ -856,6 +856,7 @@ Transform:
   m_Children:
   - {fileID: 230677490}
   - {fileID: 1045877089}
+  - {fileID: 608750038}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &290293154
@@ -874,6 +875,7 @@ MonoBehaviour:
   beamManagers:
   - {fileID: 230677489}
   - {fileID: 1045877090}
+  - {fileID: 608750037}
 --- !u!1 &327328313
 GameObject:
   m_ObjectHideFlags: 0
@@ -1548,6 +1550,58 @@ MonoBehaviour:
   playGamePanel: {fileID: 701958452}
   fader: {fileID: 1791759695}
   farmSceneName: Farm_Level
+--- !u!1 &608750036
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 608750038}
+  - component: {fileID: 608750037}
+  m_Layer: 0
+  m_Name: BeamContentManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &608750037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608750036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d42f506b0fd943b7acf1d072d2004320, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Farm.Beam.BeamContentManager
+  cropsNfContentRefs:
+  - Id: items.crop.Crop_Carrot_NF
+  - Id: items.crop.Crop_Pumpkin_NF
+  - Id: items.crop.Crop_Tomato_NF
+  cropsContentRefs:
+  - Id: items.crop.Crop_Carrot
+  - Id: items.crop.Crop_Pumpkin
+  - Id: items.crop.Crop_Tomato
+--- !u!4 &608750038
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608750036}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 290293153}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &624663422
 PrefabInstance:
   m_ObjectHideFlags: 0

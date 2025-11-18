@@ -34,6 +34,7 @@ namespace Farm.Beam
 
         public BeamAccountManager AccountManager { get; private set; }
         public BeamCommerceManager CommerceManager { get; private set; }
+        public BeamContentManager ContentManager { get; private set; }
 
         #endregion
 
@@ -45,6 +46,7 @@ namespace Farm.Beam
 
             AccountManager = GetComponentInChildren<BeamAccountManager>();
             CommerceManager = GetComponentInChildren<BeamCommerceManager>();
+            ContentManager = GetComponentInChildren<BeamContentManager>();
         }
 
         protected override void OnAfterInitialized()
