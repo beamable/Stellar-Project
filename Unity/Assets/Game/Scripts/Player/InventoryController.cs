@@ -1,21 +1,38 @@
 using System;
 using System.Collections.Generic;
+using Farm.Beam;
 using Farm.Managers;
 using Farm.UI;
+using TMPro;
 using UnityEngine;
 
 namespace Farm.Player
 {
     public class InventoryController : MonoBehaviour
     {
+        [SerializeField] private TextMeshProUGUI inventoryTitle;
         [SerializeField] private PlantUiCard plantUiCard;
+        
+        [Header("Containers")]
         [SerializeField] private Transform seedsContainer;
+        [SerializeField] private Transform yieldContainer;
+        [SerializeField] private Transform shopContainer;
+        
+        [Header("Canvas Groups")]
+        [SerializeField] private CanvasGroup seedsCanvasGroup;
+        [SerializeField] private CanvasGroup yieldCanvasGroup;
+        [SerializeField] private CanvasGroup shopCanvasGroup;
         
         private List <PlantUiCard> _seedsCards = new List<PlantUiCard>();
 
         private UiManager _uiManager;
         private ToolsBarManager _toolsBarPanel;
         private PlantUiCard _selectedSeedCard = null;
+        private List<PlantInfo> _cropInfos => BeamManager.Instance.InventoryManager.PlayerCrops;
+        
+        private const string SeedsTab = "Player Seeds";
+        private const string YieldTab = "Yield Shop";
+        private const string ShopTab = "Seeds Shop";
 
         public void InitAwake(UiManager uiManager, ToolsBarManager toolsBarManager)
         {
@@ -27,6 +44,10 @@ namespace Farm.Player
         {
             gameObject.SetActive(!gameObject.activeSelf);
             _uiManager.RaiseOpenUi(gameObject.activeSelf);
+
+            if (!gameObject.activeSelf) return;
+            OnSelectSeedTab();
+            PopulateSeeds(_cropInfos);
         }
         
         public void ForceCloseInventory()
@@ -65,6 +86,34 @@ namespace Farm.Player
                 _seedsCards.Add(card);
             }
         }
+
+        #region Button Events
+
+        public void OnSelectSeedTab()
+        {
+            inventoryTitle.text = SeedsTab;
+            seedsCanvasGroup.alpha = 1;
+            yieldCanvasGroup.alpha = 0;
+            shopCanvasGroup.alpha = 0;
+        }
+
+        public void OnSelectYieldTab()
+        {
+            inventoryTitle.text = YieldTab;
+            seedsCanvasGroup.alpha = 0;
+            yieldCanvasGroup.alpha = 1;
+            shopCanvasGroup.alpha = 0;
+        }
+
+        public void OnSelectShopTab()
+        {
+            inventoryTitle.text = ShopTab;
+            seedsCanvasGroup.alpha = 0;
+            yieldCanvasGroup.alpha = 0;
+            shopCanvasGroup.alpha = 1;
+        }
+        
+        #endregion
         
     }
 }
