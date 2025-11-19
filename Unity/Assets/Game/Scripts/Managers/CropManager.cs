@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Farm.Beam;
 using Farm.Helpers;
 using Farm.Managers;
 using Farm.UI;
@@ -23,14 +24,20 @@ namespace Farm.Managers
             CropsList = new List<PlantInfo>();
             CropsDictionary = new Dictionary<GameConstants.CropType, PlantInfo>();
             
-            foreach (var data in plantsData)
+            // foreach (var data in plantsData)
+            // {
+            //     var plant = new PlantInfo
+            //     {
+            //         seedsToPlant = data.startingSeedsAmount,
+            //         cropData = data
+            //     };
+            //     CropsDictionary.Add(data.cropType, plant);
+            //     CropsList.Add(plant);
+            // }
+
+            foreach (var plant in BeamManager.Instance.InventoryManager.PlayerCrops)
             {
-                var plant = new PlantInfo
-                {
-                    seedsToPlant = data.startingSeedsAmount,
-                    cropData = data
-                };
-                CropsDictionary.Add(data.cropType, plant);
+                CropsDictionary[plant.cropData.cropType] = plant;
                 CropsList.Add(plant);
             }
             

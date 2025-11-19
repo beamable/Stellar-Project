@@ -42,6 +42,7 @@ namespace Farm.Beam
                     sellingPrice = cropResolved.CustomProperties.TryGetValue("SellingPrice", out var sellingPrice) ? int.Parse(sellingPrice) : 0,
                     cropData = data,
                     seedsToPlant = data.startingSeedsAmount,
+                    yieldAmount = 0
                 });
             }
         }
