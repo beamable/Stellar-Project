@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Crop_Carrots
   m_EditorClassIdentifier: Assembly-CSharp::Farm.Planting.PlantsData
   cropName: Carrots
-  startingSeedsAmount: 5
+  startingSeedsAmount: 15
   yield: 7
   cropType: 0
   cropIcon: {fileID: -68751727340038015, guid: 688a17423db43294093ccb5c6916461b, type: 3}

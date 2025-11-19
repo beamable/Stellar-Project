@@ -12,7 +12,7 @@ namespace Farm.Managers
     {
         [SerializeField] private CropsData[] plantsData;
 
-        public List<PlantInfo> CropsList { get; private set; } = new List<PlantInfo>();
+        //public List<PlantInfo> CropsList { get; private set; } = new List<PlantInfo>();
         public Dictionary<GameConstants.CropType, PlantInfo> CropsDictionary { get; private set; } = new Dictionary<GameConstants.CropType, PlantInfo>();
 
         public static event Action<PlantInfo> OnCropInfoUpdated;
@@ -21,27 +21,16 @@ namespace Farm.Managers
         {
             base.OnAfterInitialized();
             
-            CropsList = new List<PlantInfo>();
+            //CropsList = new List<PlantInfo>();
             CropsDictionary = new Dictionary<GameConstants.CropType, PlantInfo>();
             
-            // foreach (var data in plantsData)
-            // {
-            //     var plant = new PlantInfo
-            //     {
-            //         seedsToPlant = data.startingSeedsAmount,
-            //         cropData = data
-            //     };
-            //     CropsDictionary.Add(data.cropType, plant);
-            //     CropsList.Add(plant);
-            // }
-
             foreach (var plant in BeamManager.Instance.InventoryManager.PlayerCrops)
             {
                 CropsDictionary[plant.cropData.cropType] = plant;
-                CropsList.Add(plant);
+                //CropsList.Add(plant);
             }
             
-            UiManager.Instance.PopulateInventory(CropsList);
+            UiManager.Instance.PopulateInventory(BeamManager.Instance.InventoryManager.PlayerCrops);
         }
 
         public void UseSeeds(GameConstants.CropType cropType)

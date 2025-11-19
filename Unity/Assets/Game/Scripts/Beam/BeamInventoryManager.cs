@@ -56,39 +56,45 @@ namespace Farm.Beam
             await UpdateDefaultCropInfo(inv);
         }
 
-        private async UniTask<bool> UpdateDefaultCropInfo( InventoryView itemsGroup)
+        private async UniTask<bool> UpdateDefaultCropInfo(InventoryView itemsGroup)
         {
             var defaultCropInfo = _contentManager.GetCropInfo(defaultCropRef.Id);
-             if (itemsGroup.items.Count < 1 || !itemsGroup.items.ContainsKey(defaultCropRef.Id))
-             {
-                 var properties = new Dictionary<string, string>
-                 {
-                     { GameConstants.SeedsLeftProp, defaultCropInfo.seedsToPlant.ToString() },
-                     { GameConstants.YieldProp, defaultCropInfo.cropData.yield.ToString() }
-                 };
-                 await _stellarClient.AddItem(defaultCropRef.Id, properties);
-                 return false;
-             }
+            if (itemsGroup.items.Count < 1 || !itemsGroup.items.ContainsKey(defaultCropRef.Id))
+            {
+                var properties = new Dictionary<string, string>
+                {
+                    { GameConstants.SeedsLeftProp, defaultCropInfo.seedsToPlant.ToString() },
+                    { GameConstants.YieldProp, defaultCropInfo.yieldAmount.ToString() }
+                };
+                await _stellarClient.AddItem(defaultCropRef.Id, properties);
+                return false;
+            }
 
             var cropInstances = itemsGroup.items[defaultCropRef.Id];
-             var cropInstance = cropInstances[0];
-            
-             defaultCropInfo.instanceId = cropInstance.id;
-             defaultCropInfo.yieldAmount = cropInstance.properties.TryGetValue(GameConstants.YieldProp, out var yieldAmount) ? int.Parse(yieldAmount) : 0;
-             defaultCropInfo.seedsToPlant = cropInstance.properties.TryGetValue(GameConstants.SeedsLeftProp, out var seedsAmount) ? int.Parse(seedsAmount) : 0;
-            
-             var defaultPlayerCrop = TryGetCropInfo(defaultCropInfo.instanceId);
-             if (defaultPlayerCrop == null)
-             {
-                 CropInstancesDictionary.Add(defaultCropInfo.instanceId, defaultCropInfo);
-                 PlayerCrops.Add(defaultCropInfo);
-             }
-             else
-             {
-                 CropInstancesDictionary[cropInstance.id] = defaultCropInfo;
-                 var index = PlayerCrops.FindIndex(x => x.instanceId == cropInstance.id);
-                 PlayerCrops[index] = defaultCropInfo;
-             }
+            var cropInstance = cropInstances[0];
+
+            defaultCropInfo.instanceId = cropInstance.id;
+            defaultCropInfo.yieldAmount =
+                cropInstance.properties.TryGetValue(GameConstants.YieldProp, out var yieldAmount)
+                    ? int.Parse(yieldAmount)
+                    : 0;
+            defaultCropInfo.seedsToPlant =
+                cropInstance.properties.TryGetValue(GameConstants.SeedsLeftProp, out var seedsAmount)
+                    ? int.Parse(seedsAmount)
+                    : 0;
+
+            var defaultPlayerCrop = TryGetCropInfo(defaultCropInfo.instanceId);
+            if (defaultPlayerCrop == null)
+            {
+                CropInstancesDictionary.Add(defaultCropInfo.instanceId, defaultCropInfo);
+                PlayerCrops.Add(defaultCropInfo);
+            }
+            else
+            {
+                CropInstancesDictionary[cropInstance.id] = defaultCropInfo;
+                var index = PlayerCrops.FindIndex(x => x.instanceId == cropInstance.id);
+                PlayerCrops[index] = defaultCropInfo;
+            }
 
             return true;
         }
