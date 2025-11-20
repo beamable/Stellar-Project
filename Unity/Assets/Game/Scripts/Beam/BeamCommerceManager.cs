@@ -14,6 +14,8 @@ namespace Farm.Beam
         [SerializeField] private CurrencyRef testCoinRef;
 
         public int CurrentCoinCount { get; private set; }
+        
+        public static Action<int> OnCoinCountUpdated;
 
         public override async UniTask InitAsync(CancellationToken ct)
         {
@@ -35,6 +37,7 @@ namespace Farm.Beam
             var serverCoin = await _beamContext.Inventory.LoadCurrencies(testCoinRef.Id);
             await serverCoin.OnReady;
             CurrentCoinCount = (int)serverCoin.GetCurrency(testCoinRef.Id).Amount;
+            OnCoinCountUpdated?.Invoke(CurrentCoinCount);
             return CurrentCoinCount;
         }
 
