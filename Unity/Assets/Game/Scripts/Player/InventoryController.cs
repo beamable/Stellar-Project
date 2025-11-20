@@ -11,7 +11,10 @@ namespace Farm.Player
     public class InventoryController : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI inventoryTitle;
+        
+        [Header("Cards Prefab")]
         [SerializeField] private PlantUiCard plantUiCard;
+        [SerializeField] private GameShopCard shopCard;
         
         [Header("Containers")]
         [SerializeField] private Transform seedsContainer;
@@ -28,7 +31,7 @@ namespace Farm.Player
         private UiManager _uiManager;
         private ToolsBarManager _toolsBarPanel;
         private PlantUiCard _selectedSeedCard = null;
-        private List<PlantInfo> _cropInfos => BeamManager.Instance.InventoryManager.PlayerCrops;
+        private List<PlantInfo> CropInfos => BeamManager.Instance.InventoryManager.PlayerCrops;
         
         private const string SeedsTab = "Player Seeds";
         private const string YieldTab = "Yield Shop";
@@ -47,9 +50,10 @@ namespace Farm.Player
 
             if (!gameObject.activeSelf) return;
             OnSelectSeedTab();
-            PopulateSeeds(_cropInfos);
+            PopulateSeedsInventory(CropInfos);
+            PopulateShopSeeds(CropInfos);
         }
-        
+
         public void ForceCloseInventory()
         {
             gameObject.SetActive(false);
@@ -70,7 +74,7 @@ namespace Farm.Player
             UiManager.Instance.RaiseSelectSeed(card.CurrentPlant);
         }
 
-        public void PopulateSeeds(List<PlantInfo> cropInfos)
+        public void PopulateSeedsInventory(List<PlantInfo> cropInfos)
         {
             for (var i = 0; i < cropInfos.Count; i++)
             {
@@ -84,6 +88,17 @@ namespace Farm.Player
                     SetSelectedSeed(card);
                 }
                 _seedsCards.Add(card);
+            }
+        }
+        
+        private void PopulateShopSeeds(List<PlantInfo> cropInfos)
+        {
+            foreach (var crop in cropInfos)
+            {
+                var seedCard = Instantiate(shopCard, shopContainer);
+                seedCard.Init(this, crop, 0, false);
+                seedCard.transform.SetParent(shopContainer);
+                
             }
         }
 

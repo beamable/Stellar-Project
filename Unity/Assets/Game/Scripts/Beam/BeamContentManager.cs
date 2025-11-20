@@ -13,6 +13,10 @@ namespace Farm.Beam
         [SerializeField] private CropItemRef[] cropsNfContentRefs;
         [SerializeField] private CropItemRef[] cropsContentRefs;
 
+        private const string DataPathProp = "DataSource";
+        private const string YieldSellingPriceProp = "SellingPrice";
+        private const string SeedBuyingPriceProp = "SeedPrice";
+        
         public List<PlantInfo> CropNfContent { get; private set; }
         
         public override async UniTask InitAsync(CancellationToken ct)
@@ -34,12 +38,13 @@ namespace Farm.Beam
             foreach (var cropRef in cropsNfContentRefs)
             {
                 var cropResolved = await cropRef.Resolve();
-                var cropDataPath = cropResolved.CustomProperties.GetValueOrDefault("DataSource", "");
+                var cropDataPath = cropResolved.CustomProperties.GetValueOrDefault(DataPathProp, "");
                 var data = Resources.Load<CropsData>(cropDataPath);
                 CropNfContent.Add(new PlantInfo
                 {
                     contentId = cropResolved.Id,
-                    sellingPrice = cropResolved.CustomProperties.TryGetValue("SellingPrice", out var sellingPrice) ? int.Parse(sellingPrice) : 0,
+                    yieldSellPrice = cropResolved.CustomProperties.TryGetValue(YieldSellingPriceProp, out var sellingPrice) ? int.Parse(sellingPrice) : 0,
+                    seedBuyPrice = cropResolved.CustomProperties.TryGetValue(SeedBuyingPriceProp, out var seedBuyPrice) ? int.Parse(seedBuyPrice) : 0,
                     cropData = data,
                     seedsToPlant = data.startingSeedsAmount,
                     yieldAmount = 0

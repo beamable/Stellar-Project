@@ -10,7 +10,8 @@ public class PlantInfo
 {
     public string contentId;
     public long instanceId;
-    public int sellingPrice;
+    public int yieldSellPrice;
+    public int seedBuyPrice;
     public int seedsToPlant;
     public int yieldAmount;
     public CropsData cropData;

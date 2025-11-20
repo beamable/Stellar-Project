@@ -3,16 +3,14 @@ using Farm.Player;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Image = UnityEngine.UI.Image;
+using UnityEngine.UI;
 
 namespace Farm.UI
 {
-    public class PlantUiCard : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+    public class GameShopCard : MonoBehaviour
     {
         [Header("UI Elements")] 
         [SerializeField] private Image iconImage;
-        [SerializeField] private Image selectedImage;
-        [SerializeField] private Image noStockImage;
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI amountText;
         [SerializeField] private CanvasGroup canvasGroup;
@@ -20,20 +18,27 @@ namespace Farm.UI
         [Header("References")]
         [SerializeField] private Collider2D uiCollider;
         
-        private bool _isSelectedByUI, _isCrop;
+        private bool _isSelectedByUI, _isCrop, _isSeed;
         private InventoryController _inventory;
+        private const string SeedsText = "Seeds";
+        private const string YieldText = "Yield";
+        private const string DollarText = "$";
+        
         public PlantInfo CurrentPlant { get; private set; }
 
-        public void Init(bool isSelected, bool isCrop, InventoryController inventory, 
-            PlantInfo plant, int amount, bool isSeed = true)
+        /// <summary>
+        /// isCrop == false: This will be a seed buying card
+        /// isCrop == true: This will be a yield selling card
+        /// </summary>
+        public void Init(InventoryController inventory, 
+            PlantInfo plant, int amount, bool isCrop)
         {
             _inventory = inventory;
-            SetIsCrop(isCrop);
             CurrentPlant = plant;
-            nameText.text = plant.cropData.cropName;
             amountText.text = $"X{amount}";
-            iconImage.sprite = isSeed ? plant.cropData.seedsSprite : plant.cropData.cropIcon;
-            SetSelectedImage(isSelected);
+            _isCrop = isCrop;
+            iconImage.sprite = !_isCrop ? plant.cropData.seedsSprite : plant.cropData.cropIcon;
+            SetTitle();
         }
 
         private void OnEnable()
@@ -45,6 +50,24 @@ namespace Farm.UI
         private void OnDisable()
         {
             CropManager.OnCropInfoUpdated -= OnCropInfoUpdated;
+        }
+
+        private void SetAmount()
+        {
+            if (_isCrop)
+            {
+                
+            }
+            else
+            {
+                
+            }
+        }
+
+        private void SetTitle()
+        {
+            nameText.text = _isCrop ? YieldText + CurrentPlant.cropData.cropName 
+                : SeedsText + CurrentPlant.cropData.cropName;
         }
 
         private void OnCropInfoUpdated(PlantInfo newInfo)
@@ -65,55 +88,11 @@ namespace Farm.UI
             if (!_isCrop && amount == 0)
             {
                 canvasGroup.alpha = 0.7f;
-                noStockImage.enabled = true;
             }
             else
             {
-                noStockImage.enabled = false;
                 canvasGroup.alpha = 1f;
             }
-        }
-
-        #region Pointer Events
-
-        public void SetSelectedImage(bool isSelected)
-        {
-            selectedImage.enabled = isSelected;
-        }
-
-        public void SetIsSelectedByUI(bool isSelected)
-        {
-            _isSelectedByUI = isSelected;
-        }
-        
-
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            if(_isCrop) return;
-            SetSelectedImage(true);
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            if(_isCrop) return;
-            if(_isSelectedByUI) return;
-            SetSelectedImage(false);
-        }
-
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if(_isCrop) return;
-            SetIsSelectedByUI(true);
-            _inventory.SetSelectedSeed(this);
-        }
-
-        #endregion
-
-        private void SetIsCrop(bool isCrop)
-        {
-            _isCrop = isCrop;
-            if(_isCrop) uiCollider.enabled = false;
-            noStockImage.enabled = !_isCrop;
         }
 
         public void UpdateAmount(int amount)

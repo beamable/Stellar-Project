@@ -77,7 +77,7 @@ namespace Farm.UI
         public void PopulateInventory(List<PlantInfo> cropInfos)
         {
             toolsBarPanel.Init();
-            inventoryPanel.PopulateSeeds(cropInfos);
+            inventoryPanel.PopulateSeedsInventory(cropInfos);
             cropUiController.PopulateCrops(cropInfos);
             inventoryPanel.ForceCloseInventory();
         }
