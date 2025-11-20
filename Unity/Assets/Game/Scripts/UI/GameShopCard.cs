@@ -103,13 +103,14 @@ namespace Farm.UI
         {
             try
             {
-                //TODO: inventory block loading
+                _inventory.SetLoadingBlocker(true);
                 await BeamManager.Instance.CommerceManager.UpdateCoinAmount(-CurrentPlant.seedBuyPrice);
                 CropManager.Instance.AddSeeds(CurrentPlant.cropData.cropType, 1);
+                _inventory.SetLoadingBlocker(false);
             }
             catch (Exception e)
             {
-                //inventory block loading to show error for 3 seconds
+                _inventory.SetLoadingBlocker(true, true, "You do not have enough coins to buy seeds.");
                 Debug.LogError($"Failed to buy seeds for {CurrentPlant.cropData.cropName}: {e.Message}");
             }
         }
@@ -118,14 +119,15 @@ namespace Farm.UI
         {
             try
             {
-                //TODO: inventory block loading
+                _inventory.SetLoadingBlocker(true);
                 await BeamManager.Instance.CommerceManager.UpdateCoinAmount(-CurrentPlant.yieldSellPrice);
                 CropManager.Instance.UseYield(CurrentPlant.cropData.cropType, 1);
                 SetButtonsStatus();
+                _inventory.SetLoadingBlocker(false);
             }
             catch (Exception e)
             {
-                //inventory block loading to show error for 3 seconds
+                _inventory.SetLoadingBlocker(true, true, $"Selling failed: {e.Message}");
                 Debug.LogError($"Failed to sell yield for {CurrentPlant.cropData.cropName}: {e.Message}");
             }
         }
@@ -134,15 +136,16 @@ namespace Farm.UI
         {
             try
             {
-                //TODO: inventory block loading
+                _inventory.SetLoadingBlocker(true);
                 var totalSellPrice = CurrentPlant.yieldAmount * CurrentPlant.yieldSellPrice;
                 await BeamManager.Instance.CommerceManager.UpdateCoinAmount(-totalSellPrice);
                 CropManager.Instance.UseYield(CurrentPlant.cropData.cropType, CurrentPlant.yieldAmount);
                 SetButtonsStatus();
+                _inventory.SetLoadingBlocker(false);
             }
             catch (Exception e)
             {
-                //inventory block loading to show error for 3 seconds
+                _inventory.SetLoadingBlocker(true, true, $"Selling failed: {e.Message}");
                 Debug.LogError($"Failed to sell all yield for {CurrentPlant.cropData.cropName}: {e.Message}");
             }
         }

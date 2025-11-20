@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Farm.Beam;
 using Farm.Managers;
@@ -13,6 +14,10 @@ namespace Farm.Player
         #region Variables
 
         [SerializeField] private TextMeshProUGUI inventoryTitle;
+        
+        [Header("Loading")]
+        [SerializeField] private GameObject loadingPanel;
+        [SerializeField] private TextMeshProUGUI loadingText;
         
         [Header("Currency")] 
         [SerializeField] private TextMeshProUGUI currencyValue;
@@ -51,6 +56,7 @@ namespace Farm.Player
             _uiManager = uiManager;
             _toolsBarPanel = toolsBarManager;
             UpdatePlayerCurrency(PlayerCurrency);
+            SetLoadingBlocker(false);
         }
 
         private void OnEnable()
@@ -127,30 +133,52 @@ namespace Farm.Player
             }
         }
 
+        private void SetCanvasGroup(CanvasGroup canvasGroup, bool isActive)
+        {
+            canvasGroup.alpha = isActive ? 1 : 0;
+            canvasGroup.interactable = isActive;
+        }
+
         #region Button Events
 
         public void OnSelectSeedTab()
         {
             inventoryTitle.text = SeedsTab;
-            seedsCanvasGroup.alpha = 1;
-            yieldCanvasGroup.alpha = 0;
-            shopCanvasGroup.alpha = 0;
+            SetCanvasGroup(seedsCanvasGroup, true);
+            SetCanvasGroup(yieldCanvasGroup, false);
+            SetCanvasGroup(shopCanvasGroup, false);
         }
 
         public void OnSelectYieldTab()
         {
             inventoryTitle.text = YieldTab;
-            seedsCanvasGroup.alpha = 0;
-            yieldCanvasGroup.alpha = 1;
-            shopCanvasGroup.alpha = 0;
+            SetCanvasGroup(seedsCanvasGroup, false);
+            SetCanvasGroup(yieldCanvasGroup, true);
+            SetCanvasGroup(shopCanvasGroup, false);
         }
 
         public void OnSelectShopTab()
         {
             inventoryTitle.text = ShopTab;
-            seedsCanvasGroup.alpha = 0;
-            yieldCanvasGroup.alpha = 0;
-            shopCanvasGroup.alpha = 1;
+            SetCanvasGroup(seedsCanvasGroup, false);
+            SetCanvasGroup(yieldCanvasGroup, false);
+            SetCanvasGroup(shopCanvasGroup, true);
+        }
+
+        public void SetLoadingBlocker(bool isLoading, bool autoDeactivate = false, string text = "Loading...")
+        {
+            loadingPanel.SetActive(isLoading);
+            loadingText.text = text;
+            
+            if (isLoading) StartCoroutine(WaitAndDeactivate());
+            return;
+            
+            IEnumerator WaitAndDeactivate()
+            {
+                yield return new WaitForSeconds(3);
+                if (autoDeactivate) gameObject.SetActive(false);
+            }
+            
         }
         
         #endregion
