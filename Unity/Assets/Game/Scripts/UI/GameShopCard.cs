@@ -72,8 +72,8 @@ namespace Farm.UI
 
         private void SetTitle()
         {
-            nameText.text = _isCrop ? YieldText + CurrentPlant.cropData.cropName 
-                : SeedsText + CurrentPlant.cropData.cropName;
+            nameText.text = _isCrop ? YieldText + " " + CurrentPlant.cropData.cropName 
+                : SeedsText + " " +CurrentPlant.cropData.cropName;
         }
 
         private void SetButtonsStatus()

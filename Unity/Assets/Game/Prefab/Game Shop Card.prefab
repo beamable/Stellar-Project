@@ -1352,7 +1352,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Buy x10
+  m_text: Buy x1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 09124f85fe4c75546aac43cb39a96aff, type: 2}
   m_sharedMaterial: {fileID: 939037210452023618, guid: 09124f85fe4c75546aac43cb39a96aff, type: 2}

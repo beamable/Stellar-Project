@@ -6,6 +6,7 @@ using Farm.Managers;
 using Farm.UI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Farm.Player
 {
@@ -14,6 +15,7 @@ namespace Farm.Player
         #region Variables
 
         [SerializeField] private TextMeshProUGUI inventoryTitle;
+        [SerializeField] private Button seedButton;
         
         [Header("Loading")]
         [SerializeField] private GameObject loadingPanel;
@@ -51,6 +53,8 @@ namespace Farm.Player
 
         #endregion
 
+        #region Unity Methods
+
         public void InitAwake(UiManager uiManager, ToolsBarManager toolsBarManager)
         {
             _uiManager = uiManager;
@@ -68,44 +72,14 @@ namespace Farm.Player
         {
             BeamCommerceManager.OnCoinCountUpdated -= UpdatePlayerCurrency;
         }
-
-        private void UpdatePlayerCurrency(int obj)
+        
+        public void PopulateInventory(List<PlantInfo> cropInfos)
         {
-            currencyValue.text = PlayerCurrency.ToString();
+            PopulateSeedsInventory(cropInfos);
+            PopulateShopSeeds(cropInfos);
         }
-
-        public void OpenInventory()
-        {
-            gameObject.SetActive(!gameObject.activeSelf);
-            _uiManager.RaiseOpenUi(gameObject.activeSelf);
-
-            if (!gameObject.activeSelf) return;
-            OnSelectSeedTab();
-            PopulateSeedsInventory(CropInfos);
-            PopulateShopSeeds(CropInfos);
-        }
-
-        public void ForceCloseInventory()
-        {
-            gameObject.SetActive(false);
-            _uiManager.RaiseOpenUi(false);
-        }
-
-        public void SetSelectedSeed(PlantUiCard card)
-        {
-            if (_selectedSeedCard != null)
-            {
-                _selectedSeedCard.SetSelectedImage(false);
-                _selectedSeedCard.SetIsSelectedByUI(false);
-            }
-            _selectedSeedCard = card;
-            _selectedSeedCard.SetSelectedImage(true);
-            _selectedSeedCard.SetIsSelectedByUI(true);
-            _toolsBarPanel.SetSeedSprite(card.CurrentPlant.cropData.seedsSprite);
-            UiManager.Instance.RaiseSelectSeed(card.CurrentPlant);
-        }
-
-        public void PopulateSeedsInventory(List<PlantInfo> cropInfos)
+        
+        private void PopulateSeedsInventory(List<PlantInfo> cropInfos)
         {
             for (var i = 0; i < cropInfos.Count; i++)
             {
@@ -131,6 +105,54 @@ namespace Farm.Player
                 seedCard.transform.SetParent(shopContainer);
                 _seedShopCards.Add(seedCard);
             }
+        }
+
+        #endregion
+
+        private void UpdatePlayerCurrency(int obj)
+        {
+            currencyValue.text = PlayerCurrency.ToString();
+        }
+
+        public void OpenInventory()
+        {
+            gameObject.SetActive(!gameObject.activeSelf);
+            _uiManager.RaiseOpenUi(gameObject.activeSelf);
+
+            if (!gameObject.activeSelf) return;
+            seedButton.Select();
+            OnSelectSeedTab();
+            UpdateSeeds();
+            //PopulateShopSeeds(CropInfos);
+        }
+
+        private void UpdateSeeds()
+        {
+            foreach (var seedsCard in _seedsCards)
+            {
+                var seedInfo = CropManager.Instance.GetCropInfo(seedsCard.CurrentPlant.cropData.cropType);
+                seedsCard.UpdateAmount(seedInfo.seedsToPlant);
+            }
+        }
+
+        public void ForceCloseInventory()
+        {
+            gameObject.SetActive(false);
+            _uiManager.RaiseOpenUi(false);
+        }
+
+        public void SetSelectedSeed(PlantUiCard card)
+        {
+            if (_selectedSeedCard != null)
+            {
+                _selectedSeedCard.SetSelectedImage(false);
+                _selectedSeedCard.SetIsSelectedByUI(false);
+            }
+            _selectedSeedCard = card;
+            _selectedSeedCard.SetSelectedImage(true);
+            _selectedSeedCard.SetIsSelectedByUI(true);
+            _toolsBarPanel.SetSeedSprite(card.CurrentPlant.cropData.seedsSprite);
+            UiManager.Instance.RaiseSelectSeed(card.CurrentPlant);
         }
 
         private void SetCanvasGroup(CanvasGroup canvasGroup, bool isActive)
