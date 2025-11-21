@@ -40,6 +40,7 @@ namespace Farm.Managers
             if (Keyboard.current[Key.Y].isPressed)
             {
                 AddYield(GameConstants.CropType.Carrot, 7);
+                AddYield(GameConstants.CropType.Tomato, 7);
             }
         }
 

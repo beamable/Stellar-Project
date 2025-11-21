@@ -9422,6 +9422,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Farm.Beam.BeamInventoryManager
   defaultCropRef:
     Id: items.crop.Crop_Carrot_NF
+  testItemRef:
+    Id: items.crop.Crop_Tomato_NF
 --- !u!1 &1042077656
 GameObject:
   m_ObjectHideFlags: 0
