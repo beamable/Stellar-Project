@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Farm.Beam;
 using Farm.Input;
 using Farm.Managers;
 using Farm.Player;
@@ -61,13 +62,13 @@ namespace Farm.UI
 
         private void OnEnable()
         {
-            playerInput.OnOpenInventoryEvent += inventoryPanel.OpenInventory;
+            playerInput.OnOpenInventoryEvent += OpenInventory;
             playerInput.OnEscapeKeyEvent += pauseMenuPanel.OpenPauseMenu;
         }
         
         private void OnDisable()
         {
-            playerInput.OnOpenInventoryEvent -= inventoryPanel.OpenInventory;
+            playerInput.OnOpenInventoryEvent -= OpenInventory;
             playerInput.OnEscapeKeyEvent -= pauseMenuPanel.OpenPauseMenu;
         }
 
@@ -91,6 +92,7 @@ namespace Farm.UI
             await UniTask.Yield();
             
             OnPlayerAwoken?.Invoke();
+            BeamManager.Instance.InventoryManager.UpdateCropInfos().Forget();
             await FadeOut();
         }
 
@@ -115,7 +117,17 @@ namespace Farm.UI
         {
             await faderPanel.FadeOut();
         }
-        
+            
+        public void OpenInventory()
+        {
+            inventoryPanel.OpenInventory();
+            if(!inventoryPanel.gameObject.activeSelf)
+            {
+                BeamManager.Instance.InventoryManager.UpdateCropInfos().Forget();
+            }
+        }
 
+        
+        
     }
 }

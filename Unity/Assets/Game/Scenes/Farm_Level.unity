@@ -75777,8 +75777,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 553298166}
-        m_TargetAssemblyTypeName: Farm.Player.InventoryController, Assembly-CSharp
+      - m_Target: {fileID: 499181371}
+        m_TargetAssemblyTypeName: Farm.UI.UiManager, Assembly-CSharp
         m_MethodName: OpenInventory
         m_Mode: 1
         m_Arguments:

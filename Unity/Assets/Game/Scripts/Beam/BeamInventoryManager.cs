@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Beamable;
 using Beamable.Common.Api.Inventory;
+using Beamable.Common.Content;
 using Beamable.Player;
 using Cysharp.Threading.Tasks;
 using Farm.Helpers;
@@ -27,26 +29,6 @@ namespace Farm.Beam
             PlayerCrops = new List<PlantInfo>();
             await FetchInventory();
         }
-
-        public override async UniTask ResetAsync(CancellationToken ct)
-        {
-            await base.ResetAsync(ct);
-        }
-
-        // private void OnInvRefresh(InventoryView inventoryView)
-        // {
-        //     RefreshInventory(inventoryView).Forget();
-        // }
-        //
-        // private async UniTask RefreshInventory(InventoryView inventoryView)
-        // {
-        //     Debug.Log($"Inventory Refreshing...");
-        //     
-        //     //check default crop
-        //     //if (!await UpdateDefaultCropInfo(inventoryView)) return;
-        //
-        //     Debug.Log($"Inventory Refresh Done!");
-        // }
 
         public async UniTask FetchInventory()
         {
@@ -83,7 +65,7 @@ namespace Farm.Beam
                     ? int.Parse(seedsAmount)
                     : 0;
 
-            var defaultPlayerCrop = TryGetCropInfo(defaultCropInfo.instanceId);
+            var defaultPlayerCrop = TryGetCropInfoByInstanceId(defaultCropInfo.instanceId);
             if (defaultPlayerCrop == null)
             {
                 CropInstancesDictionary.Add(defaultCropInfo.instanceId, defaultCropInfo);
@@ -99,7 +81,43 @@ namespace Farm.Beam
             return true;
         }
 
-        public PlantInfo TryGetCropInfo(long instanceId)
+        public async UniTask UpdateCropInfos()
+        {
+            if(PlayerCrops.Count < 1) return;
+            try
+            {
+                var itemsToUpdate = new List<CropUpdateRequest>();
+
+                foreach (var crop in PlayerCrops)
+                {
+                    var itemToUpdate = new CropUpdateRequest()
+                    {
+                        ContentId = crop.contentId,
+                        InstanceId = crop.instanceId,
+                        Properties = new Dictionary<string, string>()
+                        {
+                            {GameConstants.SeedsLeftProp, crop.seedsToPlant.ToString()},
+                            {GameConstants.YieldProp, crop.yieldAmount.ToString()}
+                        }
+                    };
+                    itemsToUpdate.Add(itemToUpdate);
+                }
+
+                await _stellarClient.UpdateItems(itemsToUpdate);
+                Debug.Log($"Inventory updated with new crop info");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to update inventory: {e.Message}");
+            }
+        }
+
+        public void UpdateCropInfo(long instanceId, int yieldAmount, int seedsAmount)
+        {
+            
+        }
+
+        public PlantInfo TryGetCropInfoByInstanceId(long instanceId)
         {
             return CropInstancesDictionary.GetValueOrDefault(instanceId);
         }

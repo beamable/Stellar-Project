@@ -109,6 +109,18 @@ namespace Beamable.Server.Clients
         }
         
         /// <summary>
+        /// Call the UpdateItems method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.UpdateItems"/>
+        /// </summary>
+        public Beamable.Common.Promise<Beamable.Common.Unit> UpdateItems(System.Collections.Generic.List<StellarFederationCommon.FederationContent.CropUpdateRequest> items)
+        {
+            object raw_items = items;
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            serializedFields.Add("items", raw_items);
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "UpdateItems", serializedFields);
+        }
+        
+        /// <summary>
         /// Call the ExternalAddress method on the StellarFederation microservice
         /// <see cref="Beamable.StellarFederation.StellarFederation.ExternalAddress"/>
         /// </summary>
@@ -149,6 +161,11 @@ namespace Beamable.Server.Clients
         
         [System.SerializableAttribute()]
         internal sealed class ParameterSystem_Int64 : MicroserviceClientDataWrapper<long>
+        {
+        }
+        
+        [System.SerializableAttribute()]
+        internal sealed class ParameterSystem_Collections_Generic_List_StellarFederationCommon_FederationContent_CropUpdateRequest : MicroserviceClientDataWrapper<System.Collections.Generic.List<StellarFederationCommon.FederationContent.CropUpdateRequest>>
         {
         }
     }
