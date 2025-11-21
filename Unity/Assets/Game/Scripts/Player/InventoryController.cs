@@ -41,6 +41,7 @@ namespace Farm.Player
         private int PlayerCurrency => BeamManager.Instance.CommerceManager.CurrentCoinCount;
         private List <PlantUiCard> _seedsCards = new List<PlantUiCard>();
         private List <GameShopCard> _seedShopCards = new List<GameShopCard>();
+        private List <GameShopCard> _yieldShopCards = new List<GameShopCard>();
 
         private UiManager _uiManager;
         private ToolsBarManager _toolsBarPanel;
@@ -77,6 +78,7 @@ namespace Farm.Player
         {
             PopulateSeedsInventory(cropInfos);
             PopulateShopSeeds(cropInfos);
+            PopulateYieldShop(cropInfos);
         }
         
         private void PopulateSeedsInventory(List<PlantInfo> cropInfos)
@@ -93,6 +95,17 @@ namespace Farm.Player
                     SetSelectedSeed(card);
                 }
                 _seedsCards.Add(card);
+            }
+        }
+
+        private void PopulateYieldShop(List<PlantInfo> cropInfos)
+        {
+            foreach (var crop in cropInfos)
+            {
+                var seedCard = Instantiate(shopCard, yieldContainer);
+                seedCard.Init(this, crop, true);
+                seedCard.transform.SetParent(yieldContainer);
+                _yieldShopCards.Add(seedCard);
             }
         }
         
@@ -122,16 +135,25 @@ namespace Farm.Player
             if (!gameObject.activeSelf) return;
             seedButton.Select();
             OnSelectSeedTab();
-            UpdateSeeds();
-            //PopulateShopSeeds(CropInfos);
+            UpdateAvailableSeeds();
+            UpdateYieldShop();
         }
 
-        private void UpdateSeeds()
+        private void UpdateAvailableSeeds()
         {
             foreach (var seedsCard in _seedsCards)
             {
                 var seedInfo = CropManager.Instance.GetCropInfo(seedsCard.CurrentPlant.cropData.cropType);
                 seedsCard.UpdateAmount(seedInfo.seedsToPlant);
+            }
+        }
+
+        private void UpdateYieldShop()
+        {
+            foreach (var yieldCard in _yieldShopCards)
+            {
+                var yieldInfo = CropManager.Instance.GetCropInfo(yieldCard.CurrentPlant.cropData.cropType);
+                yieldCard.OnCropInfoUpdated(yieldInfo);
             }
         }
 
@@ -159,6 +181,7 @@ namespace Farm.Player
         {
             canvasGroup.alpha = isActive ? 1 : 0;
             canvasGroup.interactable = isActive;
+            canvasGroup.blocksRaycasts = isActive;
         }
 
         #region Button Events

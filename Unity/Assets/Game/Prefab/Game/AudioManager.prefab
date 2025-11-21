@@ -358,6 +358,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 70f38980708b3d14eb28bbcc48837d4f, type: 3}
   - {fileID: 8300000, guid: 419cba7b7b54ce742af3e52a8dc8ffc6, type: 3}
   - {fileID: 8300000, guid: 32419e1ec5b7b0f47939ff6b71620cd7, type: 3}
+  - {fileID: 8300000, guid: f6c13571990106b4082041fbb2fca460, type: 3}
+  - {fileID: 8300000, guid: 439edc2523cae06428a145d4957908f9, type: 3}
   musicSource: {fileID: 840080170889229481}
   titleClip: {fileID: 8300000, guid: 38bb3881b0c322f4aa8e65e3bc12ffce, type: 3}
   gameMusicClips:

@@ -33,20 +33,20 @@ namespace Farm.Beam
             await base.ResetAsync(ct);
         }
 
-        private void OnInvRefresh(InventoryView inventoryView)
-        {
-            RefreshInventory(inventoryView).Forget();
-        }
-        
-        private async UniTask RefreshInventory(InventoryView inventoryView)
-        {
-            Debug.Log($"Inventory Refreshing...");
-            
-            //check default crop
-            //if (!await UpdateDefaultCropInfo(inventoryView)) return;
-
-            Debug.Log($"Inventory Refresh Done!");
-        }
+        // private void OnInvRefresh(InventoryView inventoryView)
+        // {
+        //     RefreshInventory(inventoryView).Forget();
+        // }
+        //
+        // private async UniTask RefreshInventory(InventoryView inventoryView)
+        // {
+        //     Debug.Log($"Inventory Refreshing...");
+        //     
+        //     //check default crop
+        //     //if (!await UpdateDefaultCropInfo(inventoryView)) return;
+        //
+        //     Debug.Log($"Inventory Refresh Done!");
+        // }
 
         public async UniTask FetchInventory()
         {

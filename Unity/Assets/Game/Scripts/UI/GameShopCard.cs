@@ -53,7 +53,6 @@ namespace Farm.UI
         private void OnEnable()
         {
             CropManager.OnCropInfoUpdated += OnCropInfoUpdated;
-            UpdateAmountText(CurrentPlant);
         }
 
         private void OnDisable()
@@ -81,20 +80,18 @@ namespace Farm.UI
             buySeedButton.gameObject.SetActive( !_isCrop );
             sellYieldButtonTransform.gameObject.SetActive( _isCrop );
 
-            if (!_isCrop || CurrentPlant.yieldAmount >= 1) return;
-            sellOneYieldButton.interactable = false;
-            sellAllYieldButton.interactable = false;
+            if (!_isCrop || CurrentPlant.yieldAmount < 1) return;
+            sellOneYieldButton.interactable = true;
+            sellAllYieldButton.interactable = true;
         }
 
-        private void OnCropInfoUpdated(PlantInfo newInfo)
+        public void OnCropInfoUpdated(PlantInfo newInfo)
         {
             if (newInfo.cropData.cropType != CurrentPlant.cropData.cropType) return;
             CurrentPlant = newInfo;
-        }
-
-        private void UpdateAmountText(PlantInfo newInfo)
-        {
-            if(newInfo == null) return;
+            SetAmount();
+            SetButtonsStatus();
+            SetTitle();
         }
 
         #region Button_Methods
@@ -107,6 +104,7 @@ namespace Farm.UI
                 await BeamManager.Instance.CommerceManager.UpdateCoinAmount(-CurrentPlant.seedBuyPrice);
                 CropManager.Instance.AddSeeds(CurrentPlant.cropData.cropType, 1);
                 _inventory.SetLoadingBlocker(false);
+                AudioManager.Instance.PlaySfx(8);
             }
             catch (Exception e)
             {
@@ -120,10 +118,11 @@ namespace Farm.UI
             try
             {
                 _inventory.SetLoadingBlocker(true);
-                await BeamManager.Instance.CommerceManager.UpdateCoinAmount(-CurrentPlant.yieldSellPrice);
+                await BeamManager.Instance.CommerceManager.UpdateCoinAmount(CurrentPlant.yieldSellPrice);
                 CropManager.Instance.UseYield(CurrentPlant.cropData.cropType, 1);
                 SetButtonsStatus();
                 _inventory.SetLoadingBlocker(false);
+                AudioManager.Instance.PlaySfx(9);
             }
             catch (Exception e)
             {
@@ -138,10 +137,11 @@ namespace Farm.UI
             {
                 _inventory.SetLoadingBlocker(true);
                 var totalSellPrice = CurrentPlant.yieldAmount * CurrentPlant.yieldSellPrice;
-                await BeamManager.Instance.CommerceManager.UpdateCoinAmount(-totalSellPrice);
+                await BeamManager.Instance.CommerceManager.UpdateCoinAmount(totalSellPrice);
                 CropManager.Instance.UseYield(CurrentPlant.cropData.cropType, CurrentPlant.yieldAmount);
                 SetButtonsStatus();
                 _inventory.SetLoadingBlocker(false);
+                AudioManager.Instance.PlaySfx(9);
             }
             catch (Exception e)
             {

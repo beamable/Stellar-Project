@@ -5,6 +5,7 @@ using Farm.Helpers;
 using Farm.Managers;
 using Farm.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Farm.Managers
 {
@@ -31,6 +32,15 @@ namespace Farm.Managers
             }
             
             UiManager.Instance.PopulateInventory(BeamManager.Instance.InventoryManager.PlayerCrops);
+        }
+
+        //TODO: Remove this later
+        private void Update()
+        {
+            if (Keyboard.current[Key.Y].isPressed)
+            {
+                AddYield(GameConstants.CropType.Carrot, 7);
+            }
         }
 
         public void UseSeeds(GameConstants.CropType cropType)
