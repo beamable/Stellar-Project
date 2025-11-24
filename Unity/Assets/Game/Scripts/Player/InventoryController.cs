@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Farm.Beam;
+using Farm.Helpers;
 using Farm.Managers;
 using Farm.UI;
 using TMPro;
@@ -177,37 +178,30 @@ namespace Farm.Player
             UiManager.Instance.RaiseSelectSeed(card.CurrentPlant);
         }
 
-        private void SetCanvasGroup(CanvasGroup canvasGroup, bool isActive)
-        {
-            canvasGroup.alpha = isActive ? 1 : 0;
-            canvasGroup.interactable = isActive;
-            canvasGroup.blocksRaycasts = isActive;
-        }
-
         #region Button Events
 
         public void OnSelectSeedTab()
         {
             inventoryTitle.text = SeedsTab;
-            SetCanvasGroup(seedsCanvasGroup, true);
-            SetCanvasGroup(yieldCanvasGroup, false);
-            SetCanvasGroup(shopCanvasGroup, false);
+            GameUtilities.SetCanvasGroup(seedsCanvasGroup, true);
+            GameUtilities.SetCanvasGroup(yieldCanvasGroup, false);
+            GameUtilities.SetCanvasGroup(shopCanvasGroup, false);
         }
 
         public void OnSelectYieldTab()
         {
             inventoryTitle.text = YieldTab;
-            SetCanvasGroup(seedsCanvasGroup, false);
-            SetCanvasGroup(yieldCanvasGroup, true);
-            SetCanvasGroup(shopCanvasGroup, false);
+            GameUtilities.SetCanvasGroup(seedsCanvasGroup, false);
+            GameUtilities.SetCanvasGroup(yieldCanvasGroup, true);
+            GameUtilities.SetCanvasGroup(shopCanvasGroup, false);
         }
 
         public void OnSelectShopTab()
         {
             inventoryTitle.text = ShopTab;
-            SetCanvasGroup(seedsCanvasGroup, false);
-            SetCanvasGroup(yieldCanvasGroup, false);
-            SetCanvasGroup(shopCanvasGroup, true);
+            GameUtilities.SetCanvasGroup(seedsCanvasGroup, false);
+            GameUtilities.SetCanvasGroup(yieldCanvasGroup, false);
+            GameUtilities.SetCanvasGroup(shopCanvasGroup, true);
         }
 
         public void SetLoadingBlocker(bool isLoading, bool autoDeactivate = false, string text = "Loading...")

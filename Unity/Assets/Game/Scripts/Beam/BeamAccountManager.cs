@@ -19,6 +19,8 @@ namespace Farm.Beam
             await base.InitAsync(ct);
             await _beamContext.Accounts.OnReady;
             await UpdateCurrentAccount();
+            
+            IsReady = true;
         }
 
         public override async UniTask ResetAsync(CancellationToken ct)
