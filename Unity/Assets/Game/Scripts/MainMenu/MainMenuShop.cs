@@ -88,10 +88,22 @@ namespace Farm.Game.Scripts.MainMenu
 
         private void PopulateShop()
         {
+            CleanUpContainers();
+
             PopulateInventoryTab();
             PopulateShopTab();
         }
-        
+
+        private void CleanUpContainers()
+        {
+            //clean up inventory container first
+            foreach (Transform child in inventoryContainer) Destroy(child.gameObject);
+            _inventoryCards.Clear();
+            //clean up shop container first
+            foreach (Transform child in shopContainer) Destroy(child.gameObject);
+            _shopCards.Clear();
+        }
+
         private void UpdatePlayerCurrency(int currency)
         {
             currencyValue.text = PlayerCurrency.ToString();
@@ -122,6 +134,7 @@ namespace Farm.Game.Scripts.MainMenu
                 card.transform.SetParent(inventoryContainer);
                 card.SetSelectedImage(false);
                 card.IsSelectable(false);
+                card.SetStockImageStatus(false);
                 _inventoryCards.Add(card);
             }
         }

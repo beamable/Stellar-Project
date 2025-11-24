@@ -127,5 +127,10 @@ namespace Farm.UI
             uiCollider.enabled = isSelectable; 
             _isSelectable = isSelectable;
         }
+        
+        public void SetStockImageStatus(bool isStocked)
+        {
+            noStockImage.enabled = !isStocked;
+        }
     }
 }
