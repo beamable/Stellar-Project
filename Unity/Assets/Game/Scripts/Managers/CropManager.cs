@@ -1,25 +1,19 @@
 using System;
 using System.Collections.Generic;
+using Farm.Beam;
 using Farm.Helpers;
 using Farm.Managers;
 using Farm.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Farm.Managers
 {
-    [System.Serializable]
-    public class PlantInfo
-    {
-        public int seedsToPlant;
-        public int yieldAmount;
-        public CropsData cropData;
-    }
-    
     public class CropManager : MonoSingleton<CropManager>
     {
         [SerializeField] private CropsData[] plantsData;
 
-        public List<PlantInfo> CropsList { get; private set; } = new List<PlantInfo>();
+        //public List<PlantInfo> CropsList { get; private set; } = new List<PlantInfo>();
         public Dictionary<GameConstants.CropType, PlantInfo> CropsDictionary { get; private set; } = new Dictionary<GameConstants.CropType, PlantInfo>();
 
         public static event Action<PlantInfo> OnCropInfoUpdated;
@@ -28,21 +22,26 @@ namespace Farm.Managers
         {
             base.OnAfterInitialized();
             
-            CropsList = new List<PlantInfo>();
+            //CropsList = new List<PlantInfo>();
             CropsDictionary = new Dictionary<GameConstants.CropType, PlantInfo>();
             
-            foreach (var data in plantsData)
+            foreach (var plant in BeamManager.Instance.InventoryManager.PlayerCrops)
             {
-                var plant = new PlantInfo
-                {
-                    seedsToPlant = data.startingSeedsAmount,
-                    cropData = data
-                };
-                CropsDictionary.Add(data.cropType, plant);
-                CropsList.Add(plant);
+                CropsDictionary[plant.cropData.cropType] = plant;
+                //CropsList.Add(plant);
             }
             
-            UiManager.Instance.PopulateInventory(CropsList);
+            UiManager.Instance.PopulateInventory(BeamManager.Instance.InventoryManager.PlayerCrops);
+        }
+
+        //TODO: Remove this later
+        private void Update()
+        {
+            if (Keyboard.current[Key.Y].isPressed)
+            {
+                AddYield(GameConstants.CropType.Carrot, 7);
+                AddYield(GameConstants.CropType.Tomato, 7);
+            }
         }
 
         public void UseSeeds(GameConstants.CropType cropType)

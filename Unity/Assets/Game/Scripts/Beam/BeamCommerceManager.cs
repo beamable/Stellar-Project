@@ -14,11 +14,13 @@ namespace Farm.Beam
         [SerializeField] private CurrencyRef testCoinRef;
 
         public int CurrentCoinCount { get; private set; }
+        
+        public static Action<int> OnCoinCountUpdated;
 
         public override async UniTask InitAsync(CancellationToken ct)
         {
             await base.InitAsync(ct);
-            GetServerCoinCount();
+            await GetServerCoinCount();
         }
         
         public override async UniTask ResetAsync(CancellationToken ct)
@@ -30,25 +32,27 @@ namespace Farm.Beam
         /// Get the current coin count from the server and sync it to local storage
         /// </summary>
         /// <returns></returns>
-        public int GetServerCoinCount()
+        public async UniTask<int> GetServerCoinCount()
         {
-            var coins = _beamContext.Inventory.GetCurrency(testCoinRef.Id);
-            CurrentCoinCount = (int)coins.Amount;
+            var serverCoin = await _beamContext.Inventory.LoadCurrencies(testCoinRef.Id);
+            await serverCoin.OnReady;
+            CurrentCoinCount = (int)serverCoin.GetCurrency(testCoinRef.Id).Amount;
+            OnCoinCountUpdated?.Invoke(CurrentCoinCount);
             return CurrentCoinCount;
         }
 
         [ContextMenu("Add Coins")]
         public async void AddCurrency()
         {
-            await UpdateCoinAmount(CurrentCoinCount + 50);
+            await UpdateCoinAmount(50);
         }
         
         public async UniTask UpdateCoinAmount(int amount)
         {
             try
             {
-                CurrentCoinCount = amount;
                 await _stellarClient.UpdateCurrency(testCoinRef.Id, amount);
+                CurrentCoinCount = await GetServerCoinCount();
                 Debug.Log($"Updated Currency to {amount}. Current Balance:{CurrentCoinCount}");
             }
             catch (Exception e)

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Crop_Tomato
   m_EditorClassIdentifier: Assembly-CSharp::Farm.Planting.PlantsData
   cropName: Tomato
-  startingSeedsAmount: 5
+  startingSeedsAmount: 10
   yield: 5
   cropType: 1
   cropIcon: {fileID: 5860025163644826426, guid: 688a17423db43294093ccb5c6916461b, type: 3}

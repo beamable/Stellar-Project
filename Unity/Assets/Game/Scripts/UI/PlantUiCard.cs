@@ -1,12 +1,8 @@
-using System;
-using Farm.Helpers;
 using Farm.Managers;
 using Farm.Player;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using UnityEngine.UIElements;
 using Image = UnityEngine.UI.Image;
 
 namespace Farm.UI
