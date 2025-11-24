@@ -18,6 +18,9 @@ namespace Farm.Game.Scripts.MainMenu
         
         [Header("Scene Names")]
         [SerializeField] private string farmSceneName;
+        
+        [Header("References")]
+        [SerializeField] private MainMenuShop mainMenuShop;
 
         public void Start()
         {
@@ -61,6 +64,11 @@ namespace Farm.Game.Scripts.MainMenu
             {
                 SceneManager.LoadScene(farmSceneName);
             }
+        }
+
+        public void OnOpenShop()
+        {
+            mainMenuShop.OpenShop();
         }
         
         public void OnQuitGame()

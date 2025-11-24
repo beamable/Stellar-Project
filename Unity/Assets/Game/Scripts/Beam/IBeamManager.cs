@@ -17,14 +17,13 @@ namespace Farm.Beam
     {
         protected BeamContext _beamContext;
         protected StellarFederationClient _stellarClient;
-        protected bool IsReady { get; private set; }
+        public bool IsReady { get; protected set; }
 
         public virtual async UniTask InitAsync(CancellationToken ct)
         {
             _beamContext = BeamManager.BeamContext;
             _stellarClient = BeamManager.StellarClient;
             await UniTask.Yield();
-            IsReady = true;
         }
         
         public virtual async UniTask ResetAsync(CancellationToken ct)

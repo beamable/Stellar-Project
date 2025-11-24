@@ -20,13 +20,14 @@ namespace Farm.UI
         [Header("References")]
         [SerializeField] private Collider2D uiCollider;
         
-        private bool _isSelectedByUI, _isCrop;
+        private bool _isSelectable, _isSelectedByUI, _isCrop;
         private InventoryController _inventory;
         public PlantInfo CurrentPlant { get; private set; }
 
         public void Init(bool isSelected, bool isCrop, InventoryController inventory, 
             PlantInfo plant, int amount, bool isSeed = true)
         {
+            IsSelectable(true);
             _inventory = inventory;
             SetIsCrop(isCrop);
             CurrentPlant = plant;
@@ -89,20 +90,20 @@ namespace Farm.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if(_isCrop) return;
+            if(_isCrop || !_isSelectable) return;
             SetSelectedImage(true);
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            if(_isCrop) return;
+            if(_isCrop || !_isSelectable) return;
             if(_isSelectedByUI) return;
             SetSelectedImage(false);
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if(_isCrop) return;
+            if(_isCrop || !_isSelectable) return;
             SetIsSelectedByUI(true);
             _inventory.SetSelectedSeed(this);
         }
@@ -119,6 +120,12 @@ namespace Farm.UI
         public void UpdateAmount(int amount)
         {
             amountText.text = $"X{amount}";
+        }
+        
+        public void IsSelectable(bool isSelectable)
+        { 
+            uiCollider.enabled = isSelectable; 
+            _isSelectable = isSelectable;
         }
     }
 }

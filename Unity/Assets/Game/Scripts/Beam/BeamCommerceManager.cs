@@ -21,6 +21,8 @@ namespace Farm.Beam
         {
             await base.InitAsync(ct);
             await GetServerCoinCount();
+
+            IsReady = true;
         }
         
         public override async UniTask ResetAsync(CancellationToken ct)

@@ -23,6 +23,8 @@ namespace Farm.Beam
         {
             await base.InitAsync(ct);
             await SyncContentAsync(ct);
+
+            IsReady = true;
         }
 
         public override async UniTask ResetAsync(CancellationToken ct)

@@ -70,6 +70,7 @@
     <Compile Include="Assets\Game\Scripts\Player\PlayerController.cs" />
     <Compile Include="Assets\Game\Scripts\Helpers\GameConstants.cs" />
     <Compile Include="Assets\Game\Scripts\Planting\Tool.cs" />
+    <Compile Include="Assets\Game\Scripts\MainMenu\MainMenuShop.cs" />
     <Compile Include="Assets\Game\Scripts\Beam\IBeamManager.cs" />
     <Compile Include="Assets\Game\Scripts\Planting\PlantingBlock.cs" />
     <Compile Include="Assets\Game\Scripts\Managers\AudioManager.cs" />

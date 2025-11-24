@@ -29,6 +29,8 @@ namespace Farm.Beam
             _contentManager = BeamManager.Instance.ContentManager;
             PlayerCrops = new List<PlantInfo>();
             await FetchInventory();
+
+            IsReady = true;
         }
 
         [ContextMenu("Fetch Inventory" )]
