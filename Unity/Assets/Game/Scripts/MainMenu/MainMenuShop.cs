@@ -122,7 +122,7 @@ namespace Farm.Game.Scripts.MainMenu
             IEnumerator WaitAndDeactivate()
             {
                 yield return new WaitForSeconds(3);
-                if (autoDeactivate) gameObject.SetActive(false);
+                if (autoDeactivate) loadingPanel.SetActive(false);
             }
             
         }
