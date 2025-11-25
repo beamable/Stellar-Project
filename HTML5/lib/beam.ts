@@ -1,4 +1,4 @@
-import { Beam, StatsService, AuthService, AccountService } from "beamable-sdk"
+import { Beam, clientServices } from "beamable-sdk"
 import { StellarFederationClient } from "@/beamable/clients/StellarFederationClient"
 
 export type BeamResolvedConfig = { cid: string; pid: string; environment?: "prod" | "stg" | "dev" }
@@ -95,9 +95,7 @@ async function bootBeamOnce(cfg: BeamResolvedConfig, tag?: string) {
     environment: cfg.environment,
     instanceTag,
   })
-  ;(beam as any).use?.(StatsService)
-  ;(beam as any).use?.(AuthService)
-  ;(beam as any).use?.(AccountService)
+  clientServices(beam)
   ;(beam as any).use?.(StellarFederationClient)
   // Ensure we have a token
   try {
