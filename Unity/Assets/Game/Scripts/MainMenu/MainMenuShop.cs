@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beamable.Common.Shop;
 using Cysharp.Threading.Tasks;
 using Farm.Beam;
 using Farm.Helpers;
@@ -27,7 +28,7 @@ namespace Farm.Game.Scripts.MainMenu
         
         [Header("Cards Prefab")]
         [SerializeField] private PlantUiCard plantUiCard;
-        [SerializeField] private GameShopCard shopCard;
+        [SerializeField] private MainMenuShopCard shopCard;
         
         [Header("Containers")]
         [SerializeField] private Transform inventoryContainer;
@@ -46,9 +47,9 @@ namespace Farm.Game.Scripts.MainMenu
 
         private int PlayerCurrency => BeamManager.Instance.CommerceManager.CurrentCoinCount;
         private List<PlantUiCard> _inventoryCards = new List<PlantUiCard>();
-        private List<GameShopCard> _shopCards = new List<GameShopCard>();
-        private List<PlantInfo> CropInfos => BeamManager.Instance.InventoryManager.PlayerCrops;
-        
+        private List<MainMenuShopCard> _shopCards = new List<MainMenuShopCard>();
+        private List<PlantInfo> PlayerCrops => BeamManager.Instance.InventoryManager.PlayerCrops;
+        private List<ListingContent> StoreListings => BeamManager.Instance.CommerceManager.Listings;
 
         #endregion
 
@@ -59,17 +60,18 @@ namespace Farm.Game.Scripts.MainMenu
             await UniTask.WaitUntil(()=> BeamManager.Instance.InventoryManager.IsReady);
             UpdatePlayerCurrency(PlayerCurrency);
             SetLoadingBlocker(false);
-            Debug.LogWarning($"Main Menu Shop Ready");
         }
 
         private void OnEnable()
         {
             BeamCommerceManager.OnCoinCountUpdated += UpdatePlayerCurrency;
+            BeamInventoryManager.OnInventoryUpdated += PopulateShop;
         }
 
         private void OnDisable()
         {
             BeamCommerceManager.OnCoinCountUpdated -= UpdatePlayerCurrency;
+            BeamInventoryManager.OnInventoryUpdated -= PopulateShop;
         }
 
         #endregion
@@ -88,16 +90,28 @@ namespace Farm.Game.Scripts.MainMenu
 
         private void PopulateShop()
         {
+            CleanUpContainers();
+
             PopulateInventoryTab();
             PopulateShopTab();
         }
-        
+
+        private void CleanUpContainers()
+        {
+            //clean up inventory container first
+            foreach (Transform child in inventoryContainer) Destroy(child.gameObject);
+            _inventoryCards.Clear();
+            //clean up shop container first
+            foreach (Transform child in shopContainer) Destroy(child.gameObject);
+            _shopCards.Clear();
+        }
+
         private void UpdatePlayerCurrency(int currency)
         {
             currencyValue.text = PlayerCurrency.ToString();
         }
         
-        private void SetLoadingBlocker(bool isLoading, bool autoDeactivate = false, string text = "Loading...")
+        public void SetLoadingBlocker(bool isLoading, bool autoDeactivate = false, string text = "Loading...")
         {
             loadingPanel.SetActive(isLoading);
             loadingText.text = text;
@@ -108,20 +122,21 @@ namespace Farm.Game.Scripts.MainMenu
             IEnumerator WaitAndDeactivate()
             {
                 yield return new WaitForSeconds(3);
-                if (autoDeactivate) gameObject.SetActive(false);
+                if (autoDeactivate) loadingPanel.SetActive(false);
             }
             
         }
 
         private void PopulateInventoryTab()
         {
-            foreach (var plantInfo in CropInfos)
+            foreach (var plantInfo in PlayerCrops)
             {
                 var card = Instantiate(plantUiCard, inventoryContainer);
-                card.Init(false, false, null, plantInfo, plantInfo.seedsToPlant);
+                card.Init(false, false, null, plantInfo, 0);
                 card.transform.SetParent(inventoryContainer);
                 card.SetSelectedImage(false);
                 card.IsSelectable(false);
+                card.ForceRemoveStockImage(true);
                 _inventoryCards.Add(card);
             }
         }
@@ -129,18 +144,16 @@ namespace Farm.Game.Scripts.MainMenu
         //TODO: Populate later from inventory
         private void PopulateShopTab()
         {
-            // foreach (var plantInfo in CropInfos)
-            // {
-            //     
-            // }
-        }
-        
-        private void UpdateAvailableSeeds()
-        {
-            foreach (var seedsCard in _inventoryCards)
+            foreach (var listing in StoreListings)
             {
-                var seedInfo = CropManager.Instance.GetCropInfo(seedsCard.CurrentPlant.cropData.cropType);
-                seedsCard.UpdateAmount(seedInfo.seedsToPlant);
+                var id = listing.offer.obtainItems[0].contentId;
+                var info = BeamManager.Instance.ContentManager.GetCropInfo(id.Id);
+                var card = Instantiate(shopCard, shopContainer);
+                
+                var isOwned = BeamManager.Instance.InventoryManager.AlreadyOwned(id);
+                card.Init(this, info, listing, isOwned);
+                card.transform.SetParent(shopContainer);
+                _shopCards.Add(shopCard);
             }
         }
         

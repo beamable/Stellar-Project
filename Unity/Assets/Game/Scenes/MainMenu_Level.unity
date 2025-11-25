@@ -1659,7 +1659,7 @@ MonoBehaviour:
   loadingText: {fileID: 1796426296}
   currencyValue: {fileID: 727103996}
   plantUiCard: {fileID: 592361220319614363, guid: bf01e6c2dfb48de4fa0f7716ae1e802e, type: 3}
-  shopCard: {fileID: 1350808973950208012, guid: e83816f916b73ee42a9e655bb16870a7, type: 3}
+  shopCard: {fileID: 5625785139478785225, guid: 374beb19b3ab205479bd2022cdc3cd36, type: 3}
   inventoryContainer: {fileID: 679742667}
   shopContainer: {fileID: 571247062}
   inventoryCanvasGroup: {fileID: 1568937237}
@@ -11442,6 +11442,8 @@ MonoBehaviour:
     Id: currency.coin.beam_coin
   testCoinRef:
     Id: currency.gems
+  storeRefNf:
+    Id: stores.Store_Nf
 --- !u!1 &1054368905
 GameObject:
   m_ObjectHideFlags: 0

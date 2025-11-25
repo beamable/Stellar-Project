@@ -15,32 +15,49 @@ namespace Farm.Beam
 {
     public class BeamInventoryManager : BeamManagerBase
     {
+        #region Variables
+
         [SerializeField] private CropItemRef defaultCropRef;
         [SerializeField] private CropItemRef testItemRef;
 
         private BeamContentManager _contentManager;
         
+        public bool IsRefreshing { get; private set; }
         public List<PlantInfo> PlayerCrops { get; private set; }
         public Dictionary<long, PlantInfo> CropInstancesDictionary { get; private set; } = new Dictionary<long, PlantInfo>();
+        
+        public static event Action OnInventoryUpdated;
+
+        #endregion
         
         public override async UniTask InitAsync(CancellationToken ct)
         {
             await base.InitAsync(ct);
             _contentManager = BeamManager.Instance.ContentManager;
             PlayerCrops = new List<PlantInfo>();
-            await FetchInventory();
+            //await FetchInventory();
+            _beamContext.Api.InventoryService.Subscribe(OnInvRefresh);
 
             IsReady = true;
         }
 
-        [ContextMenu("Fetch Inventory" )]
-        public async UniTask FetchInventory()
+        private void OnInvRefresh(InventoryView inv)
         {
-            var inv = await GetCurrentInventoryView();
+            FetchInventory(inv).Forget();
+        }
+
+        [ContextMenu("Fetch Inventory" )]
+        public async UniTask FetchInventory(InventoryView inv)
+        {
+            IsRefreshing = true;
+            //var inv = await GetCurrentInventoryView();
             await UpdateDefaultCropInfo(inv);
             
             if(inv.items.Count < 1) return;
             ProcessCropInstances(inv);
+            await UniTask.Yield();
+            IsRefreshing = false;
+            OnInventoryUpdated?.Invoke();
         }
 
         private void ProcessCropInstances(InventoryView inv)
@@ -186,6 +203,38 @@ namespace Farm.Beam
             {
                 Debug.LogError($"Failed to update inventory: {e.Message}");
             }
+        }
+
+        public async UniTask UpdateSpecificCropInfo(string contentId, int yieldAmount, int seedsLeft)
+        {
+            var crop = PlayerCrops.FirstOrDefault(x => x.contentId == contentId);
+            if(crop == null) return;
+            try
+            {
+                var itemsToUpdate = new List<CropUpdateRequest>();
+
+                var itemToUpdate = new CropUpdateRequest()
+                {
+                    ContentId = crop.contentId,
+                    InstanceId = crop.instanceId,
+                    Properties = new Dictionary<string, string>()
+                    {
+                        { GameConstants.SeedsLeftProp, seedsLeft.ToString() },
+                        { GameConstants.YieldProp, yieldAmount.ToString() }
+                    }
+                };
+                itemsToUpdate.Add(itemToUpdate);
+                await _stellarClient.UpdateItems(itemsToUpdate);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to update crop {crop.contentId}: {e.Message}");
+            }
+        }
+        
+        public bool AlreadyOwned(string contentId)
+        {
+            return PlayerCrops.Any(crop => crop.contentId == contentId && crop.IsOwned);
         }
         
     }

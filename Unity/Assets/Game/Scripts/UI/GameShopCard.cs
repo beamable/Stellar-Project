@@ -38,8 +38,7 @@ namespace Farm.UI
         /// isCrop == false: This will be a seed buying card
         /// isCrop == true: This will be a yield selling card
         /// </summary>
-        public void Init(InventoryController inventory, 
-            PlantInfo plant, bool isCrop)
+        public void Init(InventoryController inventory, PlantInfo plant, bool isCrop)
         {
             _inventory = inventory;
             CurrentPlant = plant;
