@@ -188,6 +188,33 @@ namespace Farm.Beam
             }
         }
 
+        public async UniTask UpdateSpecificCropInfo(string contentId, int yieldAmount, int seedsLeft)
+        {
+            var crop = PlayerCrops.FirstOrDefault(x => x.contentId == contentId);
+            if(crop == null) return;
+            try
+            {
+                var itemsToUpdate = new List<CropUpdateRequest>();
+
+                var itemToUpdate = new CropUpdateRequest()
+                {
+                    ContentId = crop.contentId,
+                    InstanceId = crop.instanceId,
+                    Properties = new Dictionary<string, string>()
+                    {
+                        { GameConstants.SeedsLeftProp, seedsLeft.ToString() },
+                        { GameConstants.YieldProp, yieldAmount.ToString() }
+                    }
+                };
+                itemsToUpdate.Add(itemToUpdate);
+                await _stellarClient.UpdateItems(itemsToUpdate);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to update crop {crop.contentId}: {e.Message}");
+            }
+        }
+        
         public bool AlreadyOwned(string contentId)
         {
             return PlayerCrops.Any(crop => crop.contentId == contentId && crop.IsOwned);

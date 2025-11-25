@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Beamable;
+using Beamable.Common.Api.Inventory;
 using Beamable.Common.Inventory;
 using Beamable.Common.Shop;
 using Cysharp.Threading.Tasks;
@@ -29,30 +31,25 @@ namespace Farm.Beam
         public override async UniTask InitAsync(CancellationToken ct)
         {
             await base.InitAsync(ct);
-            await GetServerCoinCount();
-
             await ResolveShopListings();
+            _beamContext.Api.InventoryService.Subscribe(testCoinRef.Id, OnCurrencyUpdated);
             IsReady = true;
         }
+
 
         public override async UniTask ResetAsync(CancellationToken ct)
         {
             await base.ResetAsync(ct);
         }
 
-        /// <summary>
-        /// Get the current coin count from the server and sync it to local storage
-        /// </summary>
-        /// <returns></returns>
-        public async UniTask<int> GetServerCoinCount()
+        private void OnCurrencyUpdated(InventoryView inv)
         {
-            var serverCoin = await _beamContext.Inventory.LoadCurrencies(testCoinRef.Id);
-            await serverCoin.OnReady;
-            CurrentCoinCount = (int)serverCoin.GetCurrency(testCoinRef.Id).Amount;
+            var currency = inv.currencies;
+            currency.TryGetValue(testCoinRef.Id, out var value);
+            CurrentCoinCount = (int)value;
             OnCoinCountUpdated?.Invoke(CurrentCoinCount);
-            return CurrentCoinCount;
         }
-
+        
         [ContextMenu("Add Coins")]
         public async void AddCurrency()
         {
@@ -64,7 +61,6 @@ namespace Farm.Beam
             try
             {
                 await _stellarClient.UpdateCurrency(testCoinRef.Id, amount);
-                CurrentCoinCount = await GetServerCoinCount();
                 Debug.Log($"Updated Currency to {amount}. Current Balance:{CurrentCoinCount}");
             }
             catch (Exception e)
@@ -89,6 +85,11 @@ namespace Farm.Beam
             try
             {
                 await _beamContext.Api.CommerceService.Purchase(storeRefNf.Id, listing.Id);
+                await _beamContext.Inventory.Refresh();
+                await BeamManager.Instance.InventoryManager.FetchInventory();
+                var crop = BeamManager.Instance.ContentManager.GetCropInfo(listing.offer.obtainItems[0].contentId);
+                if(crop == null) return;
+                await BeamManager.Instance.InventoryManager.UpdateSpecificCropInfo(listing.offer.obtainItems[0].contentId, crop.yieldAmount, crop.cropData.startingSeedsAmount);
             }
             catch (Exception e)
             {
