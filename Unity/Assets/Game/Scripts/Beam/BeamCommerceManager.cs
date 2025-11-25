@@ -86,7 +86,7 @@ namespace Farm.Beam
             {
                 await _beamContext.Api.CommerceService.Purchase(storeRefNf.Id, listing.Id);
                 await _beamContext.Inventory.Refresh();
-                await BeamManager.Instance.InventoryManager.FetchInventory();
+                await UniTask.WaitUntil(()=> !BeamManager.Instance.InventoryManager.IsRefreshing);
                 var crop = BeamManager.Instance.ContentManager.GetCropInfo(listing.offer.obtainItems[0].contentId);
                 if(crop == null) return;
                 await BeamManager.Instance.InventoryManager.UpdateSpecificCropInfo(listing.offer.obtainItems[0].contentId, crop.yieldAmount, crop.cropData.startingSeedsAmount);

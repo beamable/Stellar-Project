@@ -65,11 +65,13 @@ namespace Farm.Game.Scripts.MainMenu
         private void OnEnable()
         {
             BeamCommerceManager.OnCoinCountUpdated += UpdatePlayerCurrency;
+            BeamInventoryManager.OnInventoryUpdated += PopulateShop;
         }
 
         private void OnDisable()
         {
             BeamCommerceManager.OnCoinCountUpdated -= UpdatePlayerCurrency;
+            BeamInventoryManager.OnInventoryUpdated -= PopulateShop;
         }
 
         #endregion
@@ -134,7 +136,7 @@ namespace Farm.Game.Scripts.MainMenu
                 card.transform.SetParent(inventoryContainer);
                 card.SetSelectedImage(false);
                 card.IsSelectable(false);
-                card.ForceRemoveStockImage(false);
+                card.ForceRemoveStockImage(true);
                 _inventoryCards.Add(card);
             }
         }

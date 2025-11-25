@@ -61,14 +61,22 @@ namespace Farm.Game.Scripts.MainMenu
 
         #region Button_Methods
 
-        public async void OnBuySeedButtonClicked()
+        public async void OnPurchaseListingClicked()
         {
+            if (_listing.price.amount > BeamManager.Instance.CommerceManager.CurrentCoinCount)
+            {
+                _mainMenuShop.SetLoadingBlocker(true, true, "You do not have enough coins to purchase crop.");
+                return;
+            }
+            
             try
             {
                 _mainMenuShop.SetLoadingBlocker(true);
                 await BeamManager.Instance.CommerceManager.PurchaseListing(_listing);
                 _mainMenuShop.SetLoadingBlocker(false);
                 AudioManager.Instance.PlaySfx(8);
+                _isOwned = true;
+                SetButtonsStatus();
             }
             catch (Exception e)
             {
