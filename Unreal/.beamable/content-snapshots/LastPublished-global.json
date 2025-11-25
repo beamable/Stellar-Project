@@ -1,5 +1,5 @@
 {
-  "SnapshotTimestamp": 1760101930688,
+  "SnapshotTimestamp": 1764080447226,
   "ManifestId": "global",
   "ProjectData": {
     "PID": "DE_1925146714814465",
@@ -11,6 +11,35 @@
   },
   "IsAutoSnapshot": true,
   "contents": {
+    "currency.stellarcoin.StellarCoin_Gems": {
+      "properties": {
+        "clientPermission": {
+          "data": {
+            "write_self": false
+          }
+        },
+        "decimals": {
+          "data": 0
+        },
+        "description": {
+          "data": ""
+        },
+        "image": {
+          "data": ""
+        },
+        "name": {
+          "data": "Gems"
+        },
+        "startingAmount": {
+          "data": 250
+        },
+        "symbol": {
+          "data": ""
+        }
+      },
+      "tags": [],
+      "Checksum": "6d9b95cc6a247e33c5208a631422284f36fa9986"
+    },
     "currency.TestCurrency": {
       "properties": {
         "clientPermission": {
@@ -24,6 +53,29 @@
       },
       "tags": [],
       "Checksum": "43e826403b74fabc3cf62709fd2f0cebf287e398"
+    },
+    "items.warrioritem.Warrior_RedHood": {
+      "properties": {
+        "clientPermission": {
+          "data": {
+            "write_self": false
+          }
+        },
+        "customProperties": {
+          "data": {}
+        },
+        "description": {
+          "data": "Firey Death From above"
+        },
+        "image": {
+          "data": ""
+        },
+        "name": {
+          "data": "Red Hood"
+        }
+      },
+      "tags": [],
+      "Checksum": "edfb0590272256663849768640e28ad0c69ed03f"
     }
   }
 }
