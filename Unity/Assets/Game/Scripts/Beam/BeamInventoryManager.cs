@@ -187,6 +187,11 @@ namespace Farm.Beam
                 Debug.LogError($"Failed to update inventory: {e.Message}");
             }
         }
+
+        public bool AlreadyOwned(string contentId)
+        {
+            return PlayerCrops.Any(crop => crop.contentId == contentId && crop.IsOwned);
+        }
         
     }
 }

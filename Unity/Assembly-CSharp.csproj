@@ -55,6 +55,7 @@
     <Compile Include="Assets\Game\Scripts\Planting\ToolData.cs" />
     <Compile Include="Assets\Game\Scripts\UI\GameShopCard.cs" />
     <Compile Include="Assets\Game\Scripts\Helpers\GameUtilities.cs" />
+    <Compile Include="Assets\Game\Scripts\MainMenu\MainMenuShopCard.cs" />
     <Compile Include="Assets\Game\Scripts\UI\ToolsBarManager.cs" />
     <Compile Include="Assets\Game\Scripts\Managers\PlantingManager.cs" />
     <Compile Include="Assets\Game\Scripts\Beam\BeamAccountManager.cs" />

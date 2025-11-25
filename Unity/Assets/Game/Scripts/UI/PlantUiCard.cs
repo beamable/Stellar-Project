@@ -20,7 +20,7 @@ namespace Farm.UI
         [Header("References")]
         [SerializeField] private Collider2D uiCollider;
         
-        private bool _isSelectable, _isSelectedByUI, _isCrop;
+        private bool _isSelectable, _isSelectedByUI, _isCrop, _forceRemoveStockImage;
         private InventoryController _inventory;
         public PlantInfo CurrentPlant { get; private set; }
 
@@ -32,7 +32,7 @@ namespace Farm.UI
             SetIsCrop(isCrop);
             CurrentPlant = plant;
             nameText.text = plant.cropData.cropName;
-            amountText.text = $"X{amount}";
+            amountText.text = amount == 0 ? "" : $"X{amount}";
             iconImage.sprite = isSeed ? plant.cropData.seedsSprite : plant.cropData.cropIcon;
             SetSelectedImage(isSelected);
         }
@@ -66,7 +66,8 @@ namespace Farm.UI
             if (!_isCrop && amount == 0)
             {
                 canvasGroup.alpha = 0.7f;
-                noStockImage.enabled = true;
+                if(!_forceRemoveStockImage)
+                    noStockImage.enabled = true;
             }
             else
             {
@@ -114,7 +115,7 @@ namespace Farm.UI
         {
             _isCrop = isCrop;
             if(_isCrop) uiCollider.enabled = false;
-            noStockImage.enabled = !_isCrop;
+            noStockImage.enabled = !_isCrop && !_forceRemoveStockImage;
         }
 
         public void UpdateAmount(int amount)
@@ -128,9 +129,10 @@ namespace Farm.UI
             _isSelectable = isSelectable;
         }
         
-        public void SetStockImageStatus(bool isStocked)
+        public void ForceRemoveStockImage(bool remove)
         {
-            noStockImage.enabled = !isStocked;
+            _forceRemoveStockImage = remove;
+            noStockImage.enabled = !remove;
         }
     }
 }
