@@ -5,7 +5,7 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "lint": "next lint",
+    "lint": "node scripts/run-lint.cjs",
     "start": "next start",
     "test": "vitest run"
   },
@@ -40,7 +40,7 @@
     "@radix-ui/react-tooltip": "1.1.6",
     "@vercel/analytics": "latest",
     "autoprefixer": "^10.4.20",
-    "beamable-sdk": "^0.6.0",
+    "beamable-sdk": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -72,7 +72,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.13",
+    "eslint-config-next": "^16.0.4",
     "jsdom": "^27.2.0",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
