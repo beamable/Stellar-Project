@@ -1,4 +1,6 @@
-using System; //Don't remove
+using System;
+using System.Collections.Generic;
+using System.Linq; //Don't remove
 using Beamable.StellarFederation.Caching; //Don't remove
 using System.Threading.Tasks;
 using Beamable.Common;
@@ -7,10 +9,12 @@ using Beamable.StellarFederation.Features.Contract.Storage;
 using Beamable.StellarFederation.Features.Accounts;
 using Beamable.StellarFederation.Features.Content;
 using Beamable.StellarFederation.Features.Contract.CliWrapper;
+using Beamable.StellarFederation.Features.Contract.Exceptions;
 using Beamable.StellarFederation.Features.Contract.Handlers;
 using Beamable.StellarFederation.Features.Contract.Storage.Models;
 using Beamable.StellarFederation.Features.LockManager;
 using Beamable.StellarFederation.Features.Stellar;
+using Beamable.StellarFederation.Features.WalletManager;
 
 namespace Beamable.StellarFederation.Features.Contract;
 
@@ -22,8 +26,9 @@ public class ContractService : IService
     private readonly StellarService _stellarService;
     private readonly CliClient _cliClient;
     private readonly BeamContentService _beamContentService;
+    private readonly WalletManagerService2 _walletManagerService;
 
-    public ContractService(SocketRequesterContext socketRequesterContext, LockManagerService lockManagerService, ContractCollection contractCollection, StellarService stellarService, ContentContractHandlerResolver contractHandlerResolver, CliClient cliClient, BeamContentService beamContentService)
+    public ContractService(SocketRequesterContext socketRequesterContext, LockManagerService lockManagerService, ContractCollection contractCollection, StellarService stellarService, ContentContractHandlerResolver contractHandlerResolver, CliClient cliClient, BeamContentService beamContentService, WalletManagerService2 walletManagerService)
     {
         _lockManagerService = lockManagerService;
         _contractCollection = contractCollection;
@@ -31,6 +36,7 @@ public class ContractService : IService
         _contractHandlerResolver = contractHandlerResolver;
         _cliClient = cliClient;
         _beamContentService = beamContentService;
+        _walletManagerService = walletManagerService;
         SubscribeContentUpdateEvent(socketRequesterContext);
     }
 
@@ -67,7 +73,13 @@ public class ContractService : IService
                 await _stellarService.Initialize();
                 _cliClient.Initialize();
 
-                foreach (var model in await _beamContentService.FetchFederationContentForContracts())
+                var models = (await _beamContentService.FetchFederationContentForContracts()).ToList();
+                await _walletManagerService.CreateContractWallets(models.Select(m => m.Key).ToList());
+
+                BeamableLogger.Log("Waiting on contract wallets...");
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                foreach (var model in models)
                 {
                     var handler = _contractHandlerResolver.Resolve(model);
                     await handler.HandleContract(model);
@@ -85,6 +97,14 @@ public class ContractService : IService
     public async Task<TContract?> GetByContent<TContract>(string contentId) where TContract : ContractBase
     {
         return await _contractCollection.GetByContentId<TContract>(contentId);
+    }
+
+    public async Task<TContract> GetByContentId<TContract>(string contentId) where TContract : ContractBase
+    {
+        var contract = await _contractCollection.GetByContentId<TContract>(contentId);
+        if (contract is null)
+            throw new ContractException($"Contract for {contentId} don't exist.");
+        return contract;
     }
 
     public async Task<bool> UpsertContract<TContract>(TContract contract, string id) where TContract : ContractBase

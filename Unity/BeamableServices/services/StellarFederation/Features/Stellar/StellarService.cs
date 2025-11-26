@@ -1,25 +1,34 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Beamable.Common;
+using Beamable.StellarFederation.Caching;
 using Beamable.StellarFederation.Features.Accounts;
 using Beamable.StellarFederation.Features.Accounts.Exceptions;
 using Beamable.StellarFederation.Features.Common;
+using Beamable.StellarFederation.Features.Content.Handlers.Models;
 using Beamable.StellarFederation.Features.HttpService;
 using Beamable.StellarFederation.Features.Stellar.Exceptions;
+using Beamable.StellarFederation.Features.Stellar.Extensions;
 using Beamable.StellarFederation.Features.Stellar.Models;
 using StellarDotnetSdk;
 using StellarDotnetSdk.Accounts;
+using StellarDotnetSdk.Exceptions;
 using StellarDotnetSdk.Federation;
 using StellarDotnetSdk.LedgerEntries;
+using StellarDotnetSdk.LedgerKeys;
 using StellarDotnetSdk.Memos;
 using StellarDotnetSdk.Operations;
+using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
 using StellarDotnetSdk.Transactions;
 using StellarDotnetSdk.Xdr;
 using LedgerKey = StellarDotnetSdk.LedgerKeys.LedgerKey;
+using SCVal = StellarDotnetSdk.Soroban.SCVal;
+using SCVec = StellarDotnetSdk.Soroban.SCVec;
 using TimeBounds = StellarDotnetSdk.Transactions.TimeBounds;
 using Transaction = StellarDotnetSdk.Transactions.Transaction;
 
@@ -34,7 +43,7 @@ public class StellarService : IService
     private readonly StellarTransactionBuilderFactory _transactionBuilderFactory;
 
     private bool _initialized;
-    private const int FaucetWaitTimeSec = 20;
+    private const int FaucetWaitTimeSec = 10;
 
     private SorobanServer? _rpcServer;
 
@@ -46,7 +55,7 @@ public class StellarService : IService
         _transactionBuilderFactory = transactionBuilderFactory;
     }
 
-    private async ValueTask<SorobanServer> RpcInstance()
+    private async ValueTask<SorobanServer> SorobanInstance()
     {
         await SetNetwork();
         _rpcServer ??= new SorobanServer(await _configuration.StellarRpc);
@@ -108,6 +117,24 @@ public class StellarService : IService
         }
     }
 
+    public async Task<int> GetCurrentLedgerSequence()
+    {
+        using (new Measure(nameof(GetCurrentLedgerSequence)))
+        {
+            try
+            {
+                var serverInstance = await SorobanInstance();
+                var latest = await serverInstance.GetLatestLedger();
+                return latest.Sequence;
+            }
+            catch (Exception ex)
+            {
+                BeamableLogger.LogError("GetLatestLedger failed with error: {error}", ex.Message);
+                throw new StellarServiceException($"GetLatestLedger failed with error: {ex.Message}");
+            }
+        }
+    }
+
     public async Task<StellarAmount> NativeBalance(string wallet)
     {
         var result = StellarAmount.NativeZero;
@@ -115,7 +142,7 @@ public class StellarService : IService
         {
             try
             {
-                var serverInstance = await RpcInstance();
+                var serverInstance = await SorobanInstance();
                 var accountKey = LedgerKey.Account(KeyPair.FromAccountId(wallet));
                 var response = await serverInstance.GetLedgerEntry(accountKey);
 
@@ -143,7 +170,7 @@ public class StellarService : IService
         {
             try
             {
-                await RpcInstance();
+                await SorobanInstance();
                 var dummyAccount = new Account(realAccount.Address, 0);
                 var serverKeypair = KeyPair.FromSecretSeed(realAccount.SecretSeed);
                 var userKeypair = KeyPair.FromAccountId(wallet);
@@ -173,7 +200,7 @@ public class StellarService : IService
         {
             try
             {
-                await RpcInstance();
+                await SorobanInstance();
                 var userKeyPair = KeyPair.FromAccountId(wallet);
                 var serverKeyPair = KeyPair.FromSecretSeed(realAccount.SecretSeed);
 
@@ -196,13 +223,13 @@ public class StellarService : IService
         }
     }
 
-    private async Task<Account?> GetStellarAccount(string wallet)
+    public async Task<Account?> GetStellarAccount(string wallet)
     {
         using (new Measure(nameof(GetStellarAccount)))
         {
             try
             {
-                var rpcInstance = await RpcInstance();
+                var rpcInstance = await SorobanInstance();
                 return await rpcInstance.GetAccount(wallet);
             }
             catch (Exception ex)
@@ -213,15 +240,53 @@ public class StellarService : IService
         }
     }
 
+    public async Task<Account> GetRealmStellarAccount(string wallet)
+    {
+        using (new Measure(nameof(GetRealmStellarAccount)))
+        {
+            try
+            {
+                var rpcInstance = await SorobanInstance();
+                return await rpcInstance.GetAccount(wallet);
+            }
+            catch (Exception ex)
+            {
+                BeamableLogger.LogWarning("Realm account {address} does not exist on the ledger: {error}", wallet, ex.Message);
+                throw new UnknownAccountException($"Realm account {wallet} does not exist on the ledger.");
+            }
+        }
+    }
+
+    public async Task<GetTransactionResponse?> GetStellarTransaction(string hash)
+    {
+        using (new Measure(nameof(GetStellarTransaction)))
+        {
+            try
+            {
+                var rpcInstance = await SorobanInstance();
+                return await rpcInstance.GetTransaction(hash);
+            }
+            catch (Exception ex)
+            {
+                BeamableLogger.LogWarning("Transaction {hash} does not exist on the ledger: {error}", hash, ex.Message);
+                return null;
+            }
+        }
+    }
+
+    public async Task<TransactionBuilder> CreateDefaultNativeBuilder(Account sourceAccount, string memo)
+    {
+        return await _transactionBuilderFactory.CreateDefaultBuilder(sourceAccount, memo);
+    }
+
     public async Task<StellarTransactionResult> TransferNative(string toAddress, long amount)
     {
         using (new Measure(nameof(TransferNative)))
         {
             try
             {
-                var rpcInstance = await RpcInstance();
+                var rpcInstance = await SorobanInstance();
                 var realmAccount = await _accountsService.GetOrCreateRealmAccount();
-                var serverKeyPair = KeyPair.FromSecretSeed(realmAccount.SecretSeed);
                 var destinationKeyPair = KeyPair.FromAccountId(toAddress);
                 var sourceAccount = await GetStellarAccount(realmAccount.Address);
 
@@ -242,15 +307,84 @@ public class StellarService : IService
                 }
 
                 var transaction = transactionBuilder.Build();
-                transaction.Sign(serverKeyPair);
+                transaction.Sign(realmAccount.KeyPair);
                 var response = await rpcInstance.SendTransaction(transaction);
-                return new StellarTransactionResult(response.Status.ToStellarStatus(), response.Hash, response.GetErrorMessage());
+
+                return response.ToStellarTransactionResult();
             }
             catch (Exception ex)
             {
                 BeamableLogger.LogError("Can't Transfer to {address}. Error: {error}", toAddress, ex.Message);
                 throw new StellarServiceException($"Transfer: {ex.Message}");
             }
+        }
+    }
+
+    public async Task<StellarTransactionResult> TransferNativeBatch(List<TransferNativeBatch> nativeBatches)
+    {
+        using (new Measure(nameof(TransferNativeBatch)))
+        {
+            try
+            {
+                var rpcInstance = await SorobanInstance();
+                var realmAccount = await _accountsService.GetOrCreateRealmAccount();
+                var sourceAccount = await GetStellarAccount(realmAccount.Address);
+                var transactionBuilder = await _transactionBuilderFactory.CreateDefaultBuilder(sourceAccount!, nameof(TransferNativeBatch));
+
+                foreach (var batch in nativeBatches)
+                {
+                    var destinationKeyPair = KeyPair.FromAccountId(batch.ToAddress);
+                    var transferAmount = new StellarAmount(batch.Amount);
+                    var destinationAccount = await GetStellarAccount(batch.ToAddress);
+                    if (destinationAccount is null)
+                    {
+                        transactionBuilder
+                            .AddCreateAccountOperation(destinationKeyPair, transferAmount);
+                    }
+                    else
+                    {
+                        transactionBuilder
+                            .AddNativeTransferOperation(destinationKeyPair, transferAmount);
+                    }
+                }
+
+                var transaction = transactionBuilder.Build();
+                transaction.Sign(realmAccount.KeyPair);
+                var response = await rpcInstance.SendTransaction(transaction);
+                return response.ToStellarTransactionResult();
+            }
+            catch (Exception ex)
+            {
+                BeamableLogger.LogError("Can't execute TransferNativeBatch. Error: {error}", ex.Message);
+                throw new StellarServiceException($"TransferNativeBatch: {ex.Message}");
+            }
+        }
+    }
+
+    public async Task<SimulateTransactionResponse> SimulateTransaction(Transaction transaction)
+    {
+        using (new Measure(nameof(SimulateTransaction)))
+        {
+            var rpcInstance = await SorobanInstance();
+            return await rpcInstance.SimulateTransaction(transaction);
+        }
+    }
+
+    public async Task<SendTransactionResponse> SendTransaction(Transaction transaction)
+    {
+        using (new Measure(nameof(SendTransaction)))
+        {
+            var rpcInstance = await SorobanInstance();
+            return await rpcInstance.SendTransaction(transaction);
+        }
+    }
+
+    public async Task<SendTransactionResponse> SendNativeTransaction(Transaction transaction)
+    {
+        using (new Measure(nameof(SendNativeTransaction)))
+        {
+            var rpcInstance = await SorobanInstance();
+            return await rpcInstance.SendTransaction(transaction);
         }
     }
 
@@ -261,7 +395,7 @@ public class StellarService : IService
             try
             {
                 var realmAccount = await _accountsService.GetOrCreateRealmAccount();
-                await RpcInstance();
+                await SorobanInstance();
                 var network = await _configuration.StellarNetwork;
                 _initialized = true;
 
@@ -288,18 +422,16 @@ public class StellarService : IService
     {
         try
         {
-            var server = await RpcInstance();
-            var contractAddress = new ScContractId(address);
-
-            var xdrInstanceKey = new StellarDotnetSdk.Xdr.SCVal
-            {
-                Discriminant = SCValType.Create(SCValType.SCValTypeEnum.SCV_LEDGER_KEY_CONTRACT_INSTANCE)
-            };
-            var instanceKey = StellarDotnetSdk.Soroban.SCVal.FromXdr(xdrInstanceKey);
+            var server = await SorobanInstance();
+            var contractId = new ScContractId(address);
             var durability = ContractDataDurability.Create(ContractDataDurability.ContractDataDurabilityEnum.PERSISTENT);
-            var ledgerKey = LedgerKey.ContractData(contractAddress, instanceKey, durability);
-            await server.GetLedgerEntry(ledgerKey);
-            return true;
+            var ledgerKeyContractData = new LedgerKeyContractData(
+                contractId,
+                new SCLedgerKeyContractInstance(),
+                durability
+            );
+            var contractCodeResponse = await server.GetLedgerEntry(ledgerKeyContractData);
+            return contractCodeResponse.LedgerEntries is not null && contractCodeResponse.LedgerEntries.Length != 0;
         }
         catch (NotFoundException)
         {
@@ -308,6 +440,50 @@ public class StellarService : IService
         catch (Exception)
         {
             return false;
+        }
+    }
+
+
+
+    public async Task Test()
+    {
+        try
+        {
+            var server = await SorobanInstance();
+            var realmAccount = await _accountsService.GetOrCreateRealmAccount();
+            var issuerAccount = await server.GetAccount(realmAccount.Address);
+            var realmAccountKeypair = KeyPair.FromSecretSeed(realmAccount.SecretSeed);
+
+            var to = new ScAccountId("GCVEPND367W4HISKCUOS4A4FYDUAOPBSRT6J7AY5FWUTKNF6VEIO2UHF");
+            var amount = new SCInt128("5");
+            var args = new SCVal[]
+            {
+                new SCVec([to]),
+                new SCVec([amount])
+            };
+
+            var invokeContractOperation = new InvokeContractOperation("CDVJDBAOC5I2BFFGBODF6ALINFAO3RAHCUA6FLQMDGYZFKQ547BHSCU7", "batch_mint", args, realmAccountKeypair);
+            var tx = new TransactionBuilder(issuerAccount)
+                .AddOperation(invokeContractOperation).Build();
+
+            var simulateResponse = await server.SimulateTransaction(tx);
+            if (simulateResponse.SorobanTransactionData != null)
+            {
+                tx.SetSorobanTransactionData(simulateResponse.SorobanTransactionData);
+            }
+            if (simulateResponse.SorobanAuthorization != null)
+            {
+                tx.SetSorobanAuthorization(simulateResponse.SorobanAuthorization);
+            }
+            tx.AddResourceFee((simulateResponse.MinResourceFee ?? 0) + 100000);
+            tx.Sign(realmAccountKeypair);
+
+            var sendResponse = await server.SendTransaction(tx);
+            var txHash = sendResponse.Hash;
+
+        }
+        catch (Exception)
+        {
         }
     }
 }

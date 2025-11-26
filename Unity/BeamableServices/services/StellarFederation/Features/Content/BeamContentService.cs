@@ -8,6 +8,7 @@ using Beamable.Server.Content;
 using Beamable.StellarFederation.Caching;
 using Beamable.StellarFederation.Features.Contract.Models;
 using StellarFederationCommon;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Beamable.StellarFederation.Features.Content;
 
@@ -26,7 +27,7 @@ public class BeamContentService : IService
     {
         var federationContent = await FetchFederationContentLocal();
         var currencies = federationContent.Where(item => item is CurrencyContent)
-            .Select(item => new ContentContractsModel(item));
+            .Select(item => new ContentContractsModel(item.Id, item));
 
         var itemsByType = federationContent
             .Where(item => item is ItemContent)
@@ -35,9 +36,12 @@ public class BeamContentService : IService
                 var idParts = item.Id.Split('.');
                 return string.Join(".", idParts.Take(idParts.Length - 1));
             })
-            .Select(g => new ContentContractsModel(g.First()));
+            .Select(g => new
+            {
+                Content = new ContentContractsModel(g.Key, g.First())
+            });
 
-        return currencies.Concat(itemsByType);
+        return currencies; // ADD itemsByType when contract is created
     }
 
     private async Task<List<IContentObject>> FetchFederationContentLocal()
@@ -60,5 +64,12 @@ public class BeamContentService : IService
             }
             return result;
         }, TimeSpan.FromDays(1)) ?? [];
+    }
+
+    public async Task<List<IContentObject>> GetContentObjects(IEnumerable<string> contentId)
+    {
+        var allContent = await FetchFederationContentLocal();
+        var content= allContent.Where( c => contentId.Contains(c.Id));
+        return content.ToList();
     }
 }

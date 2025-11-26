@@ -33,7 +33,6 @@ public class ChainTransaction
 {
     public string Function { get; set; } = null!;
     public string Data { get; set; } = null!;
-    public string Status { get; set; } = null!;
 
     [BsonIgnoreIfNull]
     public string? Hash { get; set; }

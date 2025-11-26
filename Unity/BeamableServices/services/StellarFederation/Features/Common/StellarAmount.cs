@@ -10,6 +10,7 @@ public readonly record struct StellarAmount
     private int Decimals { get; }
 
     public static readonly StellarAmount NativeZero = new(0);
+    public static readonly StellarAmount NativeOne = new(10000000);
 
     public StellarAmount(long totalUnits, int decimals = NativeDecimals)
     {
