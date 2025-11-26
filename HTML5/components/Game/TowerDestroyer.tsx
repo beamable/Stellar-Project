@@ -41,6 +41,7 @@ import {
   EXTERNAL_SIGN_CONTEXT,
 } from "@/lib/beam/player"
 import getBeam from "@/lib/beam"
+import { fetchInventory } from "@/lib/beamInventory"
 import type { ExternalAddressSubscription } from "@/lib/beam/player"
 
 function formatSignatureErrorMessage(err: unknown): string {
@@ -418,6 +419,26 @@ export default function TowerDestroyer() {
   const handleRefreshCommerce = useCallback(() => {
     setInventoryRefreshKey((prev) => prev + 1)
   }, [])
+
+  const handlePurchaseListing = useCallback(
+    async (listingId: string) => {
+      try {
+        const beam = await getBeam()
+        if ((beam as any)?.stellarFederationClient?.purchaseBall) {
+          console.log("[Commerce] Purchasing listing:", listingId)
+          await (beam as any).stellarFederationClient.purchaseBall({ purchaseId: listingId })
+          await fetchInventory(beam)
+          setInventoryRefreshKey((prev) => prev + 1)
+        } else {
+          throw new Error("PurchaseBall unavailable on StellarFederationClient")
+        }
+      } catch (err) {
+        console.warn("[Commerce] Purchase failed:", err)
+        throw err
+      }
+    },
+    [],
+  )
   useEffect(() => {
     if (!inventoryInitialized) return
     if (commerceLoading) return
@@ -694,6 +715,8 @@ export default function TowerDestroyer() {
           currencyAmount,
           onRefreshCommerce: handleRefreshCommerce,
           ballTypeMap,
+          ownedBallTypes,
+          onPurchaseListing: handlePurchaseListing,
           showCampaignOverlay: shouldShowCampaignOverlay,
           campaignSelectionProps,
           campaignContext: {

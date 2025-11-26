@@ -68,6 +68,8 @@ type GameOverlayManagerProps = {
   currencyAmount: number | null
   onRefreshCommerce?: () => void
   ballTypeMap: Record<BallType, BallTypeConfig>
+  ownedBallTypes: BallType[]
+  onPurchaseListing: (listingId: string) => Promise<void>
   campaignContext?: CampaignResultContext
   showCampaignOverlay: boolean
   campaignSelectionProps?: {
@@ -139,6 +141,8 @@ export default function GameOverlayManager({
   currencyAmount,
   onRefreshCommerce,
   ballTypeMap,
+  ownedBallTypes,
+  onPurchaseListing,
   campaignContext,
   showCampaignOverlay,
   campaignSelectionProps,
@@ -217,7 +221,9 @@ export default function GameOverlayManager({
           error={commerceError}
           currencyAmount={currencyAmount}
           ballTypeMap={ballTypeMap}
+          ownedBallTypes={ownedBallTypes}
           onRefresh={onRefreshCommerce}
+          onPurchase={onPurchaseListing}
           onClose={onCloseShop}
         />
       )}

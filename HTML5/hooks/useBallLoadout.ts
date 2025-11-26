@@ -27,6 +27,21 @@ const parseSpeed = (value: unknown, fallback: number) => {
 const deriveBallType = (id?: string | null, customType?: string | null): BallType | null => {
   const candidate = (customType ?? id ?? "").toLowerCase()
   const slug = candidate.split(".").pop() ?? candidate
+  const aliasMap: Record<string, BallType> = {
+    fireball: "fire",
+    fire_ball: "fire",
+    fire: "fire",
+    multishot: "multishot",
+    multi_shot: "multishot",
+    laserball: "laser",
+    laser_ball: "laser",
+    laser: "laser",
+    normalball: "normal",
+    normal_ball: "normal",
+    normal: "normal",
+  }
+  const mapped = aliasMap[slug]
+  if (mapped) return mapped
   const match = ALLOWED_TYPES.find((t) => t === slug)
   return match ?? null
 }

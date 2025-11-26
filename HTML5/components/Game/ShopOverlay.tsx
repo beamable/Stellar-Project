@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { ListingContent, StoreContent } from "beamable-sdk"
 import type { BallType, BallTypeConfig } from "@/components/Game/types"
@@ -11,8 +12,10 @@ type ShopOverlayProps = {
   error: string | null
   currencyAmount: number | null
   ballTypeMap: Record<BallType, BallTypeConfig>
+  ownedBallTypes: BallType[]
   onClose: () => void
   onRefresh?: () => void
+  onPurchase: (listingId: string) => Promise<void>
 }
 
 const formatCoins = (value: number | null) =>
@@ -66,9 +69,12 @@ export default function ShopOverlay({
   error,
   currencyAmount,
   ballTypeMap,
+  ownedBallTypes,
   onClose,
   onRefresh,
+  onPurchase,
 }: ShopOverlayProps) {
+  const [purchasingId, setPurchasingId] = useState<string | null>(null)
   const title = store?.properties?.title?.data ?? "Command Deck Shop"
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur px-4 py-8">
@@ -128,12 +134,18 @@ export default function ShopOverlay({
                 const ballConfig = ballType ? ballTypeMap[ballType] : undefined
                 const friendlyName = prettifyName(firstItemId, ballConfig?.name)
                 const description = ballConfig?.description || "Unlock a new tactical ball for your arsenal."
-                const canBuy = typeof currencyAmount === "number" && Number.isFinite(price) && currencyAmount >= price
+                const alreadyOwned = ballType ? ownedBallTypes.includes(ballType) : false
+                const canBuy =
+                  !alreadyOwned &&
+                  typeof currencyAmount === "number" &&
+                  Number.isFinite(price) &&
+                  currencyAmount >= price
                 const shortSymbol = symbol.includes(".") ? symbol.split(".").pop() : symbol
                 const deficit =
                   typeof currencyAmount === "number" && Number.isFinite(price)
                     ? Math.max(0, price - currencyAmount)
                     : null
+                const isPurchasing = purchasingId === listing.id
                 return (
                   <div
                     key={listing.id}
@@ -163,18 +175,33 @@ export default function ShopOverlay({
                     </div>
 
                     <Button
-                      disabled={!canBuy}
+                      disabled={!canBuy || isPurchasing}
+                      onClick={async () => {
+                        if (!listing.id || isPurchasing || alreadyOwned) return
+                        setPurchasingId(listing.id)
+                        try {
+                          await onPurchase(listing.id)
+                        } finally {
+                          setPurchasingId(null)
+                        }
+                      }}
                       className={`mt-4 w-full rounded-full text-sm font-semibold shadow-lg ${
-                        canBuy
-                          ? "bg-emerald-400 text-slate-900 hover:bg-emerald-300"
-                          : "bg-white/5 text-white/60 border border-white/10 cursor-not-allowed"
+                        alreadyOwned
+                          ? "bg-rose-500/90 text-white border border-rose-300/60 cursor-not-allowed"
+                          : canBuy && !isPurchasing
+                            ? "bg-emerald-400 text-slate-900 hover:bg-emerald-300"
+                            : "bg-white/5 text-white/60 border border-white/10 cursor-not-allowed"
                       }`}
                     >
-                      {canBuy
-                        ? "Buy"
-                        : deficit
-                          ? `Need ${deficit.toLocaleString()} more`
-                          : "Unavailable"}
+                      {alreadyOwned
+                        ? "Already Purchased"
+                        : isPurchasing
+                          ? "Purchasing..."
+                          : canBuy
+                            ? "Buy"
+                            : deficit
+                              ? `Need ${deficit.toLocaleString()} more`
+                              : "Unavailable"}
                     </Button>
                   </div>
                 )
