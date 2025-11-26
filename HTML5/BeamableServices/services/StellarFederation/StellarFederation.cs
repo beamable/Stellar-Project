@@ -13,6 +13,7 @@ using Beamable.StellarFederation.Features.Stellar;
 using Beamable.StellarFederation.Features.Transactions;
 using Beamable.StellarFederation.Features.WalletManager;
 using StellarFederationCommon;
+using StellarFederationCommon.FederationContent;
 using StellarFederationCommon.Models.Response;
 using SuiFederationCommon.Models.Notifications;
 
@@ -112,5 +113,34 @@ namespace Beamable.StellarFederation
 				Value = message
 			});
         }
+
+		#region Moe Helpers
+
+		[ClientCallable]
+		public async Promise UpdateCurrency(string currencyContentId, int amount)
+		{
+			var invService = Services.Inventory;
+			await invService.AddCurrency(currencyContentId, amount);
+			BeamableLogger.Log($"Added {amount} of {currencyContentId} to inventory");
+		}
+		
+		
+		[ClientCallable]
+		public async Promise AddItem(string itemContentId)
+		{
+			var invService = Services.Inventory;
+			await invService.AddItem(itemContentId);
+			BeamableLogger.Log($"Added {itemContentId} to inventory");
+		}
+
+		[ClientCallable]
+		public async Promise RemoveItem(string itemContentId, long instanceId)
+		{
+			var invService = Services.Inventory;
+			await invService.DeleteItem(itemContentId, instanceId);
+			BeamableLogger.Log($"Removed {itemContentId} from inventory");
+		}
+
+		#endregion
 	}
 }
