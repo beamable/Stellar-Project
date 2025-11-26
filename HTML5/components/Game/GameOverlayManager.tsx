@@ -8,8 +8,11 @@ import ResetConfirmOverlay from "@/components/Game/ResetConfirmOverlay"
 import ResultOverlay, { type CampaignResultContext } from "@/components/Game/ResultOverlay"
 import AudioSettingsOverlay from "@/components/Game/AudioSettingsOverlay"
 import CampaignSelectionOverlay from "@/components/Game/CampaignSelectionOverlay"
+import ShopOverlay from "@/components/Game/ShopOverlay"
 import type { CampaignStage, MechanicTag } from "@/components/Game/campaign"
 import type { StageProgress } from "@/hooks/useCampaignProgress"
+import type { ListingContent, StoreContent } from "beamable-sdk"
+import type { BallTypeConfig, BallType } from "@/components/Game/types"
 
 type GameOverlayManagerProps = {
   beamReady: boolean
@@ -55,6 +58,16 @@ type GameOverlayManagerProps = {
   onCloseAudioSettings: () => void
   volume: number
   onVolumeChange: (volume: number) => void
+  onOpenShop: () => void
+  onCloseShop: () => void
+  showShop: boolean
+  commerceLoading: boolean
+  commerceError: string | null
+  storeContent: StoreContent | null
+  storeListings: ListingContent[]
+  currencyAmount: number | null
+  onRefreshCommerce?: () => void
+  ballTypeMap: Record<BallType, BallTypeConfig>
   campaignContext?: CampaignResultContext
   showCampaignOverlay: boolean
   campaignSelectionProps?: {
@@ -68,6 +81,7 @@ type GameOverlayManagerProps = {
     onSelectStage: (stageId: string) => void
     onAcknowledgeMechanics: () => void
     onConfirm: () => void
+    onOpenShop: () => void
   }
 }
 
@@ -115,6 +129,16 @@ export default function GameOverlayManager({
   onCloseAudioSettings,
   volume,
   onVolumeChange,
+  onOpenShop,
+  onCloseShop,
+  showShop,
+  commerceLoading,
+  commerceError,
+  storeContent,
+  storeListings,
+  currencyAmount,
+  onRefreshCommerce,
+  ballTypeMap,
   campaignContext,
   showCampaignOverlay,
   campaignSelectionProps,
@@ -124,7 +148,7 @@ export default function GameOverlayManager({
       {!beamReady && <BeamInitializingOverlay />}
 
       {showCampaignOverlay && campaignSelectionProps && (
-        <CampaignSelectionOverlay {...campaignSelectionProps} />
+        <CampaignSelectionOverlay {...campaignSelectionProps} onOpenShop={onOpenShop} />
       )}
 
       {!hasShot && gameState === "playing" && readyForGame && !showPlayerInfo && !showCampaignOverlay && (
@@ -162,6 +186,7 @@ export default function GameOverlayManager({
         onResetPlayer={onResetPlayer}
         onManualWalletOpen={onManualWalletOpen}
         onClosePlayerInfo={onClosePlayerInfo}
+        onOpenShop={onOpenShop}
       />
 
       {showResetConfirm && <ResetConfirmOverlay onCancel={onCancelReset} onConfirm={onConfirmReset} />}
@@ -181,6 +206,19 @@ export default function GameOverlayManager({
           volume={volume}
           onVolumeChange={onVolumeChange}
           onClose={onCloseAudioSettings}
+        />
+      )}
+
+      {showShop && (
+        <ShopOverlay
+          store={storeContent}
+          listings={storeListings}
+          loading={commerceLoading}
+          error={commerceError}
+          currencyAmount={currencyAmount}
+          ballTypeMap={ballTypeMap}
+          onRefresh={onRefreshCommerce}
+          onClose={onCloseShop}
         />
       )}
     </>

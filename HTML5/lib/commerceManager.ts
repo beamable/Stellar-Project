@@ -87,7 +87,13 @@ export async function resolveStoreContent(opts: {
           })
         : []
 
-    const resolved: ResolvedStore = { store, listings }
+    const sortedListings = [...listings].sort((a, b) => {
+      const priceA = (a as any)?.properties?.price?.data?.amount ?? Number.POSITIVE_INFINITY
+      const priceB = (b as any)?.properties?.price?.data?.amount ?? Number.POSITIVE_INFINITY
+      return priceA - priceB
+    })
+
+    const resolved: ResolvedStore = { store, listings: sortedListings }
     cachedStore = resolved
     const result: ResolvedStoreResult = { ...resolved, fromCache: false }
     console.log("[Commerce] Store resolved:", result)

@@ -106,6 +106,7 @@ export default function TowerDestroyer() {
   const activeStage = selectedStage ?? CAMPAIGN_STAGE_MAP.get(DEFAULT_STAGE_ID)!
   const totalStages = CAMPAIGN_STAGES.length
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0)
+  const [showShop, setShowShop] = useState(false)
   const { ballTypes, ballTypeMap, ownedBallTypes, loading: ballLoadoutLoading } = useBallLoadout(
     readyForGame,
     inventoryRefreshKey,
@@ -404,6 +405,19 @@ export default function TowerDestroyer() {
     if (pendingMechanics.length === 0) return
     acknowledgeMechanics(pendingMechanics)
   }, [acknowledgeMechanics, pendingMechanics])
+  const handleOpenShop = useCallback(() => {
+    if (!inventoryInitialized) return
+    setShowPlayerInfo(false)
+    setShowShop(true)
+  }, [inventoryInitialized, setShowPlayerInfo])
+
+  const handleCloseShop = useCallback(() => {
+    setShowShop(false)
+  }, [])
+
+  const handleRefreshCommerce = useCallback(() => {
+    setInventoryRefreshKey((prev) => prev + 1)
+  }, [])
   useEffect(() => {
     if (!inventoryInitialized) return
     if (commerceLoading) return
@@ -437,6 +451,7 @@ export default function TowerDestroyer() {
       commandDeckSeenRef.current = false
       setCampaignConfirmed(false)
       coinsSyncedRef.current = false
+      setShowShop(false)
     }
   }, [readyForGame])
   useEffect(() => {
@@ -557,6 +572,7 @@ export default function TowerDestroyer() {
         onSelectStage: selectStage,
         onAcknowledgeMechanics: handleAcknowledgeMechanics,
         onConfirm: handleConfirmCampaignStage,
+        onOpenShop: handleOpenShop,
       }
     : undefined
 
@@ -668,6 +684,16 @@ export default function TowerDestroyer() {
           onCloseAudioSettings: handleCloseAudioSettings,
           volume,
           onVolumeChange: handleVolumeChange,
+          onOpenShop: handleOpenShop,
+          onCloseShop: handleCloseShop,
+          showShop,
+          commerceLoading,
+          commerceError,
+          storeContent,
+          storeListings: storeListings ?? [],
+          currencyAmount,
+          onRefreshCommerce: handleRefreshCommerce,
+          ballTypeMap,
           showCampaignOverlay: shouldShowCampaignOverlay,
           campaignSelectionProps,
           campaignContext: {

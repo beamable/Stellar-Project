@@ -17,6 +17,7 @@ type PlayerInfoOverlayProps = {
   onRetryAttach: () => void
   onResetPlayer: () => void
   onManualWalletOpen: () => void
+  onOpenShop: () => void
   onClose: () => void
 }
 
@@ -34,6 +35,7 @@ export default function PlayerInfoOverlay({
   onRetryAttach,
   onResetPlayer,
   onManualWalletOpen,
+  onOpenShop,
   onClose,
 }: PlayerInfoOverlayProps) {
   return (
@@ -51,6 +53,13 @@ export default function PlayerInfoOverlay({
               className="rounded-full bg-rose-500 text-white hover:bg-rose-400 text-xs shadow-md shadow-rose-900/50"
             >
               Reset Player
+            </Button>
+            <Button
+              onClick={onOpenShop}
+              size="sm"
+              className="rounded-full bg-white/10 text-white hover:bg-white/20 border border-white/10 text-xs"
+            >
+              Open Shop
             </Button>
             <Button
               size="sm"
