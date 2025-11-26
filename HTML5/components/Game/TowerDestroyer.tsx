@@ -27,6 +27,7 @@ function useRenderCounter(label: string, enabled: boolean) {
 import * as CONST from "./constants"
 import useTowerGame from "@/hooks/useTowerGame"
 import useBallLoadout from "@/hooks/useBallLoadout"
+import useCurrency from "@/hooks/useCurrency"
 import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_MAP, DEFAULT_STAGE_ID } from "@/components/Game/campaign"
 import useCampaignProgress from "@/hooks/useCampaignProgress"
 import {
@@ -38,6 +39,7 @@ import {
   EXTERNAL_AUTH_CONTEXT,
   EXTERNAL_SIGN_CONTEXT,
 } from "@/lib/beam/player"
+import getBeam from "@/lib/beam"
 import type { ExternalAddressSubscription } from "@/lib/beam/player"
 
 function formatSignatureErrorMessage(err: unknown): string {
@@ -104,13 +106,16 @@ export default function TowerDestroyer() {
   const totalStages = CAMPAIGN_STAGES.length
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0)
   const { ballTypes, ballTypeMap, ownedBallTypes } = useBallLoadout(readyForGame, inventoryRefreshKey)
+  const { amount: currencyAmount } = useCurrency(readyForGame, inventoryRefreshKey)
   const [campaignUnlocked, setCampaignUnlocked] = useState(false)
+  const coinsSyncedRef = useRef(false)
   const {
     canvasRef,
     selectedBallType,
     selectBallType,
     gameState,
     score,
+    coinsEarned,
     ballsLeft,
     towerCount,
     remainingTowers,
@@ -407,6 +412,7 @@ export default function TowerDestroyer() {
       setCampaignUnlocked(false)
       commandDeckSeenRef.current = false
       setCampaignConfirmed(false)
+      coinsSyncedRef.current = false
     }
   }, [readyForGame])
   useEffect(() => {
@@ -414,6 +420,33 @@ export default function TowerDestroyer() {
       setInventoryRefreshKey((prev) => prev + 1)
     }
   }, [showPlayerInfo])
+
+  useEffect(() => {
+    if (gameState === "playing") {
+      coinsSyncedRef.current = false
+      return
+    }
+    if (!readyForGame) return
+    if (coinsSyncedRef.current) return
+    if (coinsEarned <= 0) return
+    coinsSyncedRef.current = true
+    ;(async () => {
+      try {
+        const beam = await getBeam()
+        const client = (beam as any)?.stellarFederationClient
+        if (client?.updateCurrency) {
+          const payload = { currencyContentId: "currency.coins", amount: coinsEarned }
+          console.log("[Coins] Syncing earned coins to server:", payload)
+          await client.updateCurrency(payload)
+          setInventoryRefreshKey((prev) => prev + 1)
+        } else {
+          console.warn("[Coins] StellarFederationClient.updateCurrency unavailable; skipping sync.")
+        }
+      } catch (err) {
+        console.warn("[Coins] Failed to sync earned coins:", err)
+      }
+    })()
+  }, [gameState, readyForGame, coinsEarned])
   const shouldShowCampaignOverlay =
     campaignUnlocked && readyForGame && !showPlayerInfo && !campaignConfirmed
 
@@ -539,6 +572,7 @@ export default function TowerDestroyer() {
         stageLabel,
         stageName: activeStage.name,
         loopLabel,
+        currencyAmount,
         alias,
         playerId,
         isCharging,
@@ -591,6 +625,7 @@ export default function TowerDestroyer() {
           selectedBallInfo: selectedBallInfo || undefined,
           ballsLeft,
           score,
+          coinsEarned,
           victoryBonusMultiplier: CONST.VICTORY_BONUS_MULTIPLIER,
           showResetConfirm,
           onCancelReset: () => setShowResetConfirm(false),

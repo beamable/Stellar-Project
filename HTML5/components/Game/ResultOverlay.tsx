@@ -15,6 +15,7 @@ export type CampaignResultContext = {
 type ResultOverlayProps = {
   gameState: "playing" | "won" | "gameOver"
   score: number
+  coinsEarned: number
   ballsLeft: number
   victoryBonusMultiplier: number
   onRetry: () => void
@@ -24,6 +25,7 @@ type ResultOverlayProps = {
 export default function ResultOverlay({
   gameState,
   score,
+  coinsEarned,
   ballsLeft,
   victoryBonusMultiplier,
   onRetry,
@@ -71,6 +73,10 @@ export default function ResultOverlay({
           <p className="text-sm uppercase tracking-wide text-white/60">Final Score</p>
           <p className="text-3xl font-semibold text-white">{score.toLocaleString()}</p>
           {bonusText && <p className="text-xs text-amber-200 mt-2">{bonusText}</p>}
+        </div>
+        <div className="rounded-2xl border border-amber-200/30 bg-amber-400/10 px-5 py-3 mb-4">
+          <p className="text-sm uppercase tracking-wide text-amber-100/80">Coins Earned</p>
+          <p className="text-2xl font-semibold text-amber-200">{coinsEarned.toLocaleString()}</p>
         </div>
 
         <div className="mt-4 flex flex-wrap justify-center gap-3">

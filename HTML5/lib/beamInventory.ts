@@ -34,7 +34,7 @@ type InventoryScope = {
 
 const currentPlayerId = (beam: Beam, objectId?: bigint | string) => objectId ?? beam.player.id
 
-const unwrap = async <T>(resPromise: Promise<{ data: T }>) => (await resPromise).data
+const unwrap = async <T>(resPromise: Promise<{ body: T }>) => (await resPromise).body
 
 export const fetchInventory = (
   beam: Beam,

@@ -25,6 +25,7 @@ export type UseTowerGameResult = {
   selectBallType: (type: BallType) => void
   gameState: "playing" | "won" | "gameOver"
   score: number
+  coinsEarned: number
   ballsLeft: number
   towerCount: number
   remainingTowers: number
@@ -149,6 +150,8 @@ export default function useTowerGame({
 
   const [gameState, setGameState] = useState<"playing" | "won" | "gameOver">("playing")
   const [score, setScore] = useState(0)
+  const coinsEarnedRef = useRef(0)
+  const [coinsEarned, setCoinsEarned] = useState(0)
   const [ballsLeft, setBallsLeft] = useState(() => towerProfile.ballCount ?? CONST.BALLS_FOR_LOW_TOWER_COUNT)
   const powerRef = useRef(0)
   const [powerSnapshot, setPowerSnapshot] = useState(0)
@@ -397,6 +400,8 @@ export default function useTowerGame({
         resetBall,
         setRemainingTowers,
         remainingTowersRef,
+        coinsEarnedRef,
+        setCoinsEarned,
         windZones: stageWindZones,
         windTimeMs: now,
         onAllTowersDestroyed: handleAllTowersDestroyed,
@@ -538,6 +543,8 @@ export default function useTowerGame({
 
       setGameState("playing")
       setScore(0)
+      coinsEarnedRef.current = 0
+      setCoinsEarned(0)
       powerRef.current = 0
       setPowerSnapshot(0)
       setIsCharging(false)
@@ -677,6 +684,7 @@ export default function useTowerGame({
     selectBallType,
     gameState,
     score,
+    coinsEarned,
     ballsLeft,
     towerCount,
     remainingTowers,

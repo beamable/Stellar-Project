@@ -36,6 +36,7 @@ type GameOverlayManagerProps = {
   selectedBallInfo?: BallTypeConfig
   ballsLeft: number
   score: number
+  coinsEarned: number
   victoryBonusMultiplier: number
   showResetConfirm: boolean
   onCancelReset: () => void
@@ -95,6 +96,7 @@ export default function GameOverlayManager({
   selectedBallInfo,
   ballsLeft,
   score,
+  coinsEarned,
   victoryBonusMultiplier,
   showResetConfirm,
   onCancelReset,
@@ -167,6 +169,7 @@ export default function GameOverlayManager({
       <ResultOverlay
         gameState={gameState}
         score={score}
+        coinsEarned={coinsEarned}
         ballsLeft={ballsLeft}
         victoryBonusMultiplier={victoryBonusMultiplier}
         onRetry={onRetry}

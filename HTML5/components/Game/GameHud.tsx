@@ -9,6 +9,7 @@ export type GameHudProps = {
   stageLabel: string
   stageName: string
   loopLabel: string
+  currencyAmount?: number | null
   alias: string | null
   playerId: string | null
   isCharging: boolean
@@ -33,6 +34,7 @@ export default function GameHud({
   stageLabel,
   stageName,
   loopLabel,
+  currencyAmount,
   alias,
   playerId,
   isCharging,
@@ -67,7 +69,12 @@ export default function GameHud({
             <p className="text-xs uppercase tracking-[0.4em] text-white/50">Beamable Presents</p>
             <h1 className="text-3xl font-black tracking-wider drop-shadow-md">Tower Destroyer</h1>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="rounded-full border border-amber-200/40 bg-amber-400/10 px-3 py-2 text-xs font-semibold text-white flex items-center gap-2 shadow-inner shadow-amber-900/40">
+              <span className="text-amber-200">◎</span>
+              <span className="text-white">{typeof currencyAmount === "number" ? currencyAmount.toLocaleString() : "--"}</span>
+              <span className="text-amber-100/70 text-[10px] uppercase tracking-wide">Coins</span>
+            </div>
             <Button
               onClick={onToggleAudioSettings}
               size="sm"
