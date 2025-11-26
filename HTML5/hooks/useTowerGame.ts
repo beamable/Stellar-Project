@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type React from "react"
 
-import type { Ball, BallType, Laser, Particle, Tower, WindZone } from "@/components/Game/types"
+import type { Ball, BallType, BallTypeConfig, Laser, Particle, Tower, WindZone } from "@/components/Game/types"
 import * as CONST from "@/components/Game/constants"
 import { generateTowers } from "@/components/Game/towers"
 import * as Audio from "@/components/Game/audio"
 import stepPhysics from "@/components/Game/engine/stepPhysics"
-import { BALL_TYPE_MAP } from "@/components/Game/ballTypes"
+import { DEFAULT_BALL_TYPE_MAP } from "@/components/Game/ballTypes"
 import { createDebugTowers, DEBUG_COLLISION_MODE } from "@/components/Game/debug"
 import type { TowerProfile } from "@/components/Game/campaign"
 
@@ -16,6 +16,7 @@ type UseTowerGameOptions = {
   readyForGame: boolean
   towerProfile: TowerProfile
   stageId: string
+  ballTypeMap?: Record<BallType, BallTypeConfig>
 }
 
 export type UseTowerGameResult = {
@@ -118,7 +119,12 @@ const drawSpecialTowerCracks = (ctx: CanvasRenderingContext2D, tower: Tower) => 
   ctx.restore()
 }
 
-export default function useTowerGame({ readyForGame, towerProfile, stageId }: UseTowerGameOptions): UseTowerGameResult {
+export default function useTowerGame({
+  readyForGame,
+  towerProfile,
+  stageId,
+  ballTypeMap = DEFAULT_BALL_TYPE_MAP,
+}: UseTowerGameOptions): UseTowerGameResult {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number>()
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -228,10 +234,11 @@ export default function useTowerGame({ readyForGame, towerProfile, stageId }: Us
 
   const selectBallType = useCallback(
     (type: BallType) => {
-      setSelectedBallType((current) => (current === type ? current : type))
+      const target = ballTypeMap[type] ? type : "normal"
+      setSelectedBallType((current) => (current === target ? current : target))
       Audio.playSelectSound(audioContextRef)
     },
-    [],
+    [ballTypeMap],
   )
 
   const applyTowerMotion = useCallback((timeMs: number) => {
@@ -274,7 +281,7 @@ export default function useTowerGame({ readyForGame, towerProfile, stageId }: Us
 
       const shootPan = toStereoPan(currentBall.x)
       Audio.playShootSound(audioContextRef, selectedBallType, shootPan)
-      const typeConfig = BALL_TYPE_MAP[selectedBallType] ?? BALL_TYPE_MAP.normal
+      const typeConfig = ballTypeMap[selectedBallType] ?? DEFAULT_BALL_TYPE_MAP.normal
       const powerRatio = Math.min(power / CONST.MAX_POWER, 1)
       const force = powerRatio * CONST.SHOT_FORCE_MULTIPLIER * typeConfig.baseSpeedMultiplier
       const baseVx = (dx / distance) * force
@@ -325,7 +332,7 @@ export default function useTowerGame({ readyForGame, towerProfile, stageId }: Us
       setHasShot(true)
       dlog(`[v0] Ball shot! Active balls: ${ballsRef.current.filter((b) => b.active).length}`)
     },
-    [selectedBallType],
+    [ballTypeMap, selectedBallType],
   )
 
   const handleAllTowersDestroyed = useCallback(() => {
@@ -459,14 +466,7 @@ export default function useTowerGame({ readyForGame, towerProfile, stageId }: Us
     })
 
     ballsRef.current.forEach((ball) => {
-      const colors: Record<BallType, string> = {
-        normal: "#8B4513",
-        multishot: "#FF6B35",
-        fire: "#FF4500",
-        laser: "#8A2BE2",
-      }
-
-      const ballColor = colors[ball.type] || "#8B4513"
+      const ballColor = ballTypeMap[ball.type]?.color ?? DEFAULT_BALL_TYPE_MAP.normal.color
       const r = Number.parseInt(ballColor.slice(1, 3), 16)
       const g = Number.parseInt(ballColor.slice(3, 5), 16)
       const b = Number.parseInt(ballColor.slice(5, 7), 16)
@@ -518,7 +518,7 @@ export default function useTowerGame({ readyForGame, towerProfile, stageId }: Us
     }
 
     animationRef.current = requestAnimationFrame(gameLoop)
-  }, [ballsLeft, gameState, isCharging, resetBall, stageWindZones, handleAllTowersDestroyed, applyTowerMotion])
+  }, [ballsLeft, gameState, isCharging, resetBall, stageWindZones, handleAllTowersDestroyed, applyTowerMotion, ballTypeMap])
 
   useEffect(() => {
     animationRef.current = requestAnimationFrame(gameLoop)

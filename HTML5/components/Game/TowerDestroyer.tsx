@@ -25,8 +25,8 @@ function useRenderCounter(label: string, enabled: boolean) {
 
 // Import types
 import * as CONST from "./constants"
-import { BALL_TYPES } from "./ballTypes"
 import useTowerGame from "@/hooks/useTowerGame"
+import useBallLoadout from "@/hooks/useBallLoadout"
 import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_MAP, DEFAULT_STAGE_ID } from "@/components/Game/campaign"
 import useCampaignProgress from "@/hooks/useCampaignProgress"
 import {
@@ -102,6 +102,8 @@ export default function TowerDestroyer() {
   } = useCampaignProgress(playerId)
   const activeStage = selectedStage ?? CAMPAIGN_STAGE_MAP.get(DEFAULT_STAGE_ID)!
   const totalStages = CAMPAIGN_STAGES.length
+  const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0)
+  const { ballTypes, ballTypeMap, ownedBallTypes } = useBallLoadout(readyForGame, inventoryRefreshKey)
   const [campaignUnlocked, setCampaignUnlocked] = useState(false)
   const {
     canvasRef,
@@ -121,7 +123,20 @@ export default function TowerDestroyer() {
     resetGame,
     startFirstShot,
     debugForceWin,
-  } = useTowerGame({ readyForGame, towerProfile: activeStage.towerProfile, stageId: activeStage.id })
+  } = useTowerGame({
+    readyForGame,
+    towerProfile: activeStage.towerProfile,
+    stageId: activeStage.id,
+    ballTypeMap,
+  })
+  const availableBallConfigs = ballTypes.filter((ball) => ownedBallTypes.includes(ball.type))
+  useEffect(() => {
+    if (!ownedBallTypes.includes(selectedBallType)) {
+      const fallback = ownedBallTypes[0] ?? "normal"
+      selectBallType(fallback)
+    }
+  }, [ownedBallTypes, selectedBallType, selectBallType])
+  const selectedBallInfo = ballTypes.find((ball) => ball.type === selectedBallType)
   const stageLabel = `Stage ${activeStage.order + 1}/${totalStages}`
   const loopLabel = `Loop ${loopCount + 1}`
   const nextStage = CAMPAIGN_STAGES[activeStage.order + 1] ?? null
@@ -394,6 +409,11 @@ export default function TowerDestroyer() {
       setCampaignConfirmed(false)
     }
   }, [readyForGame])
+  useEffect(() => {
+    if (showPlayerInfo) {
+      setInventoryRefreshKey((prev) => prev + 1)
+    }
+  }, [showPlayerInfo])
   const shouldShowCampaignOverlay =
     campaignUnlocked && readyForGame && !showPlayerInfo && !campaignConfirmed
 
@@ -415,7 +435,6 @@ export default function TowerDestroyer() {
     setShowPlayerInfo(true)
   }, [debugFakeLogin, setShowPlayerInfo])
 
-  const selectedBallInfo = BALL_TYPES.find((ball) => ball.type === selectedBallType)
   async function handleResetPlayer() {
     setShowResetConfirm(true)
   }
@@ -567,7 +586,7 @@ export default function TowerDestroyer() {
           walletPopupBlocked,
           walletPopupBlockedUrl,
           walletPopupContext,
-          ballTypes: BALL_TYPES,
+          ballTypes: availableBallConfigs,
           selectedBallType,
           selectedBallInfo: selectedBallInfo || undefined,
           ballsLeft,
