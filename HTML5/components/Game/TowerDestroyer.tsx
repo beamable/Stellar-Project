@@ -28,6 +28,7 @@ import * as CONST from "./constants"
 import useTowerGame from "@/hooks/useTowerGame"
 import useBallLoadout from "@/hooks/useBallLoadout"
 import useCurrency from "@/hooks/useCurrency"
+import useCommerceManager from "@/hooks/useCommerceManager"
 import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_MAP, DEFAULT_STAGE_ID } from "@/components/Game/campaign"
 import useCampaignProgress from "@/hooks/useCampaignProgress"
 import {
@@ -105,8 +106,21 @@ export default function TowerDestroyer() {
   const activeStage = selectedStage ?? CAMPAIGN_STAGE_MAP.get(DEFAULT_STAGE_ID)!
   const totalStages = CAMPAIGN_STAGES.length
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0)
-  const { ballTypes, ballTypeMap, ownedBallTypes } = useBallLoadout(readyForGame, inventoryRefreshKey)
-  const { amount: currencyAmount } = useCurrency(readyForGame, inventoryRefreshKey)
+  const { ballTypes, ballTypeMap, ownedBallTypes, loading: ballLoadoutLoading } = useBallLoadout(
+    readyForGame,
+    inventoryRefreshKey,
+  )
+  const { amount: currencyAmount, loading: currencyLoading } = useCurrency(readyForGame, inventoryRefreshKey)
+  const inventoryInitialized = readyForGame && !ballLoadoutLoading && !currencyLoading
+  const {
+    store: storeContent,
+    listings: storeListings,
+    loading: commerceLoading,
+    error: commerceError,
+  } = useCommerceManager({
+    enabled: inventoryInitialized,
+    refreshKey: inventoryRefreshKey,
+  })
   const [campaignUnlocked, setCampaignUnlocked] = useState(false)
   const coinsSyncedRef = useRef(false)
   const {
@@ -390,6 +404,16 @@ export default function TowerDestroyer() {
     if (pendingMechanics.length === 0) return
     acknowledgeMechanics(pendingMechanics)
   }, [acknowledgeMechanics, pendingMechanics])
+  useEffect(() => {
+    if (!inventoryInitialized) return
+    if (commerceLoading) return
+    if (!storeContent) return
+    console.log("[Commerce] Store resolved and ready:", {
+      store: storeContent,
+      listings: storeListings,
+      error: commerceError,
+    })
+  }, [inventoryInitialized, commerceLoading, storeContent, storeListings, commerceError])
 
   const [campaignConfirmed, setCampaignConfirmed] = useState(false)
   const lastStageRef = useRef(activeStage.id)

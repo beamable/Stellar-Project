@@ -25,3 +25,7 @@ export type RemoveItemRequestArgs = {
   itemContentId: string; 
   instanceId: bigint | string; 
 };
+
+export type PurchaseBallRequestArgs = { 
+  purchaseId: string; 
+};

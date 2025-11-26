@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import type { BallTypeConfig } from "@/components/Game/types"
 
@@ -52,6 +53,13 @@ export default function GameHud({
 }: GameHudProps) {
   const identityLabel = alias ?? playerId ?? "Guest"
   const powerPercent = Math.min(100, Math.max(0, powerSnapshot))
+  const powerFillRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = powerFillRef.current
+    if (!el) return
+    el.style.width = `${powerPercent}%`
+  }, [powerPercent])
 
   const stats = [
     { label: "Stage", value: stageLabel, detail: stageName, accent: "text-indigo-100", icon: "ST" },
@@ -149,8 +157,8 @@ export default function GameHud({
           </div>
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
             <div
+              ref={powerFillRef}
               className={`h-full rounded-full transition-all duration-300 ${isCharging ? "bg-amber-300" : "bg-emerald-300"}`}
-              style={{ width: `${powerPercent}%` }}
             />
           </div>
         </div>
