@@ -3,13 +3,18 @@ using Beamable.Player;
 using Beamable.Server.Clients;
 using Cysharp.Threading.Tasks;
 using StellarFederationCommon;
+using StellarFederationCommon.Models.Response;
+using SuiFederationCommon.Models.Notifications;
 using UnityEngine;
 
 namespace Farm.Beam
 {
     public class BeamAccountManager : BeamManagerBase
     {
+        private string _chosenAlias;
+        private AccountResponse _stellarAccount;
         
+        public bool CreatingNewAccount {get; private set;}
         public PlayerAccount CurrentAccount { get; private set; }
 
         #region Init
@@ -20,6 +25,7 @@ namespace Farm.Beam
             await _beamContext.Accounts.OnReady;
             await UpdateCurrentAccount();
             
+            _beamContext.Api.NotificationService.Subscribe(PlayerNotificationContext.CustodialAccountCreated, OnCustodialAccountCreated);
             IsReady = true;
         }
 
@@ -49,13 +55,27 @@ namespace Farm.Beam
             await UpdateCurrentAccount(ac);
         }
 
-        public async UniTask CreateNewAccount(string alia = "")
+        public async UniTask CreateNewAccount(string alias = "")
+        {
+            CreatingNewAccount = true;
+            _chosenAlias = alias;
+            _stellarAccount = null;
+            _stellarAccount = await _stellarClient.CreateAccount();
+        }
+        
+        private void OnCustodialAccountCreated(object obj)
+        {
+            OnCustodialAccountCreatedAsync(obj).Forget();
+        }
+
+        private async UniTask OnCustodialAccountCreatedAsync(object obj)
         {
             var newAccount = await _beamContext.Accounts.CreateNewAccount();
-            await SetAlias(alia, newAccount);
+            await SetAlias(_chosenAlias, newAccount);
             await _beamContext.Accounts.AddExternalIdentity<StellarWeb3Identity, StellarFederationClient>("",
                 (AsyncChallengeHandler) null, newAccount);
             await SwitchAccount(newAccount);
+            CreatingNewAccount = false;
         }
         
         #endregion
