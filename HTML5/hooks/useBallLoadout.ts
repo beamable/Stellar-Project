@@ -54,14 +54,17 @@ const mapContentToConfigs = (content: BallContent[]): BallTypeConfig[] => {
   const defaults = DEFAULT_BALL_TYPE_MAP
   const mapped: BallTypeConfig[] = []
   content.forEach((entry) => {
-    const derivedType = deriveBallType(entry.id, (entry as any)?.type ?? entry.customProperties?.type)
+    const raw = entry as any
+    const derivedType = deriveBallType(entry.id, raw?.type ?? raw?.customProperties?.type ?? raw?.properties?.type)
     if (!derivedType) return
     const base = defaults[derivedType] ?? BALL_TYPES[0]
-    const props = entry.customProperties ?? {}
+    const props = raw?.customProperties ?? raw?.properties ?? {}
+    const entryName = typeof raw?.name === "string" ? raw.name : undefined
+    const entryDescription = typeof raw?.description === "string" ? raw.description : undefined
     mapped.push({
       type: derivedType,
-      name: entry.name ?? base.name,
-      description: entry.description ?? base.description,
+      name: entryName ?? base.name,
+      description: entryDescription ?? base.description,
       icon: (props.icon as string) ?? base.icon,
       color: (props.color as string) ?? base.color,
       baseSpeedMultiplier: parseSpeed((props.baseSpeedMultiplier as unknown) ?? props.speed, base.baseSpeedMultiplier),
