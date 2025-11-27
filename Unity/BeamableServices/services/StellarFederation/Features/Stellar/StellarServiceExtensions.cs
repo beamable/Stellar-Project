@@ -12,6 +12,10 @@ namespace Beamable.StellarFederation.Features.Stellar;
 
 public static class StellarServiceExtensions
 {
+    private const uint LedgersPerDay = 17_280; //5 sec per ledger
+    public static uint ExpiresInDays(uint currentLedger, uint days)
+        => currentLedger + (LedgersPerDay * days);
+
     public static TransactionBuilder AddCreateAccountOperation(this TransactionBuilder builder, KeyPair keyPair, StellarAmount startingAmount)
     {
         builder.AddOperation(new CreateAccountOperation(
@@ -40,6 +44,27 @@ public static class StellarServiceExtensions
     private static TimeBounds GetDefaultTimeBounds(int timeoutSec)
     {
         return new TimeBounds(0, DateTimeOffset.UtcNow.ToUnixTimeSeconds() + timeoutSec);
+    }
+
+    public static TransactionBuilder AddBeginSponsoringFutureReservesOperation(this TransactionBuilder builder, KeyPair keyPair)
+    {
+        builder.AddOperation(new BeginSponsoringFutureReservesOperation(
+            keyPair));
+        return builder;
+    }
+
+    public static TransactionBuilder AddEndSponsoringFutureReservesOperation(this TransactionBuilder builder, KeyPair keyPair)
+    {
+        builder.AddOperation(new EndSponsoringFutureReservesOperation(
+            keyPair));
+        return builder;
+    }
+
+    public static TransactionBuilder AddCloseAccountOperation(this TransactionBuilder builder, KeyPair destination, KeyPair source)
+    {
+        builder.AddOperation(new AccountMergeOperation(
+            destination, source));
+        return builder;
     }
 
     public static string TransactionError(this SendTransactionResponse response)

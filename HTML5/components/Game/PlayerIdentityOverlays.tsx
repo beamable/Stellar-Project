@@ -27,6 +27,7 @@ type PlayerIdentityOverlaysProps = {
   onRetryAttach: () => void
   onResetPlayer: () => void
   onManualWalletOpen: () => void
+  onOpenShop: () => void
   onClosePlayerInfo: () => void
 }
 
@@ -54,6 +55,7 @@ export default function PlayerIdentityOverlays({
   onRetryAttach,
   onResetPlayer,
   onManualWalletOpen,
+  onOpenShop,
   onClosePlayerInfo,
 }: PlayerIdentityOverlaysProps) {
   return (
@@ -73,6 +75,7 @@ export default function PlayerIdentityOverlays({
           onRetryAttach={onRetryAttach}
           onResetPlayer={onResetPlayer}
           onManualWalletOpen={onManualWalletOpen}
+          onOpenShop={onOpenShop}
           onClose={onClosePlayerInfo}
         />
       )}

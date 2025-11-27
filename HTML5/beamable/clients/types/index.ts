@@ -11,3 +11,21 @@ export type ConfigurationResponse = {
 export type SendTestNotificationRequestArgs = { 
   message: string; 
 };
+
+export type UpdateCurrencyRequestArgs = { 
+  currencyContentId: string; 
+  amount: number; 
+};
+
+export type AddItemRequestArgs = { 
+  itemContentId: string; 
+};
+
+export type RemoveItemRequestArgs = { 
+  itemContentId: string; 
+  instanceId: bigint | string; 
+};
+
+export type PurchaseBallRequestArgs = { 
+  purchaseId: string; 
+};

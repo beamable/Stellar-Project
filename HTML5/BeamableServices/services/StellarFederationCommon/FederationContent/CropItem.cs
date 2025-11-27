@@ -3,7 +3,6 @@ using Beamable.Common.Content;
 using Beamable.Common.Inventory;
 using StellarFederationCommon.Extensions;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 namespace StellarFederationCommon.FederationContent
 {

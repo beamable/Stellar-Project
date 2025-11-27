@@ -86,6 +86,15 @@ const createMockContext = () => ({
 
 type TowerGameHookResult = ReturnType<typeof useTowerGame>
 
+const defaultTowerProfile = () => ({
+  minTowers: 10,
+  maxTowers: 10,
+  specialBlockRatio: 0.1,
+  ballCount: 12,
+})
+
+const defaultStageId = "test-stage"
+
 const attachCanvasToHook = (result: RenderHookResult<TowerGameHookResult, undefined>["result"]) => {
   const canvas = document.createElement("canvas")
   Object.defineProperty(canvas, "getContext", {
@@ -133,7 +142,9 @@ describe("useTowerGame", () => {
   })
 
   it("allows selecting a different ball type", () => {
-    const { result } = renderHook<TowerGameHookResult, undefined>(() => useTowerGame({ readyForGame: true }))
+    const { result } = renderHook<TowerGameHookResult, undefined>(() =>
+      useTowerGame({ readyForGame: true, towerProfile: defaultTowerProfile(), stageId: defaultStageId }),
+    )
 
     expect(result.current.selectedBallType).toBe("normal")
 
@@ -146,7 +157,9 @@ describe("useTowerGame", () => {
   })
 
   it("marks the game as started when startFirstShot is invoked", () => {
-    const { result } = renderHook<TowerGameHookResult, undefined>(() => useTowerGame({ readyForGame: true }))
+    const { result } = renderHook<TowerGameHookResult, undefined>(() =>
+      useTowerGame({ readyForGame: true, towerProfile: defaultTowerProfile(), stageId: defaultStageId }),
+    )
 
     expect(result.current.hasShot).toBe(false)
 
@@ -159,7 +172,9 @@ describe("useTowerGame", () => {
   })
 
   it("handles pointer interactions to shoot a ball when ready", () => {
-    const { result } = renderHook<TowerGameHookResult, undefined>(() => useTowerGame({ readyForGame: true }))
+    const { result } = renderHook<TowerGameHookResult, undefined>(() =>
+      useTowerGame({ readyForGame: true, towerProfile: defaultTowerProfile(), stageId: defaultStageId }),
+    )
     attachCanvasToHook(result)
 
     act(() => {

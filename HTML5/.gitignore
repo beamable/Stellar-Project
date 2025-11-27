@@ -8,6 +8,9 @@
 # Dependencies
 node_modules
 
+# Local docs aggregation
+docs/
+
 # Next.js build artifacts
 .next
 out

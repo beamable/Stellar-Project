@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import type { BallTypeConfig } from "@/components/Game/types"
 
@@ -9,6 +10,7 @@ export type GameHudProps = {
   stageLabel: string
   stageName: string
   loopLabel: string
+  currencyAmount?: number | null
   alias: string | null
   playerId: string | null
   isCharging: boolean
@@ -33,6 +35,7 @@ export default function GameHud({
   stageLabel,
   stageName,
   loopLabel,
+  currencyAmount,
   alias,
   playerId,
   isCharging,
@@ -50,6 +53,13 @@ export default function GameHud({
 }: GameHudProps) {
   const identityLabel = alias ?? playerId ?? "Guest"
   const powerPercent = Math.min(100, Math.max(0, powerSnapshot))
+  const powerFillRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = powerFillRef.current
+    if (!el) return
+    el.style.width = `${powerPercent}%`
+  }, [powerPercent])
 
   const stats = [
     { label: "Stage", value: stageLabel, detail: stageName, accent: "text-indigo-100", icon: "ST" },
@@ -67,7 +77,12 @@ export default function GameHud({
             <p className="text-xs uppercase tracking-[0.4em] text-white/50">Beamable Presents</p>
             <h1 className="text-3xl font-black tracking-wider drop-shadow-md">Tower Destroyer</h1>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="rounded-full border border-amber-200/40 bg-amber-400/10 px-3 py-2 text-xs font-semibold text-white flex items-center gap-2 shadow-inner shadow-amber-900/40">
+              <span className="text-amber-200">◎</span>
+              <span className="text-white">{typeof currencyAmount === "number" ? currencyAmount.toLocaleString() : "--"}</span>
+              <span className="text-amber-100/70 text-[10px] uppercase tracking-wide">Coins</span>
+            </div>
             <Button
               onClick={onToggleAudioSettings}
               size="sm"
@@ -142,8 +157,8 @@ export default function GameHud({
           </div>
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
             <div
+              ref={powerFillRef}
               className={`h-full rounded-full transition-all duration-300 ${isCharging ? "bg-amber-300" : "bg-emerald-300"}`}
-              style={{ width: `${powerPercent}%` }}
             />
           </div>
         </div>

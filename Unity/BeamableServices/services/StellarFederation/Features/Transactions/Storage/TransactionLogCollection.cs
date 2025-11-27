@@ -25,6 +25,10 @@ public class TransactionLogCollection : IService
 			_collection = db.GetCollection<TransactionLog>("transaction-log");
 
 			await _collection.Indexes.CreateOneAsync(new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys
+				.Ascending(x => x.InventoryTransactionId)
+			));
+
+			await _collection.Indexes.CreateOneAsync(new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys
 				.Ascending(x => x.Wallet)
 				.Ascending(x => x.OperationName)
 			));

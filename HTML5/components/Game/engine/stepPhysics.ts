@@ -29,6 +29,8 @@ type StepPhysicsOptions = {
   resetBall: () => void
   setRemainingTowers: Dispatch<SetStateAction<number>>
   remainingTowersRef: MutableRefObject<number>
+  coinsEarnedRef: MutableRefObject<number>
+  setCoinsEarned: Dispatch<SetStateAction<number>>
   windZones?: WindZone[]
   windTimeMs?: number
   onAllTowersDestroyed?: () => "win" | "phase"
@@ -98,6 +100,8 @@ export default function stepPhysics({
   resetBall,
   setRemainingTowers,
   remainingTowersRef,
+  coinsEarnedRef,
+  setCoinsEarned,
   windZones,
   windTimeMs,
   onAllTowersDestroyed,
@@ -220,6 +224,9 @@ export default function stepPhysics({
       if (hasPassThroughCharge) {
         ball.fireDestroyCount = fireDestroyCount + 1
         tower.destroyed = true
+        const coinReward = tower.isSpecial ? 4 : 2
+        coinsEarnedRef.current += coinReward
+        setCoinsEarned(coinsEarnedRef.current)
         Audio.playTowerBreakSound(audioContextRef, towerPan)
         createParticles(particlesRef, tower.x + tower.width / 2, tower.y + tower.height / 2, "fire", tower.color)
         const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
@@ -257,6 +264,9 @@ export default function stepPhysics({
 
       if (tower.hits >= tower.maxHits) {
         tower.destroyed = true
+        const coinReward = tower.isSpecial ? 4 : 2
+        coinsEarnedRef.current += coinReward
+        setCoinsEarned(coinsEarnedRef.current)
         Audio.playTowerBreakSound(audioContextRef, towerPan)
         createParticles(
           particlesRef,
@@ -301,6 +311,9 @@ export default function stepPhysics({
         probeY <= tower.y + tower.height
       ) {
         tower.destroyed = true
+        const coinReward = tower.isSpecial ? 4 : 2
+        coinsEarnedRef.current += coinReward
+        setCoinsEarned(coinsEarnedRef.current)
         const laserTowerCenterX = tower.x + tower.width / 2
         Audio.playTowerBreakSound(audioContextRef, toStereoPan(laserTowerCenterX))
         createLaserParticles(particlesRef, laserTowerCenterX, tower.y + tower.height / 2)

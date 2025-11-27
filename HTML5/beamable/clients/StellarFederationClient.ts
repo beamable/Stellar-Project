@@ -70,6 +70,38 @@ export class StellarFederationClient extends BeamMicroServiceClient {
     });
   }
   
+  async updateCurrency(params: Types.UpdateCurrencyRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "UpdateCurrency",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
+  async addItem(params: Types.AddItemRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "AddItem",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
+  async removeItem(params: Types.RemoveItemRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "RemoveItem",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
+  async purchaseBall(params: Types.PurchaseBallRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "PurchaseBall",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
   async externalAddress(): Promise<void> {
     return this.request({
       endpoint: "ExternalAddress",
