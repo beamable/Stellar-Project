@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Beamable.Common.Dependencies;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
+using Beamable.StellarFederation.Features.BlockProcessor.Handlers;
 using Beamable.StellarFederation.Features.Contract;
 using Beamable.StellarFederation.Features.Contract.Functions.Account.Models;
 using Beamable.StellarFederation.Features.Contract.Functions.Minting.Models;
@@ -18,14 +19,16 @@ public class TestService : IService
     private readonly AccountsService _accountsService;
     private readonly TransactionManager _transactionManager;
     private readonly StellarService _stellarService;
+    private readonly CreateAccountBlockHandler _createAccountBlockHandler;
 
 
-    public TestService(ContractProxy contractProxy, AccountsService accountsService, TransactionManager transactionManager, StellarService stellarService)
+    public TestService(ContractProxy contractProxy, AccountsService accountsService, TransactionManager transactionManager, StellarService stellarService, CreateAccountBlockHandler createAccountBlockHandler)
     {
         _contractProxy = contractProxy;
         _accountsService = accountsService;
         _transactionManager = transactionManager;
         _stellarService = stellarService;
+        _createAccountBlockHandler = createAccountBlockHandler;
     }
 
     // public async Task Test(string hash)
@@ -55,9 +58,14 @@ public class TestService : IService
     // }
     //
 
-    public async Task Test2(string id)
+    public async Task Test(long block)
     {
         var realmAccount = await _accountsService.GetOrCreateRealmAccount();
-        var account = await _accountsService.GetOrCreateAccount(id, MicroserviceInfo.Default());
+        await _createAccountBlockHandler.Handle(1806810, 1806810);
+        // Task task1 = _accountsService.CreateNewAccount("123");
+        // Task task2 = _accountsService.CreateNewAccount("1234");
+        //
+        // await Task.WhenAll(task1, task2);
+        var i = 0;
     }
 }

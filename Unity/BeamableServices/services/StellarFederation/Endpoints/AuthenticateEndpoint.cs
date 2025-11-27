@@ -39,10 +39,14 @@ public class AuthenticateEndpoint : IEndpoint
         if (string.IsNullOrEmpty(token) && _requestContext.UserId != 0L)
         {
             // Create new account for player if token is empty
-            var account = await _accountsService.GetOrCreateAccount(_requestContext.UserId.ToString(), microserviceInfo);
+            var account = await _accountsService.GetAccount(_requestContext.UserId.ToString());
+            if (account is null || !account.Value.Created)
+            {
+                throw new UnauthorizedException($"Wallet for user {_requestContext.UserId} is not created.");
+            }
             return new FederatedAuthenticationResponse
             {
-                user_id = account.Address
+                user_id = account.Value.Address
             };
         }
 

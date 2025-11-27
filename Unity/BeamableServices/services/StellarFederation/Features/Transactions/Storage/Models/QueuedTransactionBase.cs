@@ -20,7 +20,7 @@ public class QueuedTransactionBase
     public required TransactionStatus Status { get; set; }
     public DateTime Created { get; init; } = DateTime.UtcNow;
     public DateTime? LockedAt { get; set; }
-    public DateTime Expiration { get; set; } = DateTime.UtcNow.AddMinutes(5);
+    public DateTime Expiration { get; set; } = DateTime.UtcNow.AddMinutes(30);
     public string? ProcessingInstanceId { get; set; }
     public string? ErrorMessage { get; set; }
 }

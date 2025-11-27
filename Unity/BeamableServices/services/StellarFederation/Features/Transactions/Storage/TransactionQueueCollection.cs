@@ -247,6 +247,21 @@ public class TransactionQueueCollection(IStorageObjectConnectionProvider storage
         }
     }
 
+    public async Task Delete(IEnumerable<ObjectId> transactionIds)
+    {
+        var collection = await Get<QueuedTransactionBase>();
+        try
+        {
+            var filter = Builders<QueuedTransactionBase>.Filter.And(
+                Builders<QueuedTransactionBase>.Filter.In(x => x.TransactionId, transactionIds)
+            );
+            await collection.DeleteManyAsync(filter);
+        }
+        catch (MongoException)
+        {
+        }
+    }
+
     private async ValueTask<int> GetMaxBatchLimit(string functionName)
     {
         if (functionName == nameof(AccountCreateRequest))

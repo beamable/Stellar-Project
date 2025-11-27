@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Beamable.Server;
 using Beamable.StellarFederation.Features.Transactions.Storage.Models;
@@ -33,8 +34,15 @@ public class TransactionLogCollection : IService
 				.Ascending(x => x.OperationName)
 			));
 			await _collection.Indexes.CreateOneAsync(new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys
-				.Ascending("ChainTransactions.Digest")
-			));;
+				.Ascending("ChainTransactions.Hash")
+			));
+			await _collection.Indexes.CreateOneAsync(new CreateIndexModel<TransactionLog>(Builders<TransactionLog>.IndexKeys
+				.Ascending(x => x.MintedTimestamp)
+				.Ascending("ChainTransactions.Hash"), new CreateIndexOptions
+				{
+					Sparse = true
+				}
+			));
 		}
 		return _collection;
 	}
@@ -52,11 +60,20 @@ public class TransactionLogCollection : IService
 		await collection.UpdateOneAsync(x => x.Id == inventoryTransaction, update);
 	}
 
-	public async Task SetMintedDone(ObjectId inventoryTransaction)
+	public async Task SetMintedDone(ObjectId objectId)
 	{
 		var collection = await Get();
 		var update = Builders<TransactionLog>.Update.Set(x => x.MintedTimestamp, DateTime.UtcNow);
-		await collection.UpdateOneAsync(x => x.Id == inventoryTransaction, update);
+		await collection.UpdateOneAsync(x => x.Id == objectId, update);
+	}
+
+	public async Task SetMintedDone(IEnumerable<ObjectId> objectIds)
+	{
+		var collection = await Get();
+		var filter = Builders<TransactionLog>.Filter.In(x => x.Id, objectIds);
+		var update = Builders<TransactionLog>.Update
+			.Set(x => x.MintedTimestamp, DateTime.UtcNow);
+		await collection.UpdateManyAsync(filter, update);
 	}
 
 	public async Task SetError(ObjectId transactionId, string error)
@@ -84,4 +101,25 @@ public class TransactionLogCollection : IService
 		var collection = await Get();
 		return await collection.Find(x => x.InventoryTransactionId == inventoryTransaction).FirstOrDefaultAsync();
 	}
+
+	public async Task<TransactionLog?> GetByChainTransactionHash(string hash)
+	{
+		var collection = await Get();
+		return await collection
+			.Find(Builders<TransactionLog>.Filter.ElemMatch(x => x.ChainTransactions, xx => xx.Hash == hash))
+			.FirstOrDefaultAsync();
+	}
+
+	public async Task<List<TransactionLog>> GetByChainTransactionHashes(IEnumerable<string> hashes)
+	{
+		var collection = await Get();
+		var filter = Builders<TransactionLog>.Filter.And(
+			Builders<TransactionLog>.Filter.Where(x => x.MintedTimestamp == null),
+			Builders<TransactionLog>.Filter.ElemMatch(
+				x => x.ChainTransactions,
+				Builders<ChainTransaction>.Filter.In(tx => tx.Hash, hashes))
+		);
+		return await collection.Find(filter).ToListAsync();
+	}
+
 }

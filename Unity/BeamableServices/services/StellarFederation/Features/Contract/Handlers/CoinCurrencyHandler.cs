@@ -49,12 +49,14 @@ public class CoinCurrencyHandler : IService, IContentContractHandler
 
             BeamableLogger.Log($"Creating contract for {model.ContentObject.Id}...");
             var moduleName = coinCurrency.ToCurrencyModuleName();
-            var contractAccount = await _accountsService.GetOrCreateAccount(model.ContentObject.ToContractAccountName());
+            var contractAccount = await _accountsService.GetAccount(model.ContentObject.ToContractAccountName());
+            if (contractAccount is null)
+                throw new ContractException($"Account for {model.ContentObject.ToContractAccountName()} is not created.");
             await _cliClient.CreateProject(moduleName);
             await WriteContractTemplate(coinCurrency);
             await _cliClient.CopyContractCode(moduleName);
             await _cliClient.CompileContract(moduleName);
-            var contractAddress = await _cliClient.DeployContract(moduleName, contractAccount);
+            var contractAddress = await _cliClient.DeployContract(moduleName, contractAccount.Value);
             await _contractService.UpsertContract(new CoinContract
             {
                 ContentId = model.ContentObject.Id,

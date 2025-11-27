@@ -39,6 +39,7 @@ public class Configuration : IService
     /// </summary>
 
     public ValueTask<string> StellarRpc => GetValue(nameof(StellarRpc), "");
+    public ValueTask<string> StellarHorizon => GetValue(nameof(StellarHorizon), "https://horizon-testnet.stellar.org");
 
     // "public" or "test"
     public ValueTask<string> StellarNetwork => GetValue(nameof(StellarNetwork), StellarSettings.TestNetwork);
@@ -56,6 +57,7 @@ public class Configuration : IService
     public ValueTask<uint> MinExtraResourceFeeInStroops => GetValue<uint>(nameof(MinExtraResourceFeeInStroops), 100_000);
     public ValueTask<int> ExtraResourceFeePercentage => GetValue(nameof(ExtraResourceFeePercentage), 5);
     public ValueTask<int> FetchLogsCronSeconds => GetValue(nameof(FetchLogsCronSeconds), 5);
+    public ValueTask<uint> FetchLogsBlockSize => GetValue(nameof(FetchLogsBlockSize), 100u);
 
     private async ValueTask<T> GetValue<T>(string key, T defaultValue) where T : IConvertible
     {
