@@ -606,11 +606,15 @@ export default function TowerDestroyer() {
       }
       return
     }
-    if (campaignWinStageRef.current === activeStage.id) {
+    // Only mark the stage that actually produced the win. If the user changes selection while still in a won state,
+    // don't auto-complete the newly selected stage.
+    if (campaignWinStageRef.current && campaignWinStageRef.current !== activeStage.id) {
       return
     }
-    markStageComplete(activeStage.id)
-    campaignWinStageRef.current = activeStage.id
+    if (!campaignWinStageRef.current) {
+      campaignWinStageRef.current = activeStage.id
+      markStageComplete(activeStage.id)
+    }
     if (activeStage.order === totalStages - 1 && campaignComplete && !loopAdvanceRef.current) {
       loopAdvanceRef.current = true
       startNextLoop()

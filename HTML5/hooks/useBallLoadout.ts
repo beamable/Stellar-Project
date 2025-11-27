@@ -13,6 +13,7 @@ type UseBallLoadoutResult = {
   ballTypes: BallTypeConfig[]
   ballTypeMap: Record<BallType, BallTypeConfig>
   ownedBallTypes: BallType[]
+  ownedBallInventory: OwnedBallInstance[]
   loading: boolean
 }
 
@@ -31,6 +32,9 @@ const deriveBallType = (id?: string | null, customType?: string | null): BallTyp
     fireball: "fire",
     fire_ball: "fire",
     fire: "fire",
+    defaultball: "normal",
+    default_ball: "normal",
+    default: "normal",
     multishot: "multishot",
     multi_shot: "multishot",
     laserball: "laser",
@@ -80,26 +84,90 @@ const extractOwnedBallInstances = (inventory: any): OwnedBallInstance[] => {
   const owned: OwnedBallInstance[] = []
   if (!inventory) return owned
 
-  const visitItem = (item: any) => {
-    const contentId = item?.contentId ?? item?.id ?? item?.content?.id
-    const instanceId = item?.instanceId ?? item?.id
-    const type = deriveBallType(contentId)
+  const pushInstance = (type: BallType | null, contentId?: any, instanceId?: any) => {
     if (!type) return
     owned.push({ type, instanceId, contentId })
   }
 
-  const items = inventory.items ?? inventory.inventoryItems ?? inventory
-  if (Array.isArray(items)) {
-    items.forEach(visitItem)
-  } else if (items && typeof items === "object") {
-    Object.values(items).forEach((value) => {
-      if (Array.isArray(value)) {
-        value.forEach(visitItem)
-      } else {
-        visitItem(value)
+  const visitItem = (item: any) => {
+    if (typeof item === "string") {
+      const typeFromString = deriveBallType(item)
+      if (typeFromString) {
+        pushInstance(typeFromString, item, item)
       }
-    })
+      return
+    }
+
+    // If this looks like a grouped item { id: contentId, items: [...] }, use child ids as instanceIds.
+    if (Array.isArray(item?.items) && typeof item?.id === "string") {
+      const parentContentId =
+        item.id ??
+        item.contentId ??
+        item.content?.id ??
+        item.properties?.contentId ??
+        item.content?.properties?.contentId
+      const parentTypeCandidate =
+        item?.type ??
+        item?.customType ??
+        item?.properties?.type ??
+        item?.content?.type ??
+        item?.content?.properties?.type
+      const parentType = deriveBallType(parentContentId, parentTypeCandidate)
+      item.items.forEach((child: any) => {
+        const childInstanceId = child?.instanceId ?? child?.id
+        const childTypeCandidate =
+          child?.type ??
+          child?.customType ??
+          child?.properties?.type ??
+          child?.content?.type ??
+          child?.content?.properties?.type ??
+          parentTypeCandidate
+        const childType = deriveBallType(parentContentId, childTypeCandidate) ?? parentType
+        pushInstance(childType, parentContentId, childInstanceId)
+      })
+    }
+
+    const contentId =
+      item?.contentId ??
+      item?.id ??
+      item?.content?.id ??
+      item?.properties?.contentId ??
+      item?.content?.properties?.contentId
+    const instanceId = item?.instanceId ?? item?.id
+    const typeCandidate =
+      item?.type ??
+      item?.customType ??
+      item?.properties?.type ??
+      item?.content?.type ??
+      item?.content?.properties?.type
+    const type = deriveBallType(contentId, typeCandidate)
+    pushInstance(type, contentId, instanceId)
   }
+
+  const visited = new Set<any>()
+  const walk = (val: any) => {
+    if (!val || typeof val !== "object") return
+    if (visited.has(val)) return
+    visited.add(val)
+
+    const isCandidate =
+      typeof val === "object" &&
+      (typeof (val as any).contentId === "string" ||
+        typeof (val as any).id === "string" ||
+        typeof (val as any).content?.id === "string")
+    if (isCandidate) {
+      visitItem(val)
+    }
+
+    if (Array.isArray(val)) {
+      val.forEach(walk)
+    } else {
+      Object.values(val).forEach(walk)
+    }
+  }
+
+  // Walk the full inventory object to catch nested shapes we may not anticipate.
+  walk(inventory)
 
   const deduped: OwnedBallInstance[] = []
   const seen = new Set<string>()
@@ -111,6 +179,17 @@ const extractOwnedBallInstances = (inventory: any): OwnedBallInstance[] => {
   })
 
   return deduped
+}
+
+const dedupeByType = (instances: OwnedBallInstance[]): OwnedBallInstance[] => {
+  const map = new Map<BallType, OwnedBallInstance>()
+  instances.forEach((entry) => {
+    if (!entry.type) return
+    if (!map.has(entry.type)) {
+      map.set(entry.type, entry)
+    }
+  })
+  return Array.from(map.values())
 }
 
 const ensureDefaultBallIfNeeded = async ({
@@ -157,6 +236,7 @@ const ensureDefaultBallIfNeeded = async ({
 export default function useBallLoadout(readyForGame: boolean, refreshKey = 0): UseBallLoadoutResult {
   const [ballTypes, setBallTypes] = useState<BallTypeConfig[]>(BALL_TYPES)
   const [ownedBallTypes, setOwnedBallTypes] = useState<BallType[]>(["normal"])
+  const [ownedBallInventory, setOwnedBallInventory] = useState<OwnedBallInstance[]>([])
   const [loading, setLoading] = useState(false)
   const addInFlightRef = useRef(false)
 
@@ -171,7 +251,6 @@ export default function useBallLoadout(readyForGame: boolean, refreshKey = 0): U
 
   useEffect(() => {
     if (!readyForGame) {
-      console.log("[BallLoadout] Not ready for game yet; resetting to defaults.")
       setOwnedBallTypes(["normal"])
       setBallTypes(BALL_TYPES)
       return
@@ -196,24 +275,34 @@ export default function useBallLoadout(readyForGame: boolean, refreshKey = 0): U
         console.log("[BallLoadout] Fetching inventory for owned ball items...")
         const inventory = await fetchInventory(beam)
         let ownedBallInstances = extractOwnedBallInstances(inventory)
+        const dedupedByType = dedupeByType(ownedBallInstances)
+        setOwnedBallInventory(dedupedByType)
 
         const granted = await ensureDefaultBallIfNeeded({
           beam,
-          ownedBallInstances,
+          ownedBallInstances: dedupedByType,
           availableBallContentIds: ballContentIds,
           addInFlightRef,
         })
         if (granted) {
-          console.log("[BallLoadout] Granted default ball; refreshing inventory.")
           const refreshed = await fetchInventory(beam)
           ownedBallInstances = extractOwnedBallInstances(refreshed)
+          const refreshedDeduped = dedupeByType(ownedBallInstances)
+          setOwnedBallInventory(refreshedDeduped)
+          console.log("[BallLoadout] Cached owned ball inventory after grant (deduped):", refreshedDeduped)
         }
 
-        const ownedTypes = ownedBallInstances.map((entry) => entry.type).filter((v): v is BallType => Boolean(v))
+        const ownedTypes = dedupedByType.map((entry) => entry.type).filter((v): v is BallType => Boolean(v))
         const uniqueOwned = Array.from(new Set(ownedTypes))
 
         if (!cancelled) {
-          setOwnedBallTypes(uniqueOwned.length > 0 ? uniqueOwned : ["normal"])
+          setOwnedBallTypes((prev) => {
+            // Preserve previously known balls in case the latest inventory snapshot is incomplete.
+            const base = prev && prev.length > 0 ? new Set(prev) : new Set<BallType>(["normal"])
+            uniqueOwned.forEach((t) => base.add(t))
+            const nextOwned = Array.from(base)
+            return nextOwned
+          })
         }
       } catch (err) {
         console.warn("[BallLoadout] Unable to load ball content/inventory:", err)
@@ -234,5 +323,5 @@ export default function useBallLoadout(readyForGame: boolean, refreshKey = 0): U
     }
   }, [readyForGame, refreshKey])
 
-  return { ballTypes, ballTypeMap, ownedBallTypes, loading }
+  return { ballTypes, ballTypeMap, ownedBallTypes, ownedBallInventory, loading }
 }
