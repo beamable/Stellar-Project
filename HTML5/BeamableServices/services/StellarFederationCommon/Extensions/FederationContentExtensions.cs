@@ -36,5 +36,10 @@ namespace StellarFederationCommon.Extensions
         /// Crop type name
         /// </summary>
         public const string CropItemType = "crop";
+
+        /// <summary>
+        /// Ball item type name
+        /// </summary>
+        public const string BallItemType = "ball";
     }
 }

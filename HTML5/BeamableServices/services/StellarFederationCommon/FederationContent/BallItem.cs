@@ -8,15 +8,15 @@ namespace StellarFederationCommon.FederationContent
 {
     
     /// <summary>
-    /// CropItem NFT
+    /// BallItem NFT
     /// </summary>
-    [ContentType(FederationContentTypes.CropItemType)]
-    public class CropItem : ItemContent, INftBase
+    [ContentType(FederationContentTypes.BallItemType)]
+    public class BallItem : ItemContent, INftBase
     {
         /// <summary>
         /// Default federation
         /// </summary>
-        public CropItem()
+        public BallItem()
         {
             federation = new OptionalFederation
             {
@@ -57,18 +57,18 @@ namespace StellarFederationCommon.FederationContent
     }
 
     /// <summary>
-    /// CropItemRef
+    /// BallItemRef
     /// </summary>
     [Serializable]
-    public class CropItemRef : ContentRef<CropItem>
+    public class BallItemRef : ContentRef<BallItem>
     {
     }
 
     /// <summary>
-    /// CropItemLink
+    /// BallItemLink
     /// </summary>
     [Serializable]
-    public class CropItemLink : ContentLink<CropItem>
+    public class BallItemLink : ContentLink<BallItem>
     {
     }
 }

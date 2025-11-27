@@ -30,7 +30,7 @@ const createScriptedRng = (headValues: number[], tailSeed = 1) => {
 describe("generateTowers", () => {
   it("returns towers within configured bounds", () => {
     const rng = createDeterministicRng(2)
-    const { towers, towerCount } = generateTowers(rng)
+    const { towers, towerCount } = generateTowers({ rng })
 
     expect(towerCount).toBeGreaterThanOrEqual(MIN_TOWERS)
     expect(towerCount).toBeLessThanOrEqual(MAX_TOWERS)
@@ -41,7 +41,7 @@ describe("generateTowers", () => {
   it("uses low special block percentage below the threshold", () => {
     // Force tower count to MIN_TOWERS by returning 0 on the first RNG call
     const rng = createScriptedRng([0])
-    const { towers, towerCount } = generateTowers(rng)
+    const { towers, towerCount } = generateTowers({ rng })
     expect(towerCount).toBeLessThanOrEqual(TOWER_THRESHOLD_FOR_HIGH_SPECIAL)
 
     const expectedSpecialBlocks = Math.floor(towerCount * SPECIAL_BLOCK_PERCENTAGE_LOW)
@@ -54,7 +54,7 @@ describe("generateTowers", () => {
   it("uses high special block percentage above the threshold", () => {
     // Force tower count near the maximum by returning 0.99 on the first RNG call
     const rng = createScriptedRng([0.99])
-    const { towers, towerCount } = generateTowers(rng)
+    const { towers, towerCount } = generateTowers({ rng })
     expect(towerCount).toBeGreaterThan(TOWER_THRESHOLD_FOR_HIGH_SPECIAL)
 
     const expectedSpecialBlocks = Math.floor(towerCount * SPECIAL_BLOCK_PERCENTAGE_HIGH)

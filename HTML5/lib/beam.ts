@@ -1,41 +1,81 @@
-import { Beam, StatsService, AuthService, AccountService } from "beamable-sdk"
+import { Beam, BeamEnvironment, clientServices, type BeamEnvironmentName } from "beamable-sdk"
 import { StellarFederationClient } from "@/beamable/clients/StellarFederationClient"
 
-export type BeamResolvedConfig = { cid: string; pid: string; environment?: "prod" | "stg" | "dev" }
+export type BeamResolvedConfig = { cid: string; pid: string; environment: BeamEnvironmentName }
 
 let beamPromise: Promise<any> | null = null
 let cachedBeamConfig: BeamResolvedConfig | null = null
 let currentBeamInstance: any | null = null
+
+function normalizeEnvName(env?: string | null): BeamEnvironmentName {
+  const normalized = (env || "prod").trim().toLowerCase() as BeamEnvironmentName
+  return (normalized.length > 0 ? normalized : "prod") as BeamEnvironmentName
+}
+
+function stripTrailingSlash(url: string) {
+  return url.replace(/\/+$/, "")
+}
+
+function ensureEnvironment(host: string | undefined, fallbackEnv: BeamEnvironmentName): BeamEnvironmentName {
+  if (!host) return fallbackEnv
+  const normalizedHost = stripTrailingSlash(host.trim())
+  if (!normalizedHost) return fallbackEnv
+
+  const existing = Object.entries(BeamEnvironment.list()).find(
+    ([, cfg]) => stripTrailingSlash(cfg.apiUrl) === normalizedHost,
+  )
+  if (existing) {
+    return existing[0] as BeamEnvironmentName
+  }
+
+  let baseConfig = BeamEnvironment.get("prod")
+  try {
+    baseConfig = BeamEnvironment.get(fallbackEnv)
+  } catch {
+    // ignore, use prod fallback
+  }
+
+  const slug = normalizedHost
+    .replace(/^https?:\/\//, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase()
+  const customEnv = (slug ? `${fallbackEnv}-${slug}` : `${fallbackEnv}-custom`) as BeamEnvironmentName
+  const config = { ...baseConfig, apiUrl: normalizedHost }
+  BeamEnvironment.register(customEnv, config)
+  return customEnv
+}
 
 export async function resolveBeamConfig(): Promise<BeamResolvedConfig> {
   if (cachedBeamConfig) {
     return cachedBeamConfig
   }
 
-  const envName = ((process.env.NEXT_PUBLIC_BEAM_ENV || process.env.BEAM_ENV || "prod").trim().toLowerCase() || "prod") as
-    | "prod"
-    | "stg"
-    | "dev"
+  const envName = normalizeEnvName(process.env.NEXT_PUBLIC_BEAM_ENV || process.env.BEAM_ENV)
 
-  const remember = (cfg: BeamResolvedConfig) => {
-    cachedBeamConfig = cfg
-    return cfg
+  const remember = (cfg: { cid: string; pid: string; env?: BeamEnvironmentName; host?: string }) => {
+    const environment = ensureEnvironment(cfg.host, cfg.env ?? envName)
+    const final: BeamResolvedConfig = { cid: cfg.cid, pid: cfg.pid, environment }
+    cachedBeamConfig = final
+    return final
   }
 
   const cidEnv = (process.env.NEXT_PUBLIC_BEAM_CID || "").trim()
   const pidEnv = (process.env.NEXT_PUBLIC_BEAM_PID || "").trim()
+  const hostEnv = (process.env.NEXT_PUBLIC_BEAM_HOST || "").trim() || (process.env.BEAM_HOST || "").trim()
   if (cidEnv && pidEnv) {
-    return remember({ cid: cidEnv, pid: pidEnv, environment: envName })
+    return remember({ cid: cidEnv, pid: pidEnv, env: envName, host: hostEnv })
   }
 
   if (typeof window !== "undefined") {
     const w = window as any
-    const fromWindow = w.__BEAM__ as Partial<BeamResolvedConfig> | undefined
+    const fromWindow = w.__BEAM__ as (Partial<BeamResolvedConfig> & { host?: string }) | undefined
     if (fromWindow?.cid && fromWindow?.pid) {
       return remember({
         cid: fromWindow.cid,
         pid: fromWindow.pid,
-        environment: fromWindow.environment ?? envName,
+        env: fromWindow.environment,
+        host: fromWindow.host,
       })
     }
 
@@ -43,13 +83,9 @@ export async function resolveBeamConfig(): Promise<BeamResolvedConfig> {
     try {
       const res = await fetch("/api/beam-config", { cache: "no-store" })
       if (res.ok) {
-        const data = (await res.json()) as Partial<BeamResolvedConfig>
+        const data = (await res.json()) as Partial<BeamResolvedConfig> & { host?: string }
         if (data.cid && data.pid) {
-          return remember({
-            cid: data.cid,
-            pid: data.pid,
-            environment: (data as any).environment ?? envName,
-          })
+          return remember({ cid: data.cid, pid: data.pid, env: data.environment, host: data.host })
         }
       }
     } catch {}
@@ -95,9 +131,7 @@ async function bootBeamOnce(cfg: BeamResolvedConfig, tag?: string) {
     environment: cfg.environment,
     instanceTag,
   })
-  ;(beam as any).use?.(StatsService)
-  ;(beam as any).use?.(AuthService)
-  ;(beam as any).use?.(AccountService)
+  clientServices(beam)
   ;(beam as any).use?.(StellarFederationClient)
   // Ensure we have a token
   try {

@@ -14,6 +14,7 @@ type CampaignSelectionOverlayProps = {
   onSelectStage: (stageId: string) => void
   onAcknowledgeMechanics: () => void
   onConfirm: () => void
+  onOpenShop: () => void
 }
 
 export default function CampaignSelectionOverlay({
@@ -27,6 +28,7 @@ export default function CampaignSelectionOverlay({
   onSelectStage,
   onAcknowledgeMechanics,
   onConfirm,
+  onOpenShop,
 }: CampaignSelectionOverlayProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur px-4 py-8">
@@ -50,6 +52,13 @@ export default function CampaignSelectionOverlay({
         />
 
         <div className="mt-6 flex justify-end gap-3">
+          <Button
+            onClick={onOpenShop}
+            variant="outline"
+            className="rounded-full border-white/20 text-white hover:bg-white/10"
+          >
+            Open Shop
+          </Button>
           <Button
             onClick={onConfirm}
             className="rounded-full bg-emerald-400 text-slate-900 hover:bg-emerald-300 px-6 font-semibold"

@@ -25,8 +25,10 @@ function useRenderCounter(label: string, enabled: boolean) {
 
 // Import types
 import * as CONST from "./constants"
-import { BALL_TYPES } from "./ballTypes"
 import useTowerGame from "@/hooks/useTowerGame"
+import useBallLoadout from "@/hooks/useBallLoadout"
+import useCurrency from "@/hooks/useCurrency"
+import useCommerceManager from "@/hooks/useCommerceManager"
 import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_MAP, DEFAULT_STAGE_ID } from "@/components/Game/campaign"
 import useCampaignProgress from "@/hooks/useCampaignProgress"
 import {
@@ -38,6 +40,8 @@ import {
   EXTERNAL_AUTH_CONTEXT,
   EXTERNAL_SIGN_CONTEXT,
 } from "@/lib/beam/player"
+import getBeam from "@/lib/beam"
+import { fetchInventory } from "@/lib/beamInventory"
 import type { ExternalAddressSubscription } from "@/lib/beam/player"
 
 function formatSignatureErrorMessage(err: unknown): string {
@@ -102,13 +106,32 @@ export default function TowerDestroyer() {
   } = useCampaignProgress(playerId)
   const activeStage = selectedStage ?? CAMPAIGN_STAGE_MAP.get(DEFAULT_STAGE_ID)!
   const totalStages = CAMPAIGN_STAGES.length
+  const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0)
+  const [showShop, setShowShop] = useState(false)
+  const { ballTypes, ballTypeMap, ownedBallTypes, loading: ballLoadoutLoading } = useBallLoadout(
+    readyForGame,
+    inventoryRefreshKey,
+  )
+  const { amount: currencyAmount, loading: currencyLoading } = useCurrency(readyForGame, inventoryRefreshKey)
+  const inventoryInitialized = readyForGame && !ballLoadoutLoading && !currencyLoading
+  const {
+    store: storeContent,
+    listings: storeListings,
+    loading: commerceLoading,
+    error: commerceError,
+  } = useCommerceManager({
+    enabled: inventoryInitialized,
+    refreshKey: inventoryRefreshKey,
+  })
   const [campaignUnlocked, setCampaignUnlocked] = useState(false)
+  const coinsSyncedRef = useRef(false)
   const {
     canvasRef,
     selectedBallType,
     selectBallType,
     gameState,
     score,
+    coinsEarned,
     ballsLeft,
     towerCount,
     remainingTowers,
@@ -121,7 +144,20 @@ export default function TowerDestroyer() {
     resetGame,
     startFirstShot,
     debugForceWin,
-  } = useTowerGame({ readyForGame, towerProfile: activeStage.towerProfile, stageId: activeStage.id })
+  } = useTowerGame({
+    readyForGame,
+    towerProfile: activeStage.towerProfile,
+    stageId: activeStage.id,
+    ballTypeMap,
+  })
+  const availableBallConfigs = ballTypes.filter((ball) => ownedBallTypes.includes(ball.type))
+  useEffect(() => {
+    if (!ownedBallTypes.includes(selectedBallType)) {
+      const fallback = ownedBallTypes[0] ?? "normal"
+      selectBallType(fallback)
+    }
+  }, [ownedBallTypes, selectedBallType, selectBallType])
+  const selectedBallInfo = ballTypes.find((ball) => ball.type === selectedBallType)
   const stageLabel = `Stage ${activeStage.order + 1}/${totalStages}`
   const loopLabel = `Loop ${loopCount + 1}`
   const nextStage = CAMPAIGN_STAGES[activeStage.order + 1] ?? null
@@ -370,6 +406,49 @@ export default function TowerDestroyer() {
     if (pendingMechanics.length === 0) return
     acknowledgeMechanics(pendingMechanics)
   }, [acknowledgeMechanics, pendingMechanics])
+  const handleOpenShop = useCallback(() => {
+    if (!inventoryInitialized) return
+    setShowPlayerInfo(false)
+    setShowShop(true)
+  }, [inventoryInitialized, setShowPlayerInfo])
+
+  const handleCloseShop = useCallback(() => {
+    setShowShop(false)
+  }, [])
+
+  const handleRefreshCommerce = useCallback(() => {
+    setInventoryRefreshKey((prev) => prev + 1)
+  }, [])
+
+  const handlePurchaseListing = useCallback(
+    async (listingId: string) => {
+      try {
+        const beam = await getBeam()
+        if ((beam as any)?.stellarFederationClient?.purchaseBall) {
+          console.log("[Commerce] Purchasing listing:", listingId)
+          await (beam as any).stellarFederationClient.purchaseBall({ purchaseId: listingId })
+          await fetchInventory(beam)
+          setInventoryRefreshKey((prev) => prev + 1)
+        } else {
+          throw new Error("PurchaseBall unavailable on StellarFederationClient")
+        }
+      } catch (err) {
+        console.warn("[Commerce] Purchase failed:", err)
+        throw err
+      }
+    },
+    [],
+  )
+  useEffect(() => {
+    if (!inventoryInitialized) return
+    if (commerceLoading) return
+    if (!storeContent) return
+    console.log("[Commerce] Store resolved and ready:", {
+      store: storeContent,
+      listings: storeListings,
+      error: commerceError,
+    })
+  }, [inventoryInitialized, commerceLoading, storeContent, storeListings, commerceError])
 
   const [campaignConfirmed, setCampaignConfirmed] = useState(false)
   const lastStageRef = useRef(activeStage.id)
@@ -392,8 +471,42 @@ export default function TowerDestroyer() {
       setCampaignUnlocked(false)
       commandDeckSeenRef.current = false
       setCampaignConfirmed(false)
+      coinsSyncedRef.current = false
+      setShowShop(false)
     }
   }, [readyForGame])
+  useEffect(() => {
+    if (showPlayerInfo) {
+      setInventoryRefreshKey((prev) => prev + 1)
+    }
+  }, [showPlayerInfo])
+
+  useEffect(() => {
+    if (gameState === "playing") {
+      coinsSyncedRef.current = false
+      return
+    }
+    if (!readyForGame) return
+    if (coinsSyncedRef.current) return
+    if (coinsEarned <= 0) return
+    coinsSyncedRef.current = true
+    ;(async () => {
+      try {
+        const beam = await getBeam()
+        const client = (beam as any)?.stellarFederationClient
+        if (client?.updateCurrency) {
+          const payload = { currencyContentId: "currency.coins", amount: coinsEarned }
+          console.log("[Coins] Syncing earned coins to server:", payload)
+          await client.updateCurrency(payload)
+          setInventoryRefreshKey((prev) => prev + 1)
+        } else {
+          console.warn("[Coins] StellarFederationClient.updateCurrency unavailable; skipping sync.")
+        }
+      } catch (err) {
+        console.warn("[Coins] Failed to sync earned coins:", err)
+      }
+    })()
+  }, [gameState, readyForGame, coinsEarned])
   const shouldShowCampaignOverlay =
     campaignUnlocked && readyForGame && !showPlayerInfo && !campaignConfirmed
 
@@ -415,7 +528,6 @@ export default function TowerDestroyer() {
     setShowPlayerInfo(true)
   }, [debugFakeLogin, setShowPlayerInfo])
 
-  const selectedBallInfo = BALL_TYPES.find((ball) => ball.type === selectedBallType)
   async function handleResetPlayer() {
     setShowResetConfirm(true)
   }
@@ -481,6 +593,7 @@ export default function TowerDestroyer() {
         onSelectStage: selectStage,
         onAcknowledgeMechanics: handleAcknowledgeMechanics,
         onConfirm: handleConfirmCampaignStage,
+        onOpenShop: handleOpenShop,
       }
     : undefined
 
@@ -493,11 +606,15 @@ export default function TowerDestroyer() {
       }
       return
     }
-    if (campaignWinStageRef.current === activeStage.id) {
+    // Only mark the stage that actually produced the win. If the user changes selection while still in a won state,
+    // don't auto-complete the newly selected stage.
+    if (campaignWinStageRef.current && campaignWinStageRef.current !== activeStage.id) {
       return
     }
-    markStageComplete(activeStage.id)
-    campaignWinStageRef.current = activeStage.id
+    if (!campaignWinStageRef.current) {
+      campaignWinStageRef.current = activeStage.id
+      markStageComplete(activeStage.id)
+    }
     if (activeStage.order === totalStages - 1 && campaignComplete && !loopAdvanceRef.current) {
       loopAdvanceRef.current = true
       startNextLoop()
@@ -520,6 +637,7 @@ export default function TowerDestroyer() {
         stageLabel,
         stageName: activeStage.name,
         loopLabel,
+        currencyAmount,
         alias,
         playerId,
         isCharging,
@@ -567,11 +685,12 @@ export default function TowerDestroyer() {
           walletPopupBlocked,
           walletPopupBlockedUrl,
           walletPopupContext,
-          ballTypes: BALL_TYPES,
+          ballTypes: availableBallConfigs,
           selectedBallType,
           selectedBallInfo: selectedBallInfo || undefined,
           ballsLeft,
           score,
+          coinsEarned,
           victoryBonusMultiplier: CONST.VICTORY_BONUS_MULTIPLIER,
           showResetConfirm,
           onCancelReset: () => setShowResetConfirm(false),
@@ -590,6 +709,18 @@ export default function TowerDestroyer() {
           onCloseAudioSettings: handleCloseAudioSettings,
           volume,
           onVolumeChange: handleVolumeChange,
+          onOpenShop: handleOpenShop,
+          onCloseShop: handleCloseShop,
+          showShop,
+          commerceLoading,
+          commerceError,
+          storeContent,
+          storeListings: storeListings ?? [],
+          currencyAmount,
+          onRefreshCommerce: handleRefreshCommerce,
+          ballTypeMap,
+          ownedBallTypes,
+          onPurchaseListing: handlePurchaseListing,
           showCampaignOverlay: shouldShowCampaignOverlay,
           campaignSelectionProps,
           campaignContext: {
