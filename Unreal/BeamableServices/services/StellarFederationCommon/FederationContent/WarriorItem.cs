@@ -6,19 +6,18 @@ using UnityEngine;
 
 namespace StellarFederationCommon.FederationContent
 {
-    
     /// <summary>
-    /// CropItem NFT
+    /// WarriorItem NFT
     /// </summary>
-    [ContentType(FederationContentTypes.CropItemType)]
-    public class CropItem : ItemContent, INftBase
+    [ContentType(FederationContentTypes.WarriorItemType)]
+    public class WarriorItem : ItemContent, INftBase
     {
         /// <summary>
         /// Default federation
         /// </summary>
-        public CropItem()
+        public WarriorItem()
         {
-            federation = new OptionalFederation
+            federation = new OptionalFederation()
             {
                 HasValue = true,
                 Value = new Federation
@@ -28,11 +27,12 @@ namespace StellarFederationCommon.FederationContent
                 }
             };
         }
-
+        
         [SerializeField] private string name = "";
         [SerializeField] private string description = "";
         [SerializeField] private string image = "";
-        [SerializeField] private SerializableDictionaryStringToString customProperties = new SerializableDictionaryStringToString();
+        [SerializeField] private SerializableDictionaryStringToString customProperties = 
+            new SerializableDictionaryStringToString();
         
         /// <summary>
         /// Token name
@@ -53,22 +53,17 @@ namespace StellarFederationCommon.FederationContent
         /// Token custom properties
         /// </summary>
         public SerializableDictionaryStringToString CustomProperties => customProperties;
- 
     }
-
+    
     /// <summary>
-    /// CropItemRef
+    /// WarriorItemRef
     /// </summary>
     [Serializable]
-    public class CropItemRef : ContentRef<CropItem>
-    {
-    }
-
+    public class WarriorItemRef : ContentRef<WarriorItem> { }
+    
     /// <summary>
-    /// CropItemLink
+    /// WarriorItemLink
     /// </summary>
     [Serializable]
-    public class CropItemLink : ContentLink<CropItem>
-    {
-    }
+    public class WarriorItemLink : ContentLink<WarriorItem> { }
 }

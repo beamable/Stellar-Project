@@ -22,5 +22,10 @@ namespace StellarFederationCommon.Extensions
         /// Crop type name
         /// </summary>
         public const string CropItemType = "crop";
+        
+        /// <summary>
+        /// Warrior type name
+        /// </summary>
+        public const string WarriorItemType = "warrior";
     }
 }
