@@ -59,7 +59,7 @@ public static class GlobalCache
         return value;
     }
 
-    private static void Invalidate(string key)
+    public static void Invalidate(string key)
     {
         try
         {

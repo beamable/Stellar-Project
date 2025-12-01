@@ -1,7 +1,7 @@
 #![no_std]
 use soroban_sdk::{contract, contractimpl, Address, Env, String};
-use stellar_tokens::fungible::{burnable::FungibleBurnable, Base, FungibleToken};
-use stellar_access::ownable::{self as ownable };
+use stellar_tokens::fungible::{Base, burnable::FungibleBurnable, FungibleToken};
+use stellar_access::ownable::{self as ownable, Ownable };
 use stellar_macros::{default_impl, only_owner};
 use soroban_sdk::Vec;
 
@@ -42,9 +42,9 @@ impl {{toStructName Name}} {
         }
     }
 
-    pub fn batch_transfer(e: &Env, transfers: Vec<(Address, Address, Address, i128)>) {
-            for (spender, from, to, amount) in transfers.into_iter() {
-                Base::transfer(e, &spender, &from, &to, amount);
+    pub fn batch_transfer(e: &Env, transfers: Vec<(Address, Address, i128)>) {
+            for (from, to, amount) in transfers.into_iter() {
+                Base::transfer(e, &from, &to, amount);
             }
         }
 

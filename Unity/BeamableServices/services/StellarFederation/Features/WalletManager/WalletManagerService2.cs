@@ -29,16 +29,14 @@ public class WalletManagerService2 : IService
         var transferAmount = new StellarAmount(realmBalance * 20 / 100);
         foreach (var contentKey in contentKeys)
         {
-            var account = await _accountsService.GetAccount(contentKey);
-            if (account is null)
-                throw new NoWorkingWalletsException();
-            var nativeBalance = await _stellarService.NativeBalance(account.Value.Address);
+            var account = await _accountsService.GetOrCreateAccount(contentKey);
+            var nativeBalance = await _stellarService.NativeBalance(account.Address);
             if (nativeBalance > new StellarAmount(50000000))
                 continue;
 
             transferBatch.Add(new TransferNativeBatch
             {
-                ToAddress = account.Value.Address,
+                ToAddress = account.Address,
                 Amount = transferAmount
             });
         }

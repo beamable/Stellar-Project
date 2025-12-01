@@ -38,7 +38,7 @@ public class AccountsService : IService
         _transactionBatchService = transactionBatchService;
     }
 
-    private async Task<Account> GetOrCreateAccount(string accountName, MicroserviceInfo? microserviceInfo = null)
+    public async Task<Account> GetOrCreateAccount(string accountName, MicroserviceInfo? microserviceInfo = null)
     {
         var account = await GetAccount(accountName);
         if (!account.HasValue)
