@@ -13,7 +13,7 @@ public partial class TransactionBatchService
     public async Task Insert(Account account, MicroserviceInfo microserviceInfo)
     {
         var uniqueTransactionId = Guid.NewGuid().ToString();
-        var transactionId = await _transactionManager.StartTransaction(new NewCustomTransaction(account.Name.ToLong(), account.Address, nameof(AccountCreateRequest)));
+        var transactionId = await _transactionManager.StartTransaction(new NewCustomTransaction(account.Name.ToLong(), account.Address, nameof(AccountCreateRequest), nameof(AccountCreateRequest)));
         _ = _transactionManager.RunAsyncBlock(transactionId, uniqueTransactionId, async () =>
         {
             long.TryParse(account.Name, out var gamerTag);

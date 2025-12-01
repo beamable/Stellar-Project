@@ -43,6 +43,9 @@
         <None Include="Features\Contract\Templates\**\*">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Features\Contract\Templates\gold.rs">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

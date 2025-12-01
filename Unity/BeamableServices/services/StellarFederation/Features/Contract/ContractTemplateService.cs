@@ -24,6 +24,25 @@ public static class ContractTemplateService
                 return string.IsNullOrEmpty(cleaned) ? cleaned
                     : char.ToUpperInvariant(cleaned[0]) + cleaned[1..];
             }));
+
+        Handlebars.RegisterHelper("if_not_zero", (writer, options, context, args) =>
+        {
+            var left = Convert.ToInt64(args[0]);
+            if (left > 0)
+                options.Template(writer, context);
+            else
+                options.Inverse(writer, context);
+        });
+
+        Handlebars.RegisterHelper("if_zero", (writer, options, context, args) =>
+        {
+            var value = Convert.ToInt64(args[0]);
+            if (value == 0)
+                options.Template(writer, context);
+            else
+                options.Inverse(writer, context);
+        });
+
         _initialized = true;
     }
 

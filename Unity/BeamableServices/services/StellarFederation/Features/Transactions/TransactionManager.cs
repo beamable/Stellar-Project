@@ -111,17 +111,17 @@ public class TransactionManager : IService
             newItems,
             deleteItems,
             updateItems
-        }, requesterUserId, path);
+        }, requesterUserId, path, "");
     }
 
     public async Task<ObjectId> StartTransaction(NewCustomTransaction customTransaction)
     {
         return await StartTransactionInternal(customTransaction.GamerTag, customTransaction.WalletAddress,
             null, customTransaction.OperationName, customTransaction,
-            customTransaction.GamerTag, customTransaction.OperationName);
+            customTransaction.GamerTag, customTransaction.OperationName, customTransaction.ConcurrencyKey);
     }
 
-    private async Task<ObjectId> StartTransactionInternal<TRequest>(long gamerTag, string walletAddress, string? inventoryTransaction, string operationName, TRequest request, long requesterUserId, string path)
+    private async Task<ObjectId> StartTransactionInternal<TRequest>(long gamerTag, string walletAddress, string? inventoryTransaction, string operationName, TRequest request, long requesterUserId, string path, string concurrencyKey)
     {
         if (inventoryTransaction is not null)
         {
@@ -139,7 +139,8 @@ public class TransactionManager : IService
             Wallet = walletAddress,
             Request = request as string ?? JsonSerializer.Serialize(request, JsonSerializerOptions),
             Path = path,
-            OperationName = operationName
+            OperationName = operationName,
+            ConcurrencyKey = concurrencyKey
         });
 
         Interlocked.Increment(ref _inflightTransactions);

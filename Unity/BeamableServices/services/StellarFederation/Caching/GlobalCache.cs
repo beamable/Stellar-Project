@@ -59,7 +59,7 @@ public static class GlobalCache
         return value;
     }
 
-    public static void Remove(string key)
+    private static void Invalidate(string key)
     {
         try
         {
@@ -71,13 +71,13 @@ public static class GlobalCache
         }
     }
 
-    public static void RemoveAccountCache(IEnumerable<string> keys)
+    public static void InvalidateAccountCache(IEnumerable<string> keys)
     {
         try
         {
             foreach (var key in keys)
             {
-                Cache.Remove($"account-{key}");
+                Invalidate($"account-{key}");
             }
         }
         catch (Exception)

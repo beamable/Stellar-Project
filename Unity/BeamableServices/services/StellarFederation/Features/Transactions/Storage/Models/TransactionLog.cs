@@ -21,6 +21,7 @@ public class TransactionLog
     public DateTime? EndTimestamp { get; set; }
     public DateTime? MintedTimestamp { get; set; }
     public string Request { get; set; } = null!;
+    public string ConcurrencyKey { get; set; } = null!;
 
     [BsonIgnoreIfNull]
     public string? Error { get; set; }

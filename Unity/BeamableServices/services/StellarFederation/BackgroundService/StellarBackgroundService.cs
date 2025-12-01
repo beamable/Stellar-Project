@@ -40,7 +40,7 @@ public class StellarBackgroundService : Microsoft.Extensions.Hosting.BackgroundS
                 // 2. Iterate through the potential groups and ATTEMPT to lock the first one we can.
                 foreach (var key in potentialWorkKeys.Shuffle()) // Randomize the order to avoid thundering herd.
                 {
-                    if (!await _batchService.AcquireLock(key, 10)) continue;
+                    if (!await _batchService.AcquireLock(key, 60)) continue;
                     // SUCCESS! We got the lock.
                     lockedGroups.Add(key);
                     break; // We successfully got a lock, exit the loop.

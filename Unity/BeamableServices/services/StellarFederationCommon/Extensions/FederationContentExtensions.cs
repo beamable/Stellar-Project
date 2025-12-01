@@ -71,6 +71,11 @@ namespace StellarFederationCommon.Extensions
         public const string RegularCoinType = "coin";
 
         /// <summary>
+        /// Gold coin type name
+        /// </summary>
+        public const string GoldCoinType = "gold";
+
+        /// <summary>
         /// Crop type name
         /// </summary>
         public const string CropItemType = "crop";

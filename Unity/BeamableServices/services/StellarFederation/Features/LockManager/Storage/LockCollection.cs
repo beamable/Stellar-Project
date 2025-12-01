@@ -19,8 +19,7 @@ public class LockCollection(IStorageObjectConnectionProvider storageObjectConnec
         {
             _collection =
                 (await storageObjectConnectionProvider.StellarFederationStorageDatabase()).GetCollection<Lock>("lock");
-            await _collection.Indexes.CreateManyAsync(new[]
-            {
+            await _collection.Indexes.CreateManyAsync([
                 new CreateIndexModel<Lock>(Builders<Lock>.IndexKeys
                         .Ascending(x => x.LockId)
                         .Ascending(x => x.InstanceId),
@@ -33,8 +32,8 @@ public class LockCollection(IStorageObjectConnectionProvider storageObjectConnec
                     {
                         Name = "expiry",
                         ExpireAfter = TimeSpan.Zero
-                    }),
-            });
+                    })
+            ]);
         }
         return _collection;
     }
@@ -59,6 +58,13 @@ public class LockCollection(IStorageObjectConnectionProvider storageObjectConnec
         var collection = await Get();
         var filter = Builders<Lock>.Filter.Eq(x => x.LockId, name);
         await collection.DeleteOneAsync(filter, CancellationToken.None);
+    }
+
+    public async Task ReleaseLock(IEnumerable<string> names)
+    {
+        var collection = await Get();
+        var filter = Builders<Lock>.Filter.In(x => x.LockId, names);
+        await collection.DeleteManyAsync(filter, CancellationToken.None);
     }
 
     public async Task<List<string>> GetLocked()

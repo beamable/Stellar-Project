@@ -13,6 +13,7 @@ public class ContentContractHandlerResolver(IDependencyProvider dependencyProvid
         return model.ContentObject switch
         {
             CoinCurrency => dependencyProvider.GetService<CoinCurrencyHandler>(),
+            GoldCurrency => dependencyProvider.GetService<GoldCurrencyHandler>(),
             _ => throw new InvalidOperationException($"No handler found for content type: {model.ContentObject.GetType().Name}")
         };
     }
