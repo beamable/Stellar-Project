@@ -1,5 +1,5 @@
 {
-  "SnapshotTimestamp": 1764080447226,
+  "SnapshotTimestamp": 1764252339254,
   "ManifestId": "global",
   "ProjectData": {
     "PID": "DE_1925146714814465",
@@ -62,7 +62,11 @@
           }
         },
         "customProperties": {
-          "data": {}
+          "data": {
+            "Type": "RedHood",
+            "DamageMultiplier": "1",
+            "MaxHealth": "100"
+          }
         },
         "description": {
           "data": "Firey Death From above"
@@ -75,7 +79,7 @@
         }
       },
       "tags": [],
-      "Checksum": "edfb0590272256663849768640e28ad0c69ed03f"
+      "Checksum": "38ff3fc445ed91735cd32d7b19d8f08179f4a0ae"
     }
   }
 }

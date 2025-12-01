@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Beamable.Common;
 using Beamable.Common.Api.Inventory;
@@ -92,5 +93,50 @@ namespace Beamable.StellarFederation
 				walletConnectBridgeUrl = await configuration.WalletConnectBridgeUrl
 			};
 		}
+		
+		#region Unreal for unfederated methods
+
+		[ClientCallable]
+		public async Promise UpdateCurrency(string currencyContentId, int amount)
+		{
+			var invService = Services.Inventory;
+			await invService.AddCurrency(currencyContentId, amount);
+			BeamableLogger.Log($"Added {amount} of {currencyContentId} to inventory");
+		}
+
+
+		[ClientCallable]
+		public async Promise<bool> AddItem(string itemContentId, Dictionary<string, string>? properties = null)
+		{
+			try
+			{
+				var invService = Services.Inventory;
+				var all = await invService.GetCurrent();
+				if (all.items.Any(item => itemContentId == item.Key))
+				{
+					BeamableLogger.LogWarning($"Item {itemContentId} already exists in inventory");
+					return false;
+				}
+
+				await invService.AddItem(itemContentId, properties);
+				BeamableLogger.Log($"Added {itemContentId} to inventory");
+				return true;
+			}
+			catch (Exception e)
+			{
+				BeamableLogger.LogWarning($"Failed to add item {itemContentId}: {e.Message}");
+				return false;
+			}
+		}
+
+		[ClientCallable]
+		public async Promise RemoveItem(string itemContentId, long instanceId)
+		{
+			var invService = Services.Inventory;
+			await invService.DeleteItem(itemContentId, instanceId);
+			BeamableLogger.Log($"Removed {itemContentId} from inventory");
+		}
+
+		#endregion
 	}
 }
