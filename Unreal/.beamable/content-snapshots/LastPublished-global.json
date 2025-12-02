@@ -1,5 +1,5 @@
 {
-  "SnapshotTimestamp": 1764608531115,
+  "SnapshotTimestamp": 1764686656480,
   "ManifestId": "global",
   "ProjectData": {
     "PID": "DE_1925146714814465",
@@ -31,14 +31,14 @@
           "data": "Gems"
         },
         "startingAmount": {
-          "data": 250
+          "data": 1000
         },
         "symbol": {
           "data": ""
         }
       },
       "tags": [],
-      "Checksum": "6d9b95cc6a247e33c5208a631422284f36fa9986"
+      "Checksum": "53ca89ab69d233738fb2a56112354eeeed132d08"
     },
     "currency.TestCurrency": {
       "properties": {
@@ -155,7 +155,7 @@
                 "properties": [
                   {
                     "name": "icon",
-                    "value": "https://cdn.pixabay.com/photo/2025/12/01/16/56/16-56-46-89_640.png"
+                    "value": "https://cdn.pixabay.com/photo/2025/12/01/16/57/zero-9988667_1280.png"
                   }
                 ]
               }
@@ -171,7 +171,7 @@
         }
       },
       "tags": [],
-      "Checksum": "de61eedfd239257aab4bada9e5f49f554c21b953"
+      "Checksum": "6b9564c8eaaad76c50438de704868f9e3aa591b4"
     },
     "listings.Listing_Scorpio": {
       "properties": {
@@ -193,7 +193,7 @@
                 "properties": [
                   {
                     "name": "icon",
-                    "value": "https://cdn.pixabay.com/photo/2025/12/01/16/57/16-57-29-594_640.png"
+                    "value": "https://cdn.pixabay.com/photo/2025/12/01/16/56/scorpio-9988666_1280.png"
                   }
                 ]
               }
@@ -209,7 +209,7 @@
         }
       },
       "tags": [],
-      "Checksum": "a4acf1ef89945809f640d3c3187696009c3e9a91"
+      "Checksum": "b56fb619dfe23a4384c6810f20f21b22c9e8827a"
     },
     "stores.Store_Characters": {
       "properties": {
