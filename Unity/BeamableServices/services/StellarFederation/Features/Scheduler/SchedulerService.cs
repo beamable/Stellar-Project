@@ -12,34 +12,25 @@ using StellarFederationCommon;
 
 namespace Beamable.StellarFederation.Features.Scheduler;
 
-public class SchedulerService : IService
+public class SchedulerService(
+    BeamScheduler beamScheduler,
+    BlockCollection blockCollection,
+    Configuration configuration,
+    StellarService stellarService,
+    IBeamableRequester beamableRequester)
+    : IService
 {
-    private readonly BeamScheduler _beamScheduler;
-    private readonly BlockCollection _blockCollection;
-    private readonly Configuration _configuration;
-    private readonly StellarService _stellarService;
-    private readonly IBeamableRequester _beamableRequester;
-
     private const string MainChainProcessor = "mainBlockProcessor";
-
-    public SchedulerService(BeamScheduler beamScheduler, BlockCollection blockCollection, Configuration configuration, StellarService stellarService, IBeamableRequester beamableRequester)
-    {
-        _beamScheduler = beamScheduler;
-        _blockCollection = blockCollection;
-        _configuration = configuration;
-        _stellarService = stellarService;
-        _beamableRequester = beamableRequester;
-    }
 
     public async Task Start()
     {
         try
         {
-            var latestBlock = await _blockCollection.Get(await _configuration.StellarRpc);
+            var latestBlock = await blockCollection.Get(await configuration.StellarRpc);
             if (latestBlock is null)
             {
-                var block = await _stellarService.GetCurrentLedgerSequence();
-                await _blockCollection.InsertBlock(await _configuration.StellarRpc, block);
+                var block = await stellarService.GetCurrentLedgerSequence();
+                await blockCollection.InsertBlock(await configuration.StellarRpc, block);
             }
 
             _ = StartOnMainChain();
@@ -55,10 +46,10 @@ public class SchedulerService : IService
         try
         {
             BeamableLogger.Log("Shutting down scheduler...");
-            var existingJobs = _beamScheduler.GetAllJobs(MainChainSource());
+            var existingJobs = beamScheduler.GetAllJobs(MainChainSource());
             await foreach (var job in existingJobs)
             {
-                await _beamScheduler.DeleteJob(job.id);
+                await beamScheduler.DeleteJob(job.id);
             }
         }
         catch (Exception e)
@@ -69,13 +60,13 @@ public class SchedulerService : IService
 
     private async Task StartOnMainChain()
     {
-        var existingJobs = await _beamScheduler.GetAllJobs(MainChainSource(), MainChainJobName()).ToListAsync();
+        var existingJobs = await beamScheduler.GetAllJobs(MainChainSource(), MainChainJobName()).ToListAsync();
 
         if (existingJobs.IsNullOrEmpty())
         {
             BeamableLogger.Log("----------------------scheduler doesnt exist");
-            var cronSeconds = await _configuration.FetchLogsCronSeconds;
-            await _beamScheduler.Schedule()
+            var cronSeconds = await configuration.FetchLogsCronSeconds;
+            await beamScheduler.Schedule()
                 .Microservice<StellarFederation>()
                 .Run(s => s.BlockProcessor)
                 .WithRetryPolicy(new RetryPolicy { maxRetryCount = 0, retryDelayMs = 0, useExponentialBackoff = false })
@@ -88,7 +79,7 @@ public class SchedulerService : IService
         }
     }
 
-    private string MainChainSource() => $"{StellarFederationSettings.MicroserviceName}.{_beamableRequester.Cid}.{_beamableRequester.Pid}";
-    private string MainChainJobName() => $"{StellarFederationSettings.MicroserviceName}.{_beamableRequester.Cid}.{_beamableRequester.Pid}.{MainChainProcessor}";
+    private string MainChainSource() => $"{StellarFederationSettings.MicroserviceName}.{beamableRequester.Cid}.{beamableRequester.Pid}";
+    private string MainChainJobName() => $"{StellarFederationSettings.MicroserviceName}.{beamableRequester.Cid}.{beamableRequester.Pid}.{MainChainProcessor}";
 
 }

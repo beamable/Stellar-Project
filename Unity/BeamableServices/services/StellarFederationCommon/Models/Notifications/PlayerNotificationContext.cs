@@ -13,5 +13,9 @@ namespace SuiFederationCommon.Models.Notifications
         /// Context for external authentication signature notifications.
         /// </summary>
         public const string ExternalAuthSignature = "external-auth-signature";
+        /// <summary>
+        /// Context for custodial account created notifications.
+        /// </summary>
+        public const string CustodialAccountCreated = "custodial-account-created";
     }
 }

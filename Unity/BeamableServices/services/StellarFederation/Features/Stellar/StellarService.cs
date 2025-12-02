@@ -22,11 +22,15 @@ using StellarDotnetSdk.LedgerEntries;
 using StellarDotnetSdk.LedgerKeys;
 using StellarDotnetSdk.Memos;
 using StellarDotnetSdk.Operations;
+using StellarDotnetSdk.Requests;
+using StellarDotnetSdk.Requests.SorobanRpc;
+using StellarDotnetSdk.Responses;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
 using StellarDotnetSdk.Transactions;
 using StellarDotnetSdk.Xdr;
 using LedgerKey = StellarDotnetSdk.LedgerKeys.LedgerKey;
+using Memo = StellarDotnetSdk.Memos.Memo;
 using SCVal = StellarDotnetSdk.Soroban.SCVal;
 using SCVec = StellarDotnetSdk.Soroban.SCVec;
 using TimeBounds = StellarDotnetSdk.Transactions.TimeBounds;
@@ -46,6 +50,7 @@ public class StellarService : IService
     private const int FaucetWaitTimeSec = 10;
 
     private SorobanServer? _rpcServer;
+    private StellarDotnetSdk.Server? _horizonServer;
 
     public StellarService(Configuration configuration, HttpClientService httpClientService, AccountsService accountsService, StellarTransactionBuilderFactory transactionBuilderFactory)
     {
@@ -60,6 +65,13 @@ public class StellarService : IService
         await SetNetwork();
         _rpcServer ??= new SorobanServer(await _configuration.StellarRpc);
         return _rpcServer;
+    }
+
+    private async ValueTask<StellarDotnetSdk.Server> HorizonInstance()
+    {
+        await SetNetwork();
+        _horizonServer ??= new StellarDotnetSdk.Server(await _configuration.StellarHorizon);
+        return _horizonServer;
     }
 
     private async ValueTask SetNetwork()
@@ -117,7 +129,7 @@ public class StellarService : IService
         }
     }
 
-    public async Task<int> GetCurrentLedgerSequence()
+    public async Task<uint> GetCurrentLedgerSequence()
     {
         using (new Measure(nameof(GetCurrentLedgerSequence)))
         {
@@ -125,7 +137,7 @@ public class StellarService : IService
             {
                 var serverInstance = await SorobanInstance();
                 var latest = await serverInstance.GetLatestLedger();
-                return latest.Sequence;
+                return (uint)latest.Sequence;
             }
             catch (Exception ex)
             {
@@ -443,7 +455,46 @@ public class StellarService : IService
         }
     }
 
+    public async Task<List<TransactionResponse>> GetHorizonLogs(string accountAddress, uint startLedger, uint endLedger, string memo)
+    {
+        using (new Measure(nameof(GetHorizonLogs)))
+        {
+            var instance = await HorizonInstance();
+            var results = new List<TransactionResponse>();
+            var requestBuilder = instance.Transactions
+                .ForAccount(accountAddress)
+                .Order(OrderDirection.ASC)
+                .Limit((int)await _configuration.FetchLogsBlockSize);
+            var page = await requestBuilder.Execute();
+            while (page.Records.Count != 0)
+            {
+                foreach (var tx in page.Records.Where(r => r.MemoValue is not null && r.MemoValue == memo))
+                {
+                    if (tx.Ledger > endLedger)
+                        return results;
 
+                    if (tx.Ledger >= startLedger)
+                        results.Add(tx);
+                }
+                page = await page.NextPage();
+            }
+            return results;
+        }
+    }
+
+    public async Task GetLogs(long block)
+    {
+        using (new Measure(nameof(GetLogs)))
+        {
+            var rpcInstance = await SorobanInstance();
+            var logs2 = await rpcInstance.GetTransaction("5debd1963332e14e11427f9e7de7c817d74ce1b06d4b8a923e0cfeb0261a7399");
+            var logs = await rpcInstance.GetEvents(new GetEventsRequest
+            {
+                StartLedger = block
+            });
+            var i = 0;
+        }
+    }
 
     public async Task Test()
     {

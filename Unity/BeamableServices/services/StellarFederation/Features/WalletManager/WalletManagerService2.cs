@@ -4,6 +4,7 @@ using Beamable.StellarFederation.Features.Accounts;
 using Beamable.StellarFederation.Features.Common;
 using Beamable.StellarFederation.Features.Stellar;
 using Beamable.StellarFederation.Features.Stellar.Models;
+using Beamable.StellarFederation.Features.WalletManager.Exceptions;
 
 namespace Beamable.StellarFederation.Features.WalletManager;
 

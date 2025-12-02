@@ -116,6 +116,7 @@ namespace Farm.MainMenu
             createAccountButton.SetInteractable(false);
             createAccountButton.SetText(false, "Creating...");
             await BeamManager.Instance.AccountManager.CreateNewAccount(_username);
+            await UniTask.WaitUntil(() => !BeamManager.Instance.AccountManager.CreatingNewAccount);
             CheckForUsers();
             _isCreatingAccount = false;
         }

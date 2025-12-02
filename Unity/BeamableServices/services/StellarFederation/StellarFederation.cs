@@ -49,8 +49,7 @@ namespace Beamable.StellarFederation
 				// Initialize Contracts
 #if !DEBUG
 				await initializer.GetService<Features.Contract.ContractService>().InitializeContentContracts();
-
-			await initializer.Provider.GetService<SchedulerService>().Start();
+				await initializer.Provider.GetService<SchedulerService>().Start();
 #endif
 			}
 			catch (Exception ex)
@@ -109,6 +108,17 @@ namespace Beamable.StellarFederation
 		}
 
 		[ClientCallable]
+		public async Promise<AccountResponse> CreateAccount()
+		{
+			var account = await Provider.GetService<AccountsService>().CreateNewAccount(Context.UserId.ToString());
+			return new AccountResponse
+			{
+				wallet = account.HasValue ? account.Value.Address : "",
+				created = account?.Created ?? false
+			};
+		}
+
+		[ClientCallable]
 		public async Promise<AccountResponse> GetAccount()
 		{
 			var account = await Provider.GetService<AccountsService>().GetAccount(Context.UserId.ToString());
@@ -120,9 +130,9 @@ namespace Beamable.StellarFederation
 		}
 
 		[ClientCallable]
-		public async Promise Test(string id)
+		public async Promise Test(long block)
 		{
-			await Provider.GetService<TestService>().Test2(id);
+			await Provider.GetService<TestService>().Test(block);
 		}
 
 		#region Placehorders for moe: to be removed later and replaced with proper endpoints in game

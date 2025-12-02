@@ -24,6 +24,11 @@ public class LockManagerService : IService
         await _lockCollection.ReleaseLock(lockName);
     }
 
+    public async Task ReleaseLock(IEnumerable<string> lockNames)
+    {
+        await _lockCollection.ReleaseLock(lockNames);
+    }
+
     public async Task<List<string>> GetLocked()
     {
         return await _lockCollection.GetLocked();

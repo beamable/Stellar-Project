@@ -68,6 +68,15 @@ public class VaultCollection(IStorageObjectConnectionProvider storageObjectConne
         var update = Builders<Vault>.Update.Set(x => x.Created, true);
         await collection.UpdateOneAsync(x => x.Name == name, update);
     }
+    
+    public async Task SetCreated(IEnumerable<string> names)
+    {
+        var collection = await Get();
+        var filter = Builders<Vault>.Filter.In(x => x.Name, names);
+        var update = Builders<Vault>.Update
+            .Set(x => x.Created, true);
+        await collection.UpdateManyAsync(filter, update);
+    }
 
     // public async Task<List<Vault>> GetVaultsByPrefix(string prefix)
     // {

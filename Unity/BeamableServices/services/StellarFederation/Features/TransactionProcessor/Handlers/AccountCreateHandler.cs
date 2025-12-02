@@ -19,7 +19,7 @@ public class AccountCreateHandler(ContractProxy contractProxy, AccountsService a
         var tasks = typedTransactions.Select(async x =>
             new CreateAccountFunctionMessage(
                 x.TransactionId,
-                await accountsService.GetOrCreateAccount(x.GamerTag.ToString())
+                (Account)(await accountsService.GetAccount(x.GamerTag.ToString()))!
             )
         );
         var functionMessages = await Task.WhenAll(tasks);

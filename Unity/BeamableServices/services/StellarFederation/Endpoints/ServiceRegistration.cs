@@ -9,9 +9,9 @@ public static class ServiceRegistration
 {
     public static void AddEndpoints(this IDependencyBuilder builder)
     {
-        Assembly.GetExecutingAssembly()
-            .GetDerivedTypes<IEndpoint>()
-            .ToList()
-            .ForEach(endpointType => builder.AddScoped(endpointType));
+        builder.AddScoped<AuthenticateEndpoint>();
+        builder.AddScoped<StartInventoryTransactionEndpoint>();
+        builder.AddScoped<GetInventoryStateEndpoint>();
+        builder.AddScoped<AuthenticateExternalEndpoint>();
     }
 }

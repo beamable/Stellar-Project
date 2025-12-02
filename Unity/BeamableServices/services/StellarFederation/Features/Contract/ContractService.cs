@@ -50,7 +50,7 @@ public class ContractService : IService
                 try
                 {
                     BeamableLogger.Log("Content was updated");
-                    GlobalCache.Remove(BeamContentService.FederationContentLocal);
+                    GlobalCache.Invalidate(BeamContentService.FederationContentLocal);
                     await InitializeContentContracts();
                 }
                 catch (Exception ex)

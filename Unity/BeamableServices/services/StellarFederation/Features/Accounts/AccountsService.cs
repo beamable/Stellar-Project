@@ -15,6 +15,7 @@ using Beamable.StellarFederation.Features.Transactions;
 using Beamable.StellarFederation.Features.Transactions.Models;
 using Beamable.StellarFederation.Features.Transactions.Storage;
 using Beamable.StellarFederation.Features.Transactions.Storage.Models;
+using StellarFederationCommon;
 
 namespace Beamable.StellarFederation.Features.Accounts;
 
@@ -49,7 +50,7 @@ public class AccountsService : IService
                 return await GetOrCreateAccount(accountName, microserviceInfo);
             }
             BeamableLogger.Log("Saved account {accountName} -> {accountAddress}", accountName, account.Value.Address);
-            if (microserviceInfo is not null)
+            if (microserviceInfo is not null && !account.Value.Created)
                 await _transactionBatchService.Insert(account.Value, microserviceInfo);
         }
         return account.Value;
@@ -215,6 +216,16 @@ public class AccountsService : IService
             BeamableLogger.LogError("Can't find a gamerTag on project {pid} for account {aid}", _beamableRequester.Pid, account.id);
         }
         return gamerTag;
+    }
+
+    public async Task<Account?> CreateNewAccount(string accountName)
+    {
+        var existing = await GetAccount(accountName);
+        if (existing is not null)
+            return existing;
+
+        var microserviceInfo = MicroserviceMetadataExtensions.GetMetadata<StellarFederation, StellarWeb3Identity>();
+        return await GetOrCreateAccount(accountName, microserviceInfo);
     }
 
     // public async Task<List<Vault>> GetVaultsByPrefixAndBalance(string walletPrefix, string currencySymbol, long minBalance = 0)

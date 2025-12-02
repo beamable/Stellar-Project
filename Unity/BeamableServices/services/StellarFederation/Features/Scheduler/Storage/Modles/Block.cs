@@ -6,5 +6,5 @@ public class Block
 {
     [BsonElement("_id")]
     public string Network { get; set; } = null!;
-    public long BlockNumber { get; set; }
+    public uint BlockNumber { get; set; }
 }

@@ -14,14 +14,14 @@ using StellarFederationCommon.FederationContent;
 
 namespace Beamable.StellarFederation.Features.Contract.Handlers;
 
-public class CoinCurrencyHandler : IService, IContentContractHandler
+public class GoldCurrencyHandler : IService, IContentContractHandler
 {
     private readonly ContractService _contractService;
     private readonly StellarService _stellarService;
     private readonly CliClient _cliClient;
     private readonly AccountsService _accountsService;
 
-    public CoinCurrencyHandler(ContractService contractService, StellarService stellarService, CliClient cliClient, AccountsService accountsService)
+    public GoldCurrencyHandler(ContractService contractService, StellarService stellarService, CliClient cliClient, AccountsService accountsService)
     {
         _contractService = contractService;
         _stellarService = stellarService;
@@ -33,7 +33,7 @@ public class CoinCurrencyHandler : IService, IContentContractHandler
     {
         try
         {
-            var contract = await _contractService.GetByContent<CoinContract>(model.ContentObject.Id);
+            var contract = await _contractService.GetByContent<GoldContract>(model.ContentObject.Id);
             if (contract != null)
             {
                 var objectExists = await _stellarService.ContractExists(contract.Address);
@@ -44,8 +44,8 @@ public class CoinCurrencyHandler : IService, IContentContractHandler
                 }
             }
 
-            if (model.ContentObject is not CoinCurrency coinCurrency)
-                throw new ContractException($"{model.ContentObject.Id} is not a {nameof(CoinCurrency)}");
+            if (model.ContentObject is not GoldCurrency coinCurrency)
+                throw new ContractException($"{model.ContentObject.Id} is not a {nameof(GoldCurrency)}");
 
             BeamableLogger.Log($"Creating contract for {model.ContentObject.Id}...");
             var moduleName = coinCurrency.ToCurrencyModuleName();
@@ -57,10 +57,11 @@ public class CoinCurrencyHandler : IService, IContentContractHandler
             await _cliClient.CopyContractCode(moduleName);
             await _cliClient.CompileContract(moduleName);
             var contractAddress = await _cliClient.DeployContract(moduleName, contractAccount.Value);
-            await _contractService.UpsertContract(new CoinContract
+            await _contractService.UpsertContract(new GoldContract
             {
                 ContentId = model.ContentObject.Id,
-                Address = contractAddress.Trim()
+                Address = contractAddress.Trim(),
+                TotalSupply = coinCurrency.TotalSupply.ToString()
             }, model.ContentObject.Id);
             BeamableLogger.Log($"Created contract for {coinCurrency.Id} with address {contractAddress}");
         }
@@ -70,9 +71,9 @@ public class CoinCurrencyHandler : IService, IContentContractHandler
         }
     }
 
-    private async Task WriteContractTemplate(CoinCurrency coinCurrency)
+    private async Task WriteContractTemplate(GoldCurrency coinCurrency)
     {
-        var itemTemplate = await File.ReadAllTextAsync("Features/Contract/Templates/coin.rs");
+        var itemTemplate = await File.ReadAllTextAsync("Features/Contract/Templates/gold.rs");
         var template = Handlebars.Compile(itemTemplate);
         var itemResult = template(coinCurrency);
         var contractPath = $"{CliClient.ContractSourcePath}/{coinCurrency.ToCurrencyModuleName()}.rc";
