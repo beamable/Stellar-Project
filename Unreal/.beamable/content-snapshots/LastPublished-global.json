@@ -1,5 +1,5 @@
 {
-  "SnapshotTimestamp": 1764686656480,
+  "SnapshotTimestamp": 1764781064377,
   "ManifestId": "global",
   "ProjectData": {
     "PID": "DE_1925146714814465",
@@ -69,17 +69,17 @@
           }
         },
         "description": {
-          "data": "Firey Death From above"
+          "data": "Colder than Death!"
         },
         "image": {
-          "data": "https://cdn.pixabay.com/photo/2025/12/01/16/57/16-57-29-594_640.png"
+          "data": "https://cdn.pixabay.com/photo/2025/12/01/16/57/zero-9988667_1280.png"
         },
         "name": {
-          "data": "Red Hood"
+          "data": "Cold Zero"
         }
       },
       "tags": [],
-      "Checksum": "c379e1a094e672b70d25b2ef3cbc3cb16a178384"
+      "Checksum": "b5defbcf3364f72829e6ba9d06b843fb0c130aae"
     },
     "items.warrioritem.Warrior_RedHood": {
       "properties": {
@@ -96,7 +96,7 @@
           }
         },
         "description": {
-          "data": "Firey Death From above"
+          "data": "Red Slash!"
         },
         "image": {
           "data": "https://cdn.pixabay.com/photo/2025/12/01/16/58/16-58-07-314_640.png"
@@ -106,7 +106,7 @@
         }
       },
       "tags": [],
-      "Checksum": "475b23a09d2edc2d1c56acc557fe0bf2c9b78529"
+      "Checksum": "019a4cb39cecfe808debb2a44d6d592ffbf4c372"
     },
     "items.warrioritem.Warrior_Scorpio": {
       "properties": {
@@ -123,17 +123,17 @@
           }
         },
         "description": {
-          "data": "Firey Death From above"
+          "data": "Get Over Here!"
         },
         "image": {
-          "data": "https://cdn.pixabay.com/photo/2025/12/01/16/56/16-56-46-89_640.png"
+          "data": "https://cdn.pixabay.com/photo/2025/12/01/16/56/scorpio-9988666_1280.png"
         },
         "name": {
-          "data": "Red Hood"
+          "data": "Scorpio"
         }
       },
       "tags": [],
-      "Checksum": "048fe51f0d7e3fffbf67b7e2e280efe0ca37523e"
+      "Checksum": "d5e94dd3fe1300be242d95ad8606c1c11f11c519"
     },
     "listings.Listing_ColdZero": {
       "properties": {
