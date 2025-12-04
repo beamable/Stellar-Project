@@ -48,4 +48,17 @@
         </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Features\BlockProcessor\NativeBlockProcessor.cs" />
+      <Compile Remove="Features\Content\Handlers\Models\BaseMessage.cs" />
+      <Compile Remove="Features\Content\Handlers\Models\RegularCoinBurnMessage.cs" />
+      <Compile Remove="Features\Content\Handlers\ContentHandlerFactory.cs" />
+      <Compile Remove="Features\Content\Handlers\IContentHandler.cs" />
+      <Compile Remove="Features\Content\Handlers\RegularCoinHandler.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Features\Content\Handlers\Models\" />
+    </ItemGroup>
+
 </Project>

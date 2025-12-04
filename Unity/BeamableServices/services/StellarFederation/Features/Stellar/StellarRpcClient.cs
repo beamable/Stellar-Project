@@ -15,6 +15,7 @@ using Beamable.StellarFederation.Features.Transactions.Storage.Models;
 using StellarDotnetSdk.Accounts;
 using StellarDotnetSdk.Operations;
 using StellarDotnetSdk.Transactions;
+using Transaction = StellarDotnetSdk.Transactions.Transaction;
 
 namespace Beamable.StellarFederation.Features.Stellar;
 
@@ -69,10 +70,12 @@ public class StellarRpcClient : IService
             var transactionHash = string.Empty;
             try
             {
-                var realmAccount = await _accountsService.GetOrCreateRealmAccount();
-                var issuerAccount = await _stellarService.GetRealmStellarAccount(realmAccount.Address);
+                var contractAccount = await _accountsService.GetAccount(functionMessage.ContentId);
+                if (!contractAccount.HasValue)
+                    throw new StellarTransactionException($"Account {functionMessage.ContentId} does not exist.");
+                var issuerAccount = await _stellarService.GetRealmStellarAccount(contractAccount.Value.Address);
 
-                var invokeContractOperation = new InvokeContractOperation(contractAddress, functionMessage.FunctionName, functionMessage.ToArgs(), realmAccount.KeyPair);
+                var invokeContractOperation = new InvokeContractOperation(contractAddress, functionMessage.FunctionName, functionMessage.ToArgs(), contractAccount.Value.KeyPair);
                 var transaction = new TransactionBuilder(issuerAccount)
                     .AddOperation(invokeContractOperation)
                     .Build();
@@ -90,7 +93,7 @@ public class StellarRpcClient : IService
                 var minResourceFee = simulateResponse.MinResourceFee ?? 0;
                 var buffer = (uint)Math.Max(minResourceFee * (await _configuration.ExtraResourceFeePercentage/100), await _configuration.MinExtraResourceFeeInStroops);
                 transaction.AddResourceFee(minResourceFee + buffer);
-                transaction.Sign(realmAccount.KeyPair);
+                transaction.Sign(contractAccount.Value.KeyPair);
                 var sendResponse = await _stellarService.SendTransaction(transaction);
                 var result = sendResponse.ToStellarTransactionResult();
                 if (result.ShouldRetry())
@@ -100,21 +103,21 @@ public class StellarRpcClient : IService
 
                 transactionHash = result.Hash;
 
-                await _transactionManager.AddChainTransaction(functionMessage.TransactionId, new ChainTransaction
+                await _transactionManager.AddChainTransaction(functionMessage.TransactionIds, new ChainTransaction
                 {
                     Data = JsonSerializer.Serialize(functionMessage),
                     Function = functionMessage.FunctionName,
                     Hash = transactionHash
-                });
+                }, functionMessage.ConcurrencyKey);
             }
             catch (Exception ex)
             {
-                await _transactionManager.AddChainTransaction(functionMessage.TransactionId, new ChainTransaction
+                await _transactionManager.AddChainTransaction(functionMessage.TransactionIds, new ChainTransaction
                 {
                     Function = nameof(functionMessage),
                     Data = JsonSerializer.Serialize(functionMessage),
                     Error = ex.Message
-                });
+                }, functionMessage.ConcurrencyKey);
 
                 BeamableLogger.LogError("Transaction for contract {N} failed with error: {e}", contractAddress, ex.ToLogFormat());
             }
@@ -173,6 +176,37 @@ public class StellarRpcClient : IService
                 BeamableLogger.LogError("Transaction for native function {N} failed with error: {e}", functionMessages.First().FunctionName, ex.ToLogFormat());
             }
             return transactionHash;
+        }
+    }
+
+    public async Task<string> InvokeContractAsync<TContractMessage>(string contractAddress,
+        TContractMessage functionMessage) where TContractMessage : IFunctionViewMessage
+    {
+        using (new Measure(functionMessage.FunctionName))
+        {
+            try
+            {
+                var fakeAccount = await _accountsService.GetOrCreateAccount("view-account");
+                var issuerAccount = new Account(fakeAccount.Address, 0);
+
+                var invokeContractOperation = new InvokeContractOperation(contractAddress, functionMessage.FunctionName, functionMessage.ToArgs());
+                var transaction = new TransactionBuilder(issuerAccount)
+                    .AddOperation(invokeContractOperation)
+                    .Build();
+                var response = await _stellarService.SimulateTransaction(transaction);
+                if (response.Results is { Length: > 0 })
+                {
+                    var resultValue = response.Results[0].Xdr;
+                    if (!string.IsNullOrWhiteSpace(resultValue))
+                        return resultValue;
+                }
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                BeamableLogger.LogError("Invoke for contract {N} failed with error: {e}", contractAddress, ex.ToLogFormat());
+                return string.Empty;
+            }
         }
     }
 }

@@ -9,21 +9,6 @@ namespace StellarFederationCommon.Extensions
     public static class FederationContentExtensions
     {
         /// <summary>
-        /// ContentObject module name
-        /// </summary>
-        /// <param name="contentObject"></param>
-        /// <returns></returns>
-        public static string ToContractAccountName(this IContentObject contentObject)
-        {
-            return contentObject switch
-            {
-                CurrencyContent content => SanitizeModuleName(content.Id),
-                ItemContent itemContent => ToContentType(itemContent.Id),
-                _ => ""
-            };
-        }
-
-        /// <summary>
         /// CoinCurrency module name
         /// </summary>
         /// <param name="coinCurrency"></param>
@@ -52,6 +37,17 @@ namespace StellarFederationCommon.Extensions
         /// <returns></returns>
         public static string ToItemModuleName(this string contentId)
             => SanitizeModuleName(ToContentType(contentId)).ToLowerInvariant();
+
+        /// <summary>
+        /// Content type
+        /// </summary>
+        /// <param name="contentId"></param>
+        /// <returns></returns>
+        public static string ExtractMiddle(this string contentId)
+        {
+            var parts = contentId.Split('.');
+            return parts.Length >= 3 ? parts[1] : "";
+        }
 
         /// <summary>
         /// Removes invalid characters from a module name

@@ -38,7 +38,7 @@ public class Configuration : IService
     /// Configuration namespace is configured in the <see cref="ConfigurationNamespace"/> constant.
     /// </summary>
 
-    public ValueTask<string> StellarRpc => GetValue(nameof(StellarRpc), "");
+    public ValueTask<string> StellarRpc => GetValue(nameof(StellarRpc), "https://soroban-testnet.stellar.org");
     public ValueTask<string> StellarHorizon => GetValue(nameof(StellarHorizon), "https://horizon-testnet.stellar.org");
 
     // "public" or "test"

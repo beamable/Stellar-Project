@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Beamable.StellarFederation.Features.Contract.Functions.Minting.Models;
 using Beamable.StellarFederation.Features.Contract.Storage.Models;
+using StellarDotnetSdk.Xdr;
 
 namespace Beamable.StellarFederation.Features.Contract;
 

@@ -40,7 +40,11 @@ public class StellarBackgroundService : Microsoft.Extensions.Hosting.BackgroundS
                 // 2. Iterate through the potential groups and ATTEMPT to lock the first one we can.
                 foreach (var key in potentialWorkKeys.Shuffle()) // Randomize the order to avoid thundering herd.
                 {
-                    if (!await _batchService.AcquireLock(key, 60)) continue;
+                    if (!await _batchService.AcquireLock(key, 60))
+                    {
+                        await Task.Delay(50, stoppingToken);
+                        continue;
+                    }
                     // SUCCESS! We got the lock.
                     lockedGroups.Add(key);
                     break; // We successfully got a lock, exit the loop.
@@ -51,6 +55,7 @@ public class StellarBackgroundService : Microsoft.Extensions.Hosting.BackgroundS
                 {
                     // This method now contains all the logic for fetching, processing, and releasing the lock.
                     await ProcessGroupedBatch(lockedGroups, stoppingToken);
+                    await Task.Delay(100, stoppingToken);
                 }
                 else
                 {
@@ -64,8 +69,8 @@ public class StellarBackgroundService : Microsoft.Extensions.Hosting.BackgroundS
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unhandled error occurred in the processing of SuiBackgroundService");
-                await Task.Delay(1000, stoppingToken);
+                _logger.LogError(ex, "An unhandled error occurred in the processing of BackgroundService");
+                await Task.Delay(5000, stoppingToken);
             }
         }
     }

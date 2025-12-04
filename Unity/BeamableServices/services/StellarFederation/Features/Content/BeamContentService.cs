@@ -6,6 +6,7 @@ using Beamable.Common.Content;
 using Beamable.Common.Inventory;
 using Beamable.Server.Content;
 using Beamable.StellarFederation.Caching;
+using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Contract.Models;
 using StellarFederationCommon;
 // ReSharper disable MemberCanBePrivate.Global
@@ -42,6 +43,31 @@ public class BeamContentService : IService
             });
 
         return currencies; // ADD itemsByType when contract is created
+    }
+
+    public async Task<IEnumerable<IContentObject>> FetchFederationContentForState(MicroserviceInfo microserviceInfo)
+    {
+        var federationContent = await FetchFederationContentLocal();
+        var currencies = federationContent
+            .Where(item => item is CurrencyContent coin && coin.federation.HasValue &&
+                           coin.federation.Value.Service == microserviceInfo.MicroserviceName &&
+                           coin.federation.Value.Namespace == microserviceInfo.MicroserviceNamespace);
+
+        var itemsByType = federationContent
+            .Where(item => item is ItemContent)
+            .GroupBy(item => {
+                var idParts = item.Id.Split('.');
+                return string.Join(".", idParts.Take(idParts.Length - 1));
+            })
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var matchingItems = itemsByType
+            .Select(kvp => kvp.Value.FirstOrDefault(co => co is ItemContent item && item.federation.HasValue &&
+                                                          item.federation.Value.Service == microserviceInfo.MicroserviceName &&
+                                                          item.federation.Value.Namespace == microserviceInfo.MicroserviceNamespace))
+            .Where(co => co is not null)
+            .Cast<IContentObject>();
+        return matchingItems.Concat(currencies);
     }
 
     private async Task<List<IContentObject>> FetchFederationContentLocal()

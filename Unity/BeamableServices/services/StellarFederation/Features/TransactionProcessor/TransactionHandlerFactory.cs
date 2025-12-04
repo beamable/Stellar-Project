@@ -13,6 +13,7 @@ public class TransactionHandlerFactory(IDependencyProvider serviceProvider) : IS
         return transactionType.Name switch
         {
             nameof(AccountCreateRequest) => serviceProvider.GetRequiredService<AccountCreateHandler>(),
+            nameof(CurrencyAddInventoryRequest) => serviceProvider.GetRequiredService<CurrencyAddHandler>(),
             _ => throw new NotSupportedException($"No handler found for transaction type: {transactionType.Name}")
         };
     }

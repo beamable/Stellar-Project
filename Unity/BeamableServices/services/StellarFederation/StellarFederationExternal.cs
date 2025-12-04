@@ -3,6 +3,7 @@ using Beamable.Common;
 using Beamable.Common.Api.Inventory;
 using Beamable.Server;
 using Beamable.StellarFederation.Endpoints;
+using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.ExternalAuth;
 using StellarFederationCommon;
 
@@ -17,8 +18,9 @@ public partial class StellarFederation : IFederatedInventory<StellarWeb3External
     }
     async Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3ExternalIdentity>.GetInventoryState(string id)
     {
+        var microserviceInfo = MicroserviceMetadataExtensions.GetMetadata<StellarFederation, StellarWeb3ExternalIdentity>();
         return await Provider.GetService<GetInventoryStateEndpoint>()
-            .GetInventoryState(id);
+            .GetInventoryState(id, microserviceInfo);
     }
 
     Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3ExternalIdentity>.StartInventoryTransaction(string id, string transaction, Dictionary<string, long> currencies, List<FederatedItemCreateRequest> newItems, List<FederatedItemDeleteRequest> deleteItems,

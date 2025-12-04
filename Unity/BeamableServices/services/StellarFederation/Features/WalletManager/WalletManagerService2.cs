@@ -4,19 +4,16 @@ using Beamable.StellarFederation.Features.Accounts;
 using Beamable.StellarFederation.Features.Common;
 using Beamable.StellarFederation.Features.Stellar;
 using Beamable.StellarFederation.Features.Stellar.Models;
-using Beamable.StellarFederation.Features.WalletManager.Exceptions;
 
 namespace Beamable.StellarFederation.Features.WalletManager;
 
-public class WalletManagerService2 : IService
+public class WalletManagerService : IService
 {
-    private readonly Configuration _configuration;
     private readonly AccountsService _accountsService;
     private readonly StellarService _stellarService;
 
-    public WalletManagerService2(Configuration configuration, AccountsService accountsService, StellarService stellarService)
+    public WalletManagerService(AccountsService accountsService, StellarService stellarService)
     {
-        _configuration = configuration;
         _accountsService = accountsService;
         _stellarService = stellarService;
     }

@@ -69,6 +69,12 @@ public class ContractCollection(IStorageObjectConnectionProvider storageObjectCo
         return await collection.Find(x => x.ContentId == contentId).FirstOrDefaultAsync();
     }
 
+    public async Task<List<ContractBase>> GetAll()
+    {
+        var collection = await Get<ContractBase>();
+        return await collection.Find(Builders<ContractBase>.Filter.Empty).ToListAsync();
+    }
+
     public async Task<List<TContract>> GetAllContractsOf<TContract>() where TContract : ContractBase
     {
         var collection = await Get<ContractBase>();
