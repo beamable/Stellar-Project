@@ -49,9 +49,9 @@ public class GoldCurrencyHandler : IService, IContentContractHandler
 
             BeamableLogger.Log($"Creating contract for {model.ContentObject.Id}...");
             var moduleName = coinCurrency.ToCurrencyModuleName();
-            var contractAccount = await _accountsService.GetAccount(model.ContentObject.ToContractAccountName());
+            var contractAccount = await _accountsService.GetAccount(model.ContentObject.Id);
             if (contractAccount is null)
-                throw new ContractException($"Account for {model.ContentObject.ToContractAccountName()} is not created.");
+                throw new ContractException($"Account for {model.ContentObject.Id} is not created.");
             await _cliClient.CreateProject(moduleName);
             await WriteContractTemplate(coinCurrency);
             await _cliClient.CopyContractCode(moduleName);

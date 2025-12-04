@@ -21,7 +21,7 @@ public class CliClient : IService
 
     public const string ContractSourcePath = "/beamApp/sources";
 
-    private const int ProcessTimeoutMs = 90000;
+    private const int ProcessTimeoutMs = 900000;
 
     public CliClient(Configuration configuration)
     {
@@ -123,6 +123,12 @@ public class CliClient : IService
         }
         process.WaitForExit(ProcessTimeoutMs);
         return string.Empty;
+    }
+
+
+    public async Task<string> Test()
+    {
+        return await Execute(Executable, "-V");
     }
 
 }

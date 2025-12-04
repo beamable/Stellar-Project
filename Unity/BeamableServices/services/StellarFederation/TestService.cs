@@ -3,10 +3,17 @@ using System.Threading.Tasks;
 using Beamable.Common.Dependencies;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
+using Beamable.StellarFederation.Features.BlockProcessor;
+using Beamable.StellarFederation.Features.BlockProcessor.Decoder;
 using Beamable.StellarFederation.Features.BlockProcessor.Handlers;
+using Beamable.StellarFederation.Features.Common;
 using Beamable.StellarFederation.Features.Contract;
+using Beamable.StellarFederation.Features.Contract.CliWrapper;
 using Beamable.StellarFederation.Features.Contract.Functions.Account.Models;
 using Beamable.StellarFederation.Features.Contract.Functions.Minting.Models;
+using Beamable.StellarFederation.Features.Contract.Models;
+using Beamable.StellarFederation.Features.Contract.Storage.Models;
+using Beamable.StellarFederation.Features.Scheduler.Storage.Modles;
 using Beamable.StellarFederation.Features.Stellar;
 using Beamable.StellarFederation.Features.Transactions;
 using Beamable.StellarFederation.Features.Transactions.Models;
@@ -21,9 +28,14 @@ public class TestService : IService
     private readonly StellarService _stellarService;
     private readonly CreateAccountBlockHandler _createAccountBlockHandler;
     private readonly ContractService _contractService;
+    private readonly StellarRpcClient _stellarRpcClient;
+    private readonly Configuration _configuration;
+    private readonly SorobanBlockProcessor _blockProcessor;
+    private readonly HorizonBlockProcessor _horizonBlockProcessor;
+    private readonly CliClient _cliClient;
 
 
-    public TestService(ContractProxy contractProxy, AccountsService accountsService, TransactionManager transactionManager, StellarService stellarService, CreateAccountBlockHandler createAccountBlockHandler, ContractService contractService)
+    public TestService(ContractProxy contractProxy, AccountsService accountsService, TransactionManager transactionManager, StellarService stellarService, CreateAccountBlockHandler createAccountBlockHandler, ContractService contractService, StellarRpcClient stellarRpcClient, Configuration configuration, SorobanBlockProcessor blockProcessor, HorizonBlockProcessor horizonBlockProcessor, CliClient cliClient)
     {
         _contractProxy = contractProxy;
         _accountsService = accountsService;
@@ -31,6 +43,11 @@ public class TestService : IService
         _stellarService = stellarService;
         _createAccountBlockHandler = createAccountBlockHandler;
         _contractService = contractService;
+        _stellarRpcClient = stellarRpcClient;
+        _configuration = configuration;
+        _blockProcessor = blockProcessor;
+        _horizonBlockProcessor = horizonBlockProcessor;
+        _cliClient = cliClient;
     }
 
     // public async Task Test(string hash)
@@ -60,15 +77,38 @@ public class TestService : IService
     // }
     //
 
-    public async Task Test(long block)
+    public async Task Test()
     {
         var realmAccount = await _accountsService.GetOrCreateRealmAccount();
-        await _contractService.InitializeContentContracts();
+        var block = new Block
+        {
+            Network = await _configuration.StellarRpc,
+            Api = StellarSettings.SorobanApi,
+            Cursor = "",
+            BlockNumber = 1910621
+        };
+        // var logs = await _stellarService.GetSorobanLogs(block, ["CADXVUHVL6OVDO56DPIUQNVC3AZTUF2FKNP34DTP4ER7AVGVGOIIHXZB"]);
+        // var transferDecoder = new SorobanEventDecoder<MintEventDto>("mint");
+        // var transferEvents = transferDecoder.DecodeEvents(logs.Events);
+        //await _blockProcessor.Handle();
+        await _horizonBlockProcessor.Handle();
+        var ie = 0;
+
+        //await _contractService.InitializeContentContracts();
         //await _createAccountBlockHandler.Handle(1806810, 1806810);
         // Task task1 = _accountsService.CreateNewAccount("123");
         // Task task2 = _accountsService.CreateNewAccount("1234");
         //
         // await Task.WhenAll(task1, task2);
+        // var contract = await _contractService.GetByContentId<CoinContract>("currency.coin.beam_coin");
+        // await _stellarRpcClient.InvokeContractAsync(contract.Address, new BalanceFunctionMessage("currency.coin.beam_coin",
+        //     "GCETJ47OHSHT4VFWSAK3SYHXTVRS3U72MKMJH7JFSV5DSASPMJTP24OU"));
+
         var i = 0;
+    }
+
+    public async Task<string> Test2()
+    {
+        return await _cliClient.Test();
     }
 }

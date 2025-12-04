@@ -26,9 +26,9 @@ public class ContractService : IService
     private readonly StellarService _stellarService;
     private readonly CliClient _cliClient;
     private readonly BeamContentService _beamContentService;
-    private readonly WalletManagerService2 _walletManagerService;
+    private readonly WalletManagerService _walletManagerService;
 
-    public ContractService(SocketRequesterContext socketRequesterContext, LockManagerService lockManagerService, ContractCollection contractCollection, StellarService stellarService, ContentContractHandlerResolver contractHandlerResolver, CliClient cliClient, BeamContentService beamContentService, WalletManagerService2 walletManagerService)
+    public ContractService(SocketRequesterContext socketRequesterContext, LockManagerService lockManagerService, ContractCollection contractCollection, StellarService stellarService, ContentContractHandlerResolver contractHandlerResolver, CliClient cliClient, BeamContentService beamContentService, WalletManagerService walletManagerService)
     {
         _lockManagerService = lockManagerService;
         _contractCollection = contractCollection;
@@ -97,6 +97,11 @@ public class ContractService : IService
     public async Task<TContract?> GetByContent<TContract>(string contentId) where TContract : ContractBase
     {
         return await _contractCollection.GetByContentId<TContract>(contentId);
+    }
+
+    public async Task<List<ContractBase>> GetAllContracts()
+    {
+        return await GlobalCache.GetOrCreate<List<ContractBase>>(nameof(GetAllContracts), async _ => await _contractCollection.GetAll(), TimeSpan.FromDays(1)) ?? [];
     }
 
     public async Task<TContract> GetByContentId<TContract>(string contentId) where TContract : ContractBase

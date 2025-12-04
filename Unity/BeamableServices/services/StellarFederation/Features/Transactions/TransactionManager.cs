@@ -48,30 +48,13 @@ public class TransactionManager : IService
         };
     }
 
-    // public void SetCurrentTransactionContext(ObjectId transactionId)
-    // {
-    //     _currentTransaction.Value = transactionId;
-    // }
-    //
-    // public void SetCurrentTransactionContext(string transactionId)
-    // {
-    //     _currentTransaction.Value = ObjectId.Parse(transactionId);
-    // }
-    //
-    // public async Task SetCurrentTransactionContextByInventoryTransaction(string inventoryTransactionId)
-    // {
-    //     var transactionLog = await _transactionLogCollection.GetByInventoryTransaction(inventoryTransactionId);
-    //     if (transactionLog is not null)
-    //     {
-    //         _currentTransaction.Value = transactionLog.Id;
-    //     }
-    // }
-
-    // public async Task AddChainTransaction(ChainTransaction chainTransaction)
-    // {
-    //     if (_currentTransaction.Value.HasValue)
-    //         await _transactionLogCollection.AddChainTransaction(_currentTransaction.Value!.Value, chainTransaction);
-    // }
+    public async Task AddChainTransaction(ObjectId[] transactionId, ChainTransaction chainTransaction, string? concurrencyKey = null)
+    {
+        var tasks = transactionId.Select(async x =>
+            await _transactionLogCollection.AddChainTransaction(x, chainTransaction, concurrencyKey)
+        );
+        await Task.WhenAll(tasks);
+    }
 
     public async Task AddChainTransaction(ObjectId transactionId, ChainTransaction chainTransaction)
     {

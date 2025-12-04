@@ -77,10 +77,14 @@ public class TransactionQueueCollection(IStorageObjectConnectionProvider storage
         var collection = await Get<TTransaction>();
         try
         {
-            await collection.InsertManyAsync(transactions, new InsertManyOptions
+            var inserts = transactions.ToList();
+            if (inserts.Count > 0)
             {
-                IsOrdered = false
-            });
+                await collection.InsertManyAsync(inserts, new InsertManyOptions
+                {
+                    IsOrdered = false
+                });
+            }
             return true;
         }
         catch (MongoWriteException)

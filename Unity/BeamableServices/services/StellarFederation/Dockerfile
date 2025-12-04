@@ -22,15 +22,19 @@ RUN apt-get update && \
     curl -sS https://download.libsodium.org/libsodium/releases/libsodium-${LIBSODIUM_VERSION}.tar.gz | tar xz && \
     cd libsodium-${LIBSODIUM_VERSION} && \
     ./configure && make && make install && \
-    ldconfig && \
     cd .. && rm -rf libsodium-${LIBSODIUM_VERSION} && \
     rm -rf /var/lib/apt/lists/*
 
+# Ensure libsodium is findable
+ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+RUN ldconfig
+
 # Install Rust
 ARG RUST_VERSION=1.90.0
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION} \
-    && echo 'source $HOME/.cargo/env' >> /root/.bashrc
-ENV PATH="/root/.cargo/bin:${PATH}"
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION}
+ENV PATH="/root/.cargo/bin:${PATH}" \
+    CARGO_HOME="/root/.cargo" \
+    RUSTUP_HOME="/root/.rustup"
 RUN rustup target add wasm32v1-none
 
 # These args are provided by the Beam CLI

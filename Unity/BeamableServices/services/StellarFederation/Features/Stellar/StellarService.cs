@@ -5,18 +5,16 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Beamable.Common;
-using Beamable.StellarFederation.Caching;
 using Beamable.StellarFederation.Features.Accounts;
 using Beamable.StellarFederation.Features.Accounts.Exceptions;
 using Beamable.StellarFederation.Features.Common;
-using Beamable.StellarFederation.Features.Content.Handlers.Models;
 using Beamable.StellarFederation.Features.HttpService;
+using Beamable.StellarFederation.Features.Scheduler.Storage.Modles;
 using Beamable.StellarFederation.Features.Stellar.Exceptions;
 using Beamable.StellarFederation.Features.Stellar.Extensions;
 using Beamable.StellarFederation.Features.Stellar.Models;
 using StellarDotnetSdk;
 using StellarDotnetSdk.Accounts;
-using StellarDotnetSdk.Exceptions;
 using StellarDotnetSdk.Federation;
 using StellarDotnetSdk.LedgerEntries;
 using StellarDotnetSdk.LedgerKeys;
@@ -30,7 +28,6 @@ using StellarDotnetSdk.Soroban;
 using StellarDotnetSdk.Transactions;
 using StellarDotnetSdk.Xdr;
 using LedgerKey = StellarDotnetSdk.LedgerKeys.LedgerKey;
-using Memo = StellarDotnetSdk.Memos.Memo;
 using SCVal = StellarDotnetSdk.Soroban.SCVal;
 using SCVec = StellarDotnetSdk.Soroban.SCVec;
 using TimeBounds = StellarDotnetSdk.Transactions.TimeBounds;
@@ -48,6 +45,7 @@ public class StellarService : IService
 
     private bool _initialized;
     private const int FaucetWaitTimeSec = 10;
+    private const int LogsLimit = 200;
 
     private SorobanServer? _rpcServer;
     private StellarDotnetSdk.Server? _horizonServer;
@@ -391,15 +389,6 @@ public class StellarService : IService
         }
     }
 
-    public async Task<SendTransactionResponse> SendNativeTransaction(Transaction transaction)
-    {
-        using (new Measure(nameof(SendNativeTransaction)))
-        {
-            var rpcInstance = await SorobanInstance();
-            return await rpcInstance.SendTransaction(transaction);
-        }
-    }
-
     public async Task Initialize()
     {
         if (!_initialized)
@@ -455,30 +444,80 @@ public class StellarService : IService
         }
     }
 
-    public async Task<List<TransactionResponse>> GetHorizonLogs(string accountAddress, uint startLedger, uint endLedger, string memo)
+    public async Task<HorizonLogsResponse> GetHorizonLogs(string accountAddress, Block block)
     {
         using (new Measure(nameof(GetHorizonLogs)))
         {
             var instance = await HorizonInstance();
-            var results = new List<TransactionResponse>();
+            var result = new HorizonLogsResponse
+            {
+                LastCursor = block.Cursor,
+                LastProcessedLedger = block.BlockNumber
+            };
             var requestBuilder = instance.Transactions
                 .ForAccount(accountAddress)
                 .Order(OrderDirection.ASC)
-                .Limit((int)await _configuration.FetchLogsBlockSize);
-            var page = await requestBuilder.Execute();
-            while (page.Records.Count != 0)
-            {
-                foreach (var tx in page.Records.Where(r => r.MemoValue is not null && r.MemoValue == memo))
-                {
-                    if (tx.Ledger > endLedger)
-                        return results;
+                .Limit(LogsLimit);
 
-                    if (tx.Ledger >= startLedger)
-                        results.Add(tx);
-                }
-                page = await page.NextPage();
+            if (!string.IsNullOrWhiteSpace(block.Cursor))
+            {
+                requestBuilder = requestBuilder.Cursor(block.Cursor);
             }
-            return results;
+
+            var page = await requestBuilder.Execute();
+
+            foreach (var tx in page.Records)
+            {
+                result.LastCursor = tx.PagingToken;
+                result.LastProcessedLedger = tx.Ledger;
+                result.Transactions.Add(tx);
+            }
+
+            return result;
+        }
+    }
+
+    public async Task<SorobanLogsResponse> GetSorobanLogs(Block block, string[] contractIds)
+    {
+        using (new Measure(nameof(GetLogs)))
+        {
+            var rpcInstance = await SorobanInstance();
+            var result = new SorobanLogsResponse
+            {
+                LastCursor = block.Cursor,
+                LastProcessedLedger = block.BlockNumber
+            };
+            var eventsResponse = await rpcInstance.GetEvents(new GetEventsRequest
+            {
+                StartLedger = block.BlockNumber,
+                Filters =
+                [
+                    new GetEventsRequest.EventFilter
+                    {
+                        ContractIds = contractIds
+                    }
+                ],
+                Pagination = new PaginationOptions
+                {
+                    Limit = LogsLimit,
+                    Cursor = !string.IsNullOrWhiteSpace(block.Cursor) ? block.Cursor : null
+                }
+            });
+            if (eventsResponse?.Events is not null)
+            {
+                foreach (var eventInfo in eventsResponse.Events)
+                {
+                    result.Events.Add(eventInfo);
+                    result.LastProcessedLedger = (uint)eventInfo.Ledger;
+                }
+
+                if (eventsResponse.Events.Length > LogsLimit)
+                {
+                    result.LastCursor = eventsResponse?.Cursor ?? "";
+                }
+            }
+
+            return result;
         }
     }
 

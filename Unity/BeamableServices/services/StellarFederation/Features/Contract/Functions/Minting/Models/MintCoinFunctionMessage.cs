@@ -4,7 +4,7 @@ using StellarDotnetSdk.Soroban;
 
 namespace Beamable.StellarFederation.Features.Contract.Functions.Minting.Models;
 
-public record MintCoinFunctionMessage(ObjectId TransactionId, string ContentId, string[] To, long[] Amount) : IFunctionMessage
+public record MintCoinFunctionMessage(ObjectId[] TransactionIds, string ContentId, string ConcurrencyKey, string[] To, long[] Amount) : IFunctionMessage
 {
     public string FunctionName => "batch_mint";
 

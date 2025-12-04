@@ -7,6 +7,7 @@ using Beamable.Common.Api.Inventory;
 using Beamable.Server;
 using Beamable.StellarFederation.BackgroundService;
 using Beamable.StellarFederation.Extensions;
+using Beamable.StellarFederation.Features.Inventory;
 using Beamable.StellarFederation.Features.Transactions;
 using Beamable.StellarFederation.Features.Transactions.Storage;
 using Beamable.StellarFederation.Features.Transactions.Storage.Models;
@@ -19,12 +20,14 @@ public class StartInventoryTransactionEndpoint : IEndpoint
     private readonly TransactionBatchService _transactionBatchService;
     private readonly TransactionManager _transactionManager;
     private readonly RequestContext _requestContext;
+    private readonly InventoryService _inventoryService;
 
-    public StartInventoryTransactionEndpoint(RequestContext requestContext, TransactionBatchService transactionBatchService, TransactionManager transactionManager)
+    public StartInventoryTransactionEndpoint(RequestContext requestContext, TransactionBatchService transactionBatchService, TransactionManager transactionManager, InventoryService inventoryService)
     {
         _requestContext = requestContext;
         _transactionBatchService = transactionBatchService;
         _transactionManager = transactionManager;
+        _inventoryService = inventoryService;
     }
 
     public async Task<FederatedInventoryProxyState> StartInventoryTransaction(string id, string transaction, Dictionary<string, long> currencies, List<FederatedItemCreateRequest> newItems, List<FederatedItemDeleteRequest> deleteItems, List<FederatedItemUpdateRequest> updateItems, long gamerTag,
@@ -89,6 +92,6 @@ public class StartInventoryTransactionEndpoint : IEndpoint
         BackgroundServiceState.ResetDelay();
         });
 
-        return new FederatedInventoryProxyState();
+        return await _inventoryService.GetLastKnownState(id);
     }
 }

@@ -83,10 +83,23 @@ public class TransactionLogCollection : IService
 		await collection.UpdateOneAsync(x => x.Id == transactionId, update);
 	}
 
-	public async Task AddChainTransaction(ObjectId transactionId, ChainTransaction chainTransaction)
+	public async Task AddChainTransaction(ObjectId transactionId, ChainTransaction chainTransaction, string? concurrencyKey = null)
 	{
 		var collection = await Get();
-		var update = Builders<TransactionLog>.Update.Push(x => x.ChainTransactions, chainTransaction);
+		var updates = new List<UpdateDefinition<TransactionLog>>
+		{
+			Builders<TransactionLog>.Update.Push(x => x.ChainTransactions, chainTransaction)
+		};
+
+		if (!string.IsNullOrWhiteSpace(concurrencyKey))
+		{
+			updates.Add(
+				Builders<TransactionLog>.Update.Set(x => x.ConcurrencyKey, concurrencyKey)
+			);
+		}
+
+		var update = Builders<TransactionLog>.Update.Combine(updates);
+
 		await collection.UpdateOneAsync(x => x.Id == transactionId, update);
 	}
 

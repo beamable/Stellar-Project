@@ -83,8 +83,9 @@ namespace Beamable.StellarFederation
 
 		async Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3Identity>.GetInventoryState(string id)
 		{
+			var microserviceInfo = MicroserviceMetadataExtensions.GetMetadata<StellarFederation, StellarWeb3Identity>();
 			return await Provider.GetService<GetInventoryStateEndpoint>()
-				.GetInventoryState(id);
+				.GetInventoryState(id, microserviceInfo);
 		}
 
 		async Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3Identity>.StartInventoryTransaction(string id, string transaction, Dictionary<string, long> currencies, List<FederatedItemCreateRequest> newItems, List<FederatedItemDeleteRequest> deleteItems,
@@ -119,9 +120,10 @@ namespace Beamable.StellarFederation
 		}
 
 		[ClientCallable]
-		public async Promise<AccountResponse> GetAccount()
+		public async Promise<AccountResponse> GetAccount(string id)
 		{
 			var account = await Provider.GetService<AccountsService>().GetAccount(Context.UserId.ToString());
+			//var account = await Provider.GetService<AccountsService>().GetAccount(id);
 			return new AccountResponse
 			{
 				wallet = account.HasValue ? account.Value.Address : "",
@@ -130,9 +132,15 @@ namespace Beamable.StellarFederation
 		}
 
 		[ClientCallable]
-		public async Promise Test(long block)
+		public async Promise Test()
 		{
-			await Provider.GetService<TestService>().Test(block);
+			await Provider.GetService<TestService>().Test();
+		}
+
+		[ClientCallable]
+		public async Promise<string> Test2()
+		{
+			return await Provider.GetService<TestService>().Test2();
 		}
 
 		#region Placehorders for moe: to be removed later and replaced with proper endpoints in game
