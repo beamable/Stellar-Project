@@ -30,7 +30,7 @@ namespace Farm.Beam
         public override async UniTask ResetAsync(CancellationToken ct)
         {
             await base.ResetAsync(ct);
-            CropNfContent = new List<PlantInfo>();
+            CropNfContent.Clear();
         }
 
         private async UniTask SyncContentAsync(CancellationToken ct)

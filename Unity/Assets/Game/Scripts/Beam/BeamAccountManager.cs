@@ -32,7 +32,7 @@ namespace Farm.Beam
         public override async UniTask ResetAsync(CancellationToken ct)
         {
             await base.ResetAsync(ct);
-            await UniTask.Yield();
+            _beamContext.Api.NotificationService.Unsubscribe(PlayerNotificationContext.CustodialAccountCreated, OnCustodialAccountCreated);
         }
 
         private async UniTask UpdateCurrentAccount(PlayerAccount account = null)

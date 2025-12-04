@@ -37,13 +37,20 @@ namespace Farm.Beam
             PlayerCrops = new List<PlantInfo>();
             //await FetchInventory();
             _beamContext.Api.InventoryService.Subscribe(OnInvRefresh);
+        }
 
-            IsReady = true;
+        public override async UniTask ResetAsync(CancellationToken ct)
+        {
+            await base.ResetAsync(ct);
+            PlayerCrops.Clear();
         }
 
         private void OnInvRefresh(InventoryView inv)
         {
-            FetchInventory(inv).Forget();
+            FetchInventory(inv).ContinueWith(() =>
+            {
+                IsReady = true;
+            });
         }
 
         [ContextMenu("Fetch Inventory" )]
@@ -162,6 +169,11 @@ namespace Farm.Beam
             if (defaultPlayerCrop == null)
             {
                 CropInstancesDictionary.Add(defaultCropInfo.instanceId, defaultCropInfo);
+                PlayerCrops.Add(defaultCropInfo);
+            }
+            else if (PlayerCrops.Count < 1)
+            {
+                CropInstancesDictionary[cropInstance.id] = defaultCropInfo;
                 PlayerCrops.Add(defaultCropInfo);
             }
             else

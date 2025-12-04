@@ -6,6 +6,7 @@ using Beamable.Server.Clients;
 using Cysharp.Threading.Tasks;
 using Farm.Managers;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Farm.Beam
 {
@@ -15,6 +16,9 @@ namespace Farm.Beam
 
         [Header("Managers (init in this exact order)")]
         [SerializeField] private List<BeamManagerBase> beamManagers = new();
+        
+        [Header("Main Menu Scene")]
+        [SerializeField] private int mainMenuSceneIndex = 0;
         
         private CancellationTokenSource _cts;
         private readonly List<IBeamManager> _managers = new();
@@ -55,8 +59,19 @@ namespace Farm.Beam
         {
             base.OnAfterInitialized();
             InitAllAsync().Forget();
+
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
-        
+
+        private void OnSceneLoaded(Scene sceneLoaded, LoadSceneMode mode)
+        {
+            if(sceneLoaded.buildIndex != mainMenuSceneIndex) return;
+            if(!IsInitialized) return;
+            if (!sceneLoaded.isLoaded) return;
+            ReinitializeAsync().Forget();
+
+        }
+
         private void RebuildManagerCacheFromList()
         {
             _managers.Clear();

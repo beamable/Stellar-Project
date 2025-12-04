@@ -32,7 +32,7 @@ namespace Farm.UI
             SetIsCrop(isCrop);
             CurrentPlant = plant;
             nameText.text = plant.cropData.cropName;
-            amountText.text = amount == 0 ? "" : $"X{amount}";
+            amountText.text = amount == 0 ? "0" : $"X{amount}";
             iconImage.sprite = isSeed ? plant.cropData.seedsSprite : plant.cropData.cropIcon;
             SetSelectedImage(isSelected);
         }

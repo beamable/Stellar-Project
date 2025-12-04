@@ -16,6 +16,8 @@ namespace Farm.UI
 {
     public class UiManager : MonoSingleton<UiManager>
     {
+        #region Variables
+
         [Header("UI Elements")]
         [SerializeField] private TextMeshProUGUI dayValueText;
         [SerializeField] private TextMeshProUGUI timeValueText;
@@ -29,13 +31,18 @@ namespace Farm.UI
         [SerializeField] private ToolsBarManager toolsBarPanel;
         [SerializeField] private PauseMenuController pauseMenuPanel;
         [SerializeField] private Fader faderPanel;
+        [SerializeField] private GameObject howToPlayObject;
 
+        private bool _startTimer = false;
+        
         public static event Action OnPlayerAwoken;
         public static event Action<bool> OnOpenUi;
         public static event Action<PlantInfo> OnSelectSeed;
         
         public void RaiseSelectSeed(PlantInfo plantInfo) => OnSelectSeed?.Invoke(plantInfo);
         public void RaiseOpenUi(bool isOpen) => OnOpenUi?.Invoke(isOpen);
+
+        #endregion
 
         #region Unity_Calls
 
@@ -53,10 +60,12 @@ namespace Farm.UI
             base.OnAfterInitialized();
             faderPanel.OnInit();
             pauseMenuPanel.InitStart();
+            OnOpenUi?.Invoke(true);
         }
 
         private void Update()
         {
+            if(!_startTimer) return;
             timeValueText.text = TimeManager.Instance.CurrentTime.ToString("00.00");
         }
 
@@ -127,7 +136,12 @@ namespace Farm.UI
             }
         }
 
-        
+        public void OnCloseHowToPlay()
+        {
+            _startTimer = true;
+            howToPlayObject.SetActive(false);
+            OnOpenUi?.Invoke(false);
+        }
         
     }
 }
