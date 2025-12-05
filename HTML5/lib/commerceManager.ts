@@ -2,6 +2,7 @@
 
 import type { Beam, ListingContent, StoreContent } from "beamable-sdk"
 import getBeam from "@/lib/beam"
+import { debugLog } from "@/lib/debugLog"
 
 const DEFAULT_STORE_CONTENT_ID = process.env.NEXT_PUBLIC_STORE_CONTENT_ID || "stores.Store_Nf"
 const DEFAULT_MANIFEST_ID = "global"
@@ -13,8 +14,9 @@ type ResolvedStore = {
 
 export type ResolvedStoreResult = ResolvedStore & { fromCache: boolean }
 
-let cachedStore: ResolvedStore | null = null
-let inFlight: Promise<ResolvedStoreResult> | null = null
+const cacheKeyFor = (storeContentId: string, manifestId: string) => `${storeContentId}::${manifestId}`
+const cachedStores = new Map<string, ResolvedStore>()
+const inflightStores = new Map<string, Promise<ResolvedStoreResult>>()
 
 const getContentService = (beam: Beam) => {
   const service = (beam as any).content ?? (beam as any).clientServices?.content
@@ -39,12 +41,15 @@ function normalizeManifestId(manifestId?: string | null) {
 }
 
 export function resetCommerceCache() {
-  cachedStore = null
-  inFlight = null
+  cachedStores.clear()
+  inflightStores.clear()
 }
 
-export function getCachedStore(): ResolvedStore | null {
-  return cachedStore
+export function getCachedStore(options?: { storeContentId?: string; manifestId?: string }): ResolvedStore | null {
+  const storeContentId = normalizeContentId(options?.storeContentId)
+  const manifestId = normalizeManifestId(options?.manifestId)
+  const key = cacheKeyFor(storeContentId, manifestId)
+  return cachedStores.get(key) ?? null
 }
 
 export async function resolveStoreContent(opts: {
@@ -54,22 +59,26 @@ export async function resolveStoreContent(opts: {
 } = {}): Promise<ResolvedStoreResult> {
   const storeContentId = normalizeContentId(opts.storeContentId)
   const manifestId = normalizeManifestId(opts.manifestId)
+  const key = cacheKeyFor(storeContentId, manifestId)
 
   if (opts.forceRefresh) {
-    resetCommerceCache()
+    cachedStores.delete(key)
+    inflightStores.delete(key)
   }
 
-  if (cachedStore && cachedStore.store?.id === storeContentId) {
-    const resolved = { ...cachedStore, fromCache: true }
-    console.log("[Commerce] Store resolved from cache:", resolved)
+  const cached = cachedStores.get(key)
+  if (cached) {
+    const resolved = { ...cached, fromCache: true }
+    debugLog("[Commerce] Store resolved from cache:", resolved)
     return resolved
   }
 
-  if (inFlight) {
-    return inFlight
+  const inflight = inflightStores.get(key)
+  if (inflight) {
+    return inflight
   }
 
-  inFlight = (async () => {
+  const requestPromise = (async () => {
     const beam = await getBeam()
     const content = getContentService(beam as Beam)
 
@@ -94,16 +103,18 @@ export async function resolveStoreContent(opts: {
     })
 
     const resolved: ResolvedStore = { store, listings: sortedListings }
-    cachedStore = resolved
+    cachedStores.set(key, resolved)
     const result: ResolvedStoreResult = { ...resolved, fromCache: false }
-    console.log("[Commerce] Store resolved:", result)
+    debugLog("[Commerce] Store resolved:", result)
     return result
   })()
 
+  inflightStores.set(key, requestPromise)
+
   try {
-    return await inFlight
+    return await requestPromise
   } finally {
-    inFlight = null
+    inflightStores.delete(key)
   }
 }
 

@@ -8,6 +8,7 @@ import type { BallContent } from "@/lib/beamContent"
 import { resolveBallContent } from "@/lib/beamContent"
 import getBeam from "@/lib/beam"
 import { fetchInventory } from "@/lib/beamInventory"
+import { debugLog } from "@/lib/debugLog"
 
 type UseBallLoadoutResult = {
   ballTypes: BallTypeConfig[]
@@ -208,7 +209,7 @@ const ensureDefaultBallIfNeeded = async ({
 }): Promise<string[] | null> => {
   if (ownedBallInstances.length > 0) return null
   if (addInFlightRef.current) {
-    console.log("[BallLoadout] AddItem already in-flight; skipping duplicate grant.")
+    debugLog("[BallLoadout] AddItem already in-flight; skipping duplicate grant.")
     return null
   }
   const normalizeContentId = (id: string) => {
@@ -224,7 +225,7 @@ const ensureDefaultBallIfNeeded = async ({
   const targetContentId = normalizeContentId(target)
   if ((beam as any)?.stellarFederationClient?.addItem) {
     const payload = { itemContentId: targetContentId }
-    console.log("[BallLoadout] Granting default ball content with payload:", payload)
+    debugLog("[BallLoadout] Granting default ball content with payload:", payload)
     addInFlightRef.current = true
     try {
       await (beam as any).stellarFederationClient.addItem(payload)
@@ -263,7 +264,7 @@ export default function useBallLoadout(readyForGame: boolean, refreshKey = 0): U
     setLoading(true)
     ;(async () => {
       try {
-        console.log("[BallLoadout] Starting ball loadout fetch...")
+        debugLog("[BallLoadout] Starting ball loadout fetch...")
         const content = await resolveBallContent().catch((err) => {
           console.warn("[BallLoadout] Failed to resolve ball content:", err)
           return [] as BallContent[]
@@ -275,7 +276,7 @@ export default function useBallLoadout(readyForGame: boolean, refreshKey = 0): U
         }
 
         const beam = await getBeam()
-        console.log("[BallLoadout] Fetching inventory for owned ball items...")
+        debugLog("[BallLoadout] Fetching inventory for owned ball items...")
         const inventory = await fetchInventory(beam)
         let ownedBallInstances = extractOwnedBallInstances(inventory)
         const dedupedByType = dedupeByType(ownedBallInstances)
@@ -292,7 +293,7 @@ export default function useBallLoadout(readyForGame: boolean, refreshKey = 0): U
           ownedBallInstances = extractOwnedBallInstances(refreshed)
           const refreshedDeduped = dedupeByType(ownedBallInstances)
           setOwnedBallInventory(refreshedDeduped)
-          console.log("[BallLoadout] Cached owned ball inventory after grant (deduped):", refreshedDeduped)
+          debugLog("[BallLoadout] Cached owned ball inventory after grant (deduped):", refreshedDeduped)
         }
 
         const ownedTypes = dedupedByType.map((entry) => entry.type).filter((v): v is BallType => Boolean(v))
@@ -316,7 +317,7 @@ export default function useBallLoadout(readyForGame: boolean, refreshKey = 0): U
       } finally {
         if (!cancelled) {
           setLoading(false)
-          console.log("[BallLoadout] Loadout fetch completed.")
+          debugLog("[BallLoadout] Loadout fetch completed.")
         }
       }
     })()

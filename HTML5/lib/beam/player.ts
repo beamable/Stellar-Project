@@ -1,5 +1,16 @@
+import type { Beam } from "beamable-sdk"
 import getBeam, { resolveBeamConfig, resetBeam } from "@/lib/beam"
 import { getNotificationBootstrap, PlayerNotificationContexts, subscribeToContext, type NotificationHandler } from "@/lib/notifications"
+
+type StellarFederationClient = {
+  attachCustodialWallet?: () => Promise<{ stellarId?: string; userId?: string } | void>
+  stellarConfiguration: () => Promise<{
+    walletConnectBridgeUrl?: string
+    network?: string | number
+  }>
+  updateCurrency?: (payload: { currencyContentId: string; amount: number }) => Promise<unknown>
+  sendTestNotification?: (payload: { message: string }) => Promise<unknown>
+}
 
 type ProviderInfo = {
   providerService: string
@@ -80,14 +91,14 @@ export const EXTERNAL_AUTH_CONTEXT = PlayerNotificationContexts.ExternalAuthAddr
 export const EXTERNAL_SIGN_CONTEXT = PlayerNotificationContexts.ExternalAuthSignature
 
 export async function initBeamPlayer() {
-  const beam: any = await getBeam()
+  const beam = (await getBeam()) as Beam & { stellarFederationClient?: StellarFederationClient }
   return {
     playerId: beam?.player?.id ?? null,
   }
 }
 
 export async function fetchPlayerAlias(): Promise<string | null> {
-  const beam: any = await getBeam()
+  const beam = (await getBeam()) as Beam
 
   const readAlias = async (accessType: "private" | "public") => {
     try {
@@ -103,7 +114,7 @@ export async function fetchPlayerAlias(): Promise<string | null> {
 }
 
 export async function fetchStellarIdentityInfo(): Promise<StellarIdentityInfo> {
-  const beam: any = await getBeam()
+  const beam = (await getBeam()) as Beam
   const { providerService, custodialNamespace, externalNamespace } = getProviderInfo(beam)
   try {
     const acct = await beam.account.current()
@@ -132,7 +143,7 @@ export async function fetchStellarIdentityInfo(): Promise<StellarIdentityInfo> {
 }
 
 export async function saveAliasAndAttachWallet(alias: string): Promise<{ stellarId: string | null }> {
-  const beam: any = await getBeam()
+  const beam = (await getBeam()) as Beam & { stellarFederationClient?: StellarFederationClient }
   await beam.stats.set({ domainType: "client", accessType: "private", stats: { Alias: alias } })
 
   try {
@@ -146,7 +157,7 @@ export async function saveAliasAndAttachWallet(alias: string): Promise<{ stellar
 
 export async function resetBeamSession() {
   try {
-    const beam: any = await getBeam().catch(() => null)
+    const beam = (await getBeam().catch(() => null)) as (Beam & { tokenStorage?: any }) | null
     await beam?.tokenStorage?.clear?.()
     await beam?.tokenStorage?.dispose?.()
   } catch {}
@@ -154,7 +165,7 @@ export async function resetBeamSession() {
 }
 
 export async function fetchNotificationDebugData(playerId: string | null): Promise<NotificationChannelDebugPayload[]> {
-  const beam: any = await getBeam()
+  const beam = (await getBeam()) as Beam
   const cid = beam?.cid
   const pid = beam?.pid
   if (!cid || !pid) {
@@ -179,12 +190,15 @@ export async function fetchNotificationDebugData(playerId: string | null): Promi
 }
 
 export async function sendStellarTestNotification(message: string) {
-  const beam: any = await getBeam()
+  const beam = (await getBeam()) as Beam & { stellarFederationClient?: StellarFederationClient }
   await beam?.stellarFederationClient?.sendTestNotification?.({ message })
 }
 
 export async function buildWalletConnectUrl(playerId: string | null): Promise<{ url: string }> {
-  const beam: any = await getBeam()
+  const beam = (await getBeam()) as Beam & { stellarFederationClient: StellarFederationClient }
+  if (!beam.stellarFederationClient) {
+    throw new Error("[Stellar] stellarFederationClient unavailable on Beam instance.")
+  }
   const config = await beam.stellarFederationClient.stellarConfiguration()
   const { cid, pid } = await deriveCidPid()
   const gamerTag = (playerId || "").toString()
@@ -285,7 +299,6 @@ export async function requestExternalIdentityChallenge(token: string) {
       }
     })
   pendingExternalIdentityAttach = session
-  console.log('[Stellar] Requesting external identity challenge.')
   return challengeDeferred.promise
 }
 
@@ -301,7 +314,6 @@ export async function completeExternalIdentityChallenge(challengeToken: string, 
     console.warn("[Stellar] Signature has already been provided for the current challenge.")
     return session.attachPromise
   }
-  console.log('[Stellar] Completing external identity challenge.')
   session.signatureDeferred.resolve(signature)
   return session.attachPromise
 }
