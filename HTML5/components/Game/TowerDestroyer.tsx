@@ -9,6 +9,10 @@ import useAudioSettings from "@/hooks/useAudioSettings"
 import useShop from "@/hooks/useShop"
 import useExternalIdentityFlow from "@/hooks/useExternalIdentityFlow"
 import useCampaignOverlay from "@/hooks/useCampaignOverlay"
+import useCoinSync from "@/hooks/useCoinSync"
+import useWinLoopHandler from "@/hooks/useWinLoopHandler"
+import usePlayerInfoInventory from "@/hooks/usePlayerInfoInventory"
+import useReadyStateCleanup from "@/hooks/useReadyStateCleanup"
 
 const SHOULD_LOG_RENDERS = process.env.NEXT_PUBLIC_TD_RENDER_DEBUG === "true"
 const IS_DEV = process.env.NODE_ENV !== "production"
@@ -33,7 +37,6 @@ import useCampaignProgress from "@/hooks/useCampaignProgress"
 import {
   resetBeamSession,
 } from "@/lib/beam/player"
-import getBeam from "@/lib/beam"
 import { debugLog } from "@/lib/debugLog"
 
 export default function TowerDestroyer() {
@@ -103,7 +106,6 @@ export default function TowerDestroyer() {
     enabled: inventoryInitialized,
     refreshKey: inventoryRefreshKey,
   })
-  const coinsSyncedRef = useRef(false)
   const {
     canvasRef,
     selectedBallType,
@@ -180,9 +182,7 @@ export default function TowerDestroyer() {
       blockedState: walletBridge.blockedState,
       acknowledgeUserAction: walletBridge.acknowledgeUserAction,
       clearBlockedState: walletBridge.clearBlockedState,
-      openWalletWindow: (url, context, opts) => {
-        walletBridge.openWalletWindow(url, context ?? "Stellar wallet", opts)
-      },
+      openWalletWindow: (url, context, opts) => walletBridge.openWalletWindow(url, context ?? "Stellar wallet", opts),
       primeWalletWindow: walletBridge.primeWalletWindow,
       closeWalletWindow: walletBridge.closeWalletWindow,
       resetWalletBridge: walletBridge.reset,
@@ -216,47 +216,25 @@ export default function TowerDestroyer() {
     })
   }, [inventoryInitialized, commerceLoading, storeContent, storeListings, commerceError])
 
-  useEffect(() => {
-    if (!readyForGame) {
-      coinsSyncedRef.current = false
+  useReadyStateCleanup({
+    readyForGame,
+    onReset: () => {
       closeShop()
-    }
-  }, [readyForGame, closeShop])
-
-  useEffect(() => {
-    if (!readyForGame) {
       resetCampaignOverlay()
-    }
-  }, [readyForGame, resetCampaignOverlay])
+    },
+  })
 
-  useEffect(() => {
-    if (gameState === "playing") {
-      coinsSyncedRef.current = false
-      return
-    }
-    if (!readyForGame) return
-    if (coinsSyncedRef.current) return
-    if (coinsEarned <= 0) return
-    coinsSyncedRef.current = true
-    ;(async () => {
-      try {
-        const beam = await getBeam()
-        const client = (beam as any)?.stellarFederationClient as
-          | { updateCurrency?: (payload: { currencyContentId: string; amount: number }) => Promise<unknown> }
-          | undefined
-        if (client?.updateCurrency) {
-          const payload = { currencyContentId: "currency.coins", amount: coinsEarned }
-          debugLog("[Coins] Syncing earned coins to server:", payload)
-          await client.updateCurrency(payload)
-          setInventoryRefreshKey((prev) => prev + 1)
-        } else {
-          console.warn("[Coins] StellarFederationClient.updateCurrency unavailable; skipping sync.")
-        }
-      } catch (err) {
-        console.warn("[Coins] Failed to sync earned coins:", err)
-      }
-    })()
-  }, [gameState, readyForGame, coinsEarned, setInventoryRefreshKey])
+  usePlayerInfoInventory({
+    showPlayerInfo,
+    onInventoryRefresh: refreshInventory,
+  })
+
+  useCoinSync({
+    readyForGame,
+    gameState,
+    coinsEarned,
+    onInventoryRefresh: refreshInventory,
+  })
   const handleDebugSkipStage = useCallback(() => {
     if (!IS_DEV) return
     debugForceWin()
@@ -308,33 +286,16 @@ export default function TowerDestroyer() {
       }
     : undefined
 
-  const loopAdvanceRef = useRef(false)
-  useEffect(() => {
-    if (gameState !== "won") {
-      if (gameState === "playing") {
-        campaignWinStageRef.current = null
-        loopAdvanceRef.current = false
-      }
-      return
-    }
-    // Only mark the stage that actually produced the win. If the user changes selection while still in a won state,
-    // don't auto-complete the newly selected stage.
-    if (campaignWinStageRef.current && campaignWinStageRef.current !== activeStage.id) {
-      return
-    }
-    if (!campaignWinStageRef.current) {
-      campaignWinStageRef.current = activeStage.id
-      markStageComplete(activeStage.id)
-    }
-    if (activeStage.order === totalStages - 1 && campaignComplete && !loopAdvanceRef.current) {
-      loopAdvanceRef.current = true
-      Promise.resolve().then(() => {
-        startNextLoop()
-        setCampaignConfirmed(false)
-        openPlayerInfo()
-      })
-    }
-  }, [gameState, activeStage.id, markStageComplete, activeStage.order, totalStages, campaignComplete, startNextLoop, setCampaignConfirmed, openPlayerInfo])
+  useWinLoopHandler({
+    gameState,
+    activeStage,
+    totalStages,
+    campaignComplete,
+    markStageComplete,
+    startNextLoop,
+    setCampaignConfirmed,
+    onLoopAdvance: openPlayerInfo,
+  })
 
 
   // ============================================================================

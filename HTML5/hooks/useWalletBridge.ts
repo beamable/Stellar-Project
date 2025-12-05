@@ -4,6 +4,10 @@ const WALLET_WINDOW_NAME = "stellarWalletBridge"
 const WALLET_WINDOW_FEATURES =
   "noopener,noreferrer,width=480,height=780,resizable=yes,scrollbars=yes,menubar=no,toolbar=no"
 
+type WalletWindowOptions = {
+  allowNew?: boolean
+}
+
 type WalletPopupState = {
   pendingSignUrl: string | null
   signatureError: string | null
@@ -63,7 +67,7 @@ export type UseWalletBridgeResult = {
   blockedState: WalletBlockedState
   clearBlockedState: () => void
   acknowledgeUserAction: () => void
-  openWalletWindow: (targetUrl: string | null, contextLabel: string, options?: { allowNew?: boolean }) => Window | null
+  openWalletWindow: (targetUrl: string | null, contextLabel: string, options?: WalletWindowOptions) => Window | null
   primeWalletWindow: () => Window | null
   closeWalletWindow: () => void
   reset: () => void
@@ -171,7 +175,7 @@ export default function useWalletBridge(): UseWalletBridgeResult {
   }, [bumpHeartbeat])
 
   const openWalletWindow = useCallback(
-    (targetUrl: string | null, contextLabel: string, options?: { allowNew?: boolean }) => {
+    (targetUrl: string | null, contextLabel: string, options?: WalletWindowOptions) => {
       const allowNew = options?.allowNew ?? true
       if (!targetUrl) {
         console.warn("[Stellar] Cannot open wallet window; missing URL.")
