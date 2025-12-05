@@ -4,6 +4,7 @@ import { useCallback, useState } from "react"
 import { debugLog } from "@/lib/debugLog"
 import getBeam from "@/lib/beam"
 import { fetchInventory } from "@/lib/beamInventory"
+import type { Beam } from "beamable-sdk"
 
 type UseShopOptions = {
   inventoryInitialized: boolean
@@ -34,10 +35,12 @@ export function useShop({ inventoryInitialized, onHidePlayerInfo, onRefreshInven
   const purchaseListing = useCallback(
     async (listingId: string) => {
       try {
-        const beam = await getBeam()
-        if ((beam as any)?.stellarFederationClient?.purchaseBall) {
+        const beam = (await getBeam()) as Beam & {
+          stellarFederationClient?: { purchaseBall?: (payload: { purchaseId: string }) => Promise<unknown> }
+        }
+        if (beam.stellarFederationClient?.purchaseBall) {
           debugLog("[Commerce] Purchasing listing:", listingId)
-          await (beam as any).stellarFederationClient.purchaseBall({ purchaseId: listingId })
+          await beam.stellarFederationClient.purchaseBall({ purchaseId: listingId })
           await fetchInventory(beam)
           onRefreshInventory()
         } else {

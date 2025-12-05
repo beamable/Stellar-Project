@@ -241,7 +241,9 @@ export default function TowerDestroyer() {
     ;(async () => {
       try {
         const beam = await getBeam()
-        const client = (beam as any)?.stellarFederationClient
+        const client = (beam as any)?.stellarFederationClient as
+          | { updateCurrency?: (payload: { currencyContentId: string; amount: number }) => Promise<unknown> }
+          | undefined
         if (client?.updateCurrency) {
           const payload = { currencyContentId: "currency.coins", amount: coinsEarned }
           debugLog("[Coins] Syncing earned coins to server:", payload)
