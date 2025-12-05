@@ -15,12 +15,9 @@ const IS_DEV = process.env.NODE_ENV !== "production"
 
 function useRenderCounter(label: string, enabled: boolean) {
   const renderCountRef = useRef(0)
-  renderCountRef.current += 1
-
   useEffect(() => {
-    if (!enabled) {
-      return
-    }
+    renderCountRef.current += 1
+    if (!enabled) return
     debugLog(`[RenderCounter] ${label} render #${renderCountRef.current}`)
   })
 }
@@ -150,7 +147,6 @@ export default function TowerDestroyer() {
   const walletBridge = useWalletBridge()
   const campaignWinStageRef = useRef<string | null>(null)
   const {
-    campaignConfirmed,
     shouldShowCampaignOverlay,
     confirmCampaignStage,
     showCommandDeck,
@@ -184,12 +180,26 @@ export default function TowerDestroyer() {
       blockedState: walletBridge.blockedState,
       acknowledgeUserAction: walletBridge.acknowledgeUserAction,
       clearBlockedState: walletBridge.clearBlockedState,
-      openWalletWindow: walletBridge.openWalletWindow,
+      openWalletWindow: (url, context, opts) => {
+        walletBridge.openWalletWindow(url, context ?? "Stellar wallet", opts)
+      },
       primeWalletWindow: walletBridge.primeWalletWindow,
       closeWalletWindow: walletBridge.closeWalletWindow,
       resetWalletBridge: walletBridge.reset,
     },
   })
+
+  const openPlayerInfo = useCallback(() => {
+    markCommandDeckSeen()
+    refreshInventory()
+    setShowPlayerInfo(true)
+  }, [markCommandDeckSeen, refreshInventory, setShowPlayerInfo])
+
+  const handleShowCommandDeck = useCallback(() => {
+    showCommandDeck()
+    markCommandDeckSeen()
+    refreshInventory()
+  }, [markCommandDeckSeen, refreshInventory, showCommandDeck])
 
   const handleAcknowledgeMechanics = useCallback(() => {
     if (pendingMechanics.length === 0) return
@@ -212,17 +222,6 @@ export default function TowerDestroyer() {
       closeShop()
     }
   }, [readyForGame, closeShop])
-  useEffect(() => {
-    if (showPlayerInfo) {
-      setInventoryRefreshKey((prev) => prev + 1)
-    }
-  }, [showPlayerInfo])
-
-  useEffect(() => {
-    if (showPlayerInfo) {
-      markCommandDeckSeen()
-    }
-  }, [showPlayerInfo, markCommandDeckSeen])
 
   useEffect(() => {
     if (!readyForGame) {
@@ -255,7 +254,7 @@ export default function TowerDestroyer() {
         console.warn("[Coins] Failed to sync earned coins:", err)
       }
     })()
-  }, [gameState, readyForGame, coinsEarned])
+  }, [gameState, readyForGame, coinsEarned, setInventoryRefreshKey])
   const handleDebugSkipStage = useCallback(() => {
     if (!IS_DEV) return
     debugForceWin()
@@ -265,8 +264,8 @@ export default function TowerDestroyer() {
     if (!IS_DEV) return
     debugFakeLogin()
     resetCampaignOverlay()
-    setShowPlayerInfo(true)
-  }, [debugFakeLogin, resetCampaignOverlay, setShowPlayerInfo])
+    openPlayerInfo()
+  }, [debugFakeLogin, openPlayerInfo, resetCampaignOverlay])
 
   async function handleResetPlayer() {
     setShowResetConfirm(true)
@@ -327,11 +326,13 @@ export default function TowerDestroyer() {
     }
     if (activeStage.order === totalStages - 1 && campaignComplete && !loopAdvanceRef.current) {
       loopAdvanceRef.current = true
-      startNextLoop()
-      setCampaignConfirmed(false)
-      setShowPlayerInfo(true)
+      Promise.resolve().then(() => {
+        startNextLoop()
+        setCampaignConfirmed(false)
+        openPlayerInfo()
+      })
     }
-  }, [gameState, activeStage.id, markStageComplete, activeStage.order, totalStages, campaignComplete, startNextLoop, setShowPlayerInfo])
+  }, [gameState, activeStage.id, markStageComplete, activeStage.order, totalStages, campaignComplete, startNextLoop, setCampaignConfirmed, openPlayerInfo])
 
 
   // ============================================================================
@@ -358,7 +359,7 @@ export default function TowerDestroyer() {
         onRestart: resetGame,
         isAudioSettingsOpen: showAudioSettings,
         onToggleAudioSettings: onToggleAudioSettings,
-        onShowCommandDeck: showCommandDeck,
+        onShowCommandDeck: handleShowCommandDeck,
         showDebugControls: IS_DEV,
         onDebugSkipStage: IS_DEV ? handleDebugSkipStage : undefined,
         onDebugFakeLogin: IS_DEV ? handleDebugFakeLogin : undefined,

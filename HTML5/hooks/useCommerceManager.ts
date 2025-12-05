@@ -36,12 +36,14 @@ export default function useCommerceManager({
 
   useEffect(() => {
     if (!enabled) {
-      setState(initialState)
       return
     }
 
     let cancelled = false
-    setState((prev) => ({ ...prev, loading: true, error: null }))
+    Promise.resolve().then(() => {
+      if (cancelled) return
+      setState((prev) => ({ ...prev, loading: true, error: null }))
+    })
 
     ;(async () => {
       try {
@@ -77,6 +79,10 @@ export default function useCommerceManager({
       cancelled = true
     }
   }, [enabled, refreshKey, storeContentId, manifestId])
+
+  if (!enabled) {
+    return initialState
+  }
 
   return state
 }

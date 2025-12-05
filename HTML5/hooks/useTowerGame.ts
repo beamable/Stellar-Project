@@ -82,9 +82,6 @@ const resolveWindForce = (zone: WindZone, timeMs: number) => {
   return oscillation > 0 ? zone.force : 0
 }
 
-const ballInsideZone = (zone: WindZone, x: number, y: number) =>
-  x >= zone.xStart && x <= zone.xEnd && y >= zone.yStart && y <= zone.yEnd
-
 const pseudoRandomFromTower = (tower: Tower, salt: number) => {
   const seed = Math.sin(tower.x * 12.9898 + tower.y * 78.233 + salt) * 43758.5453
   return seed - Math.floor(seed)
@@ -349,13 +346,13 @@ export default function useTowerGame({
     return "win"
   }, [initializeTowers, totalBossPhases, resetBall])
 
-  const gameLoop = useCallback(() => {
+  const gameLoop = useCallback(function loop() {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const ctxMaybe = canvas.getContext("2d")
     if (!ctxMaybe) {
-      animationRef.current = requestAnimationFrame(gameLoop)
+      animationRef.current = requestAnimationFrame(loop)
       return
     }
     const ctx = ctxMaybe
@@ -522,7 +519,7 @@ export default function useTowerGame({
       }
     }
 
-    animationRef.current = requestAnimationFrame(gameLoop)
+    animationRef.current = requestAnimationFrame(loop)
   }, [ballsLeft, gameState, isCharging, resetBall, stageWindZones, handleAllTowersDestroyed, applyTowerMotion, ballTypeMap])
 
   useEffect(() => {

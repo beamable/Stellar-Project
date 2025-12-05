@@ -236,6 +236,7 @@ export function useExternalIdentityFlow({
     acknowledgeUserAction,
     clearBlockedState,
     closeWalletWindow,
+    buildSignUrlFromChallenge,
     openWalletWindow,
     pendingSignUrl,
     playerId,

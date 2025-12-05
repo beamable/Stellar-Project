@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useState } from "react"
 import type { CampaignStage } from "@/components/Game/campaign"
 
 type CampaignOverlayOptions = {

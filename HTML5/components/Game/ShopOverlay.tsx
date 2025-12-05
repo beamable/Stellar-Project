@@ -27,15 +27,6 @@ const getPrice = (listing: ListingContent) =>
 const getSymbol = (listing: ListingContent) =>
   (listing as any)?.properties?.price?.data?.symbol as string | undefined
 
-const getRewardLabel = (listing: ListingContent) => {
-  const obtainItems = ((listing as any)?.properties?.offer?.data?.obtainItems ?? []) as any[]
-  if (obtainItems.length === 0) return "Reward"
-  const first = obtainItems[0]
-  const id = typeof first?.contentId === "string" ? first.contentId : ""
-  const shortId = id.includes(".") ? id.split(".").pop() : id
-  return shortId || "Reward"
-}
-
 const deriveBallType = (id?: string | null): BallType | null => {
   const candidate = (id ?? "").toLowerCase()
   const slug = candidate.split(".").pop() ?? candidate
