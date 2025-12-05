@@ -1,5 +1,6 @@
 import type { HttpRequester } from 'beamable-sdk'
 import getBeam from '@/lib/beam'
+import { debugLog } from '@/lib/debugLog'
 
 export type NotificationHandler = (data: any) => void
 
@@ -57,9 +58,7 @@ async function setupBeamRealtimeSubscription(
         ? { ...inner, context: inner.context ?? ctxRaw }
         : { Value: inner, context: ctxRaw }
 
-    try {
-      console.log('[Notifications] Beam websocket message received', normalized)
-    } catch {}
+    debugLog('[Notifications] Beam websocket message received', normalized)
     try {
       handler(normalized)
     } catch (err) {
@@ -68,12 +67,12 @@ async function setupBeamRealtimeSubscription(
   }
 
   socket.addEventListener('message', listener)
-  console.log('[Notifications] Beam websocket subscribed to context:', context)
+  debugLog('[Notifications] Beam websocket subscribed to context:', context)
 
   return () => {
     try {
       socket.removeEventListener('message', listener)
-      console.log('[Notifications] Beam websocket unsubscribed from context:', context)
+      debugLog('[Notifications] Beam websocket unsubscribed from context:', context)
     } catch (err) {
       console.warn('[Notifications] Failed to remove websocket listener:', (err as any)?.message || err)
     }
@@ -95,7 +94,7 @@ export async function subscribeToContext(
   const beam: any = await getBeam()
   const sub: Subscription = { context, stopped: false }
   const contextKey = context.toLowerCase()
-  console.log('[Notifications] subscribe start:', { context })
+  debugLog('[Notifications] subscribe start:', { context })
 
   const normalizeAndHandle = (msg: any) => {
     if (!msg) return
@@ -143,9 +142,7 @@ export async function subscribeToContext(
       }
     }
 
-    try {
-      console.log('[Notifications] normalized message ready for handler', working)
-    } catch {}
+    debugLog('[Notifications] normalized message ready for handler', working)
 
     handler(working)
   }

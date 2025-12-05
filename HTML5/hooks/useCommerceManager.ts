@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import type { ListingContent, StoreContent } from "beamable-sdk"
 import { initCommerceManager, resetCommerceCache } from "@/lib/commerceManager"
+import { debugLog } from "@/lib/debugLog"
 
 type UseCommerceManagerOptions = {
   enabled: boolean
@@ -59,7 +60,7 @@ export default function useCommerceManager({
           loading: false,
           error: null,
         })
-        console.log("[Commerce] Resolved store content (hook):", resolved)
+        debugLog("[Commerce] Resolved store content (hook):", resolved)
       } catch (err) {
         if (cancelled) return
         setState({

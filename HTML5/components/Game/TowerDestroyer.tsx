@@ -19,7 +19,7 @@ function useRenderCounter(label: string, enabled: boolean) {
     if (!enabled) {
       return
     }
-    console.log(`[RenderCounter] ${label} render #${renderCountRef.current}`)
+    debugLog(`[RenderCounter] ${label} render #${renderCountRef.current}`)
   })
 }
 
@@ -42,6 +42,7 @@ import {
 } from "@/lib/beam/player"
 import getBeam from "@/lib/beam"
 import { fetchInventory } from "@/lib/beamInventory"
+import { debugLog } from "@/lib/debugLog"
 import type { ExternalAddressSubscription } from "@/lib/beam/player"
 
 function formatSignatureErrorMessage(err: unknown): string {
@@ -221,12 +222,12 @@ export default function TowerDestroyer() {
       try {
         const { url } = await buildWalletConnectUrl(playerId || null)
         walletConnectUrlRef.current = url
-        console.log("[Stellar] Launching wallet flow:", url)
+        debugLog("[Stellar] Launching wallet flow:", url)
         if (primedWindow && !primedWindow.closed) {
           primedWindow.location.href = url
           primedWindow.focus?.()
           acknowledgeUserAction()
-          console.log("[Stellar] Wallet window navigated for initial wallet connect.")
+          debugLog("[Stellar] Wallet window navigated for initial wallet connect.")
         } else {
           openWalletWindow(url, "initial wallet connect")
         }
@@ -236,14 +237,14 @@ export default function TowerDestroyer() {
         externalSignatureSubRef.current = null
         const handleAddress = async (payload: any) => {
           try {
-            console.log('[Stellar] ExternalAuthAddress message payload:', payload)
+            debugLog('[Stellar] ExternalAuthAddress message payload:', payload)
             if (payload?.messageFull) {
-              console.log('[Stellar] ExternalAuthAddress raw messageFull:', payload.messageFull)
+              debugLog('[Stellar] ExternalAuthAddress raw messageFull:', payload.messageFull)
             }
             const ctxRaw = (payload && (payload.Context ?? payload.context)) || null
             const ctx = ctxRaw ? String(ctxRaw).toLowerCase() : null
             if (ctx && ctx !== EXTERNAL_AUTH_CONTEXT) {
-              console.log('[Stellar] Ignoring message for different context:', ctxRaw)
+              debugLog('[Stellar] Ignoring message for different context:', ctxRaw)
               return
             }
             let value = (payload && (payload.Value ?? payload.value)) || null
@@ -265,12 +266,12 @@ export default function TowerDestroyer() {
               return
             }
             challengeSolutionRef.current = { challenge_token: challengeToken }
-            console.log('[Stellar] challenge_token:', challengeToken)
+            debugLog('[Stellar] challenge_token:', challengeToken)
             const signUrl = buildSignUrlFromChallenge(challengeToken)
-            console.log('[Stellar] Built sign URL from challenge:', signUrl || '[none]')
+            debugLog('[Stellar] Built sign URL from challenge:', signUrl || '[none]')
             if (signUrl) {
               setPendingSignUrl(signUrl)
-              console.log('[Stellar] Stellar bridge ready. Click "Sign Stellar Wallet" to continue.')
+              debugLog('[Stellar] Stellar bridge ready. Click "Sign Stellar Wallet" to continue.')
             } else {
               console.warn('[Stellar] Unable to build sign URL - missing wallet bridge base or invalid payload.')
             }
@@ -279,12 +280,12 @@ export default function TowerDestroyer() {
           } finally {
             externalAddressSubRef.current?.stop?.()
             externalAddressSubRef.current = null
-            console.log('[Stellar] ExternalAuthAddress subscription stopped after challenge request cycle.')
+            debugLog('[Stellar] ExternalAuthAddress subscription stopped after challenge request cycle.')
           }
         }
         const handleSignature = async (payload: any) => {
           try {
-            console.log('[Stellar] ExternalAuthSignature message payload:', payload)
+            debugLog('[Stellar] ExternalAuthSignature message payload:', payload)
             let signature = (payload && (payload.Value ?? payload.value)) || null
             if (!signature && typeof payload?.messageFull === 'string') {
               try {
@@ -303,14 +304,14 @@ export default function TowerDestroyer() {
             }
             await completeExternalIdentityChallenge(challengeToken, signature)
             await refreshPlayerProfile()
-            console.log('[Stellar] External identity attached via signature.')
+            debugLog('[Stellar] External identity attached via signature.')
             closeWalletWindow()
             setPendingSignUrl(null)
             setSignatureError(null)
             clearBlockedState()
             externalSignatureSubRef.current?.stop?.()
             externalSignatureSubRef.current = null
-            console.log('[Stellar] ExternalAuthSignature subscription stopped after successful attachment.')
+            debugLog('[Stellar] ExternalAuthSignature subscription stopped after successful attachment.')
           } catch (err) {
             const message = formatSignatureErrorMessage(err)
             setSignatureError(message)
@@ -320,11 +321,11 @@ export default function TowerDestroyer() {
         externalAddressSubRef.current = await subscribeToExternalContext(EXTERNAL_AUTH_CONTEXT, handleAddress, {
           intervalMs: 2000,
         })
-        console.log('[Stellar] Subscribed to ExternalAuthAddress notifications.')
+        debugLog('[Stellar] Subscribed to ExternalAuthAddress notifications.')
         externalSignatureSubRef.current = await subscribeToExternalContext(EXTERNAL_SIGN_CONTEXT, handleSignature, {
           intervalMs: 2000,
         })
-        console.log('[Stellar] Subscribed to ExternalAuthSignature notifications.')
+        debugLog('[Stellar] Subscribed to ExternalAuthSignature notifications.')
       } catch (e) {
         console.error('[Stellar] Failed to open External ID attach flow:', (e as any)?.message || e)
       }
@@ -411,7 +412,7 @@ export default function TowerDestroyer() {
       try {
         const beam = await getBeam()
         if ((beam as any)?.stellarFederationClient?.purchaseBall) {
-          console.log("[Commerce] Purchasing listing:", listingId)
+          debugLog("[Commerce] Purchasing listing:", listingId)
           await (beam as any).stellarFederationClient.purchaseBall({ purchaseId: listingId })
           await fetchInventory(beam)
           setInventoryRefreshKey((prev) => prev + 1)
@@ -429,7 +430,7 @@ export default function TowerDestroyer() {
     if (!inventoryInitialized) return
     if (commerceLoading) return
     if (!storeContent) return
-    console.log("[Commerce] Store resolved and ready:", {
+    debugLog("[Commerce] Store resolved and ready:", {
       store: storeContent,
       listings: storeListings,
       error: commerceError,
@@ -482,7 +483,7 @@ export default function TowerDestroyer() {
         const client = (beam as any)?.stellarFederationClient
         if (client?.updateCurrency) {
           const payload = { currencyContentId: "currency.coins", amount: coinsEarned }
-          console.log("[Coins] Syncing earned coins to server:", payload)
+          debugLog("[Coins] Syncing earned coins to server:", payload)
           await client.updateCurrency(payload)
           setInventoryRefreshKey((prev) => prev + 1)
         } else {

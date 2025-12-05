@@ -2,6 +2,7 @@
 
 import type { Beam, ListingContent, StoreContent } from "beamable-sdk"
 import getBeam from "@/lib/beam"
+import { debugLog } from "@/lib/debugLog"
 
 const DEFAULT_STORE_CONTENT_ID = process.env.NEXT_PUBLIC_STORE_CONTENT_ID || "stores.Store_Nf"
 const DEFAULT_MANIFEST_ID = "global"
@@ -68,7 +69,7 @@ export async function resolveStoreContent(opts: {
   const cached = cachedStores.get(key)
   if (cached) {
     const resolved = { ...cached, fromCache: true }
-    console.log("[Commerce] Store resolved from cache:", resolved)
+    debugLog("[Commerce] Store resolved from cache:", resolved)
     return resolved
   }
 
@@ -104,7 +105,7 @@ export async function resolveStoreContent(opts: {
     const resolved: ResolvedStore = { store, listings: sortedListings }
     cachedStores.set(key, resolved)
     const result: ResolvedStoreResult = { ...resolved, fromCache: false }
-    console.log("[Commerce] Store resolved:", result)
+    debugLog("[Commerce] Store resolved:", result)
     return result
   })()
 
