@@ -299,7 +299,6 @@ export async function requestExternalIdentityChallenge(token: string) {
       }
     })
   pendingExternalIdentityAttach = session
-  console.log('[Stellar] Requesting external identity challenge.')
   return challengeDeferred.promise
 }
 
@@ -315,7 +314,6 @@ export async function completeExternalIdentityChallenge(challengeToken: string, 
     console.warn("[Stellar] Signature has already been provided for the current challenge.")
     return session.attachPromise
   }
-  console.log('[Stellar] Completing external identity challenge.')
   session.signatureDeferred.resolve(signature)
   return session.attachPromise
 }

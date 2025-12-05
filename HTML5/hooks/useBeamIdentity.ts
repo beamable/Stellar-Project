@@ -70,10 +70,7 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
     try {
       const { stellarId } = await saveAliasAndAttachWallet(aliasInput)
       if (stellarId) {
-        console.log("[Stellar] Custodial wallet attached. Stellar ID:", stellarId)
         setStellarExternalId(stellarId)
-      } else {
-        console.log("[Stellar] Custodial wallet attached (no external userId found).")
       }
       setAlias(aliasInput)
       setAliasModalOpen(false)
@@ -92,7 +89,6 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
         if (!mounted) return
         setPlayerId(id)
         setBeamReady(true)
-        console.log("[Beam] Initialized. Player ID:", id)
       })
       .catch((err: unknown) => {
         console.error("[Beam] Initialization failed:", (err as any)?.message || err)
@@ -115,11 +111,9 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
       try {
         const info = await fetchStellarIdentityInfo()
         if (info.custodialId) {
-          console.log("[Stellar] Returning player Stellar ID:", info.custodialId)
           setStellarExternalId(info.custodialId)
         }
         if (info.externalId) {
-          console.log("[Stellar] Returning player Stellar External ID:", info.externalId)
           setStellarExternalIdentityId(info.externalId)
         }
         stellarLoggedOnceRef.current = true

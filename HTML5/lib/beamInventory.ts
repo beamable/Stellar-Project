@@ -11,6 +11,7 @@ import {
   inventoryPutProxyReloadByObjectId,
   inventoryPutTransferByObjectId,
 } from "beamable-sdk/api"
+import { debugLog } from "@/lib/debugLog"
 
 // Derive types from the generated API functions to avoid missing exports in the main barrel.
 type InventoryView = Awaited<ReturnType<typeof inventoryGetByObjectId>>["body"]
@@ -39,7 +40,7 @@ export const fetchInventory = (
   beam: Beam,
   options: InventoryScope = {},
 ): Promise<InventoryView> => {
-  console.log("[BeamInventory] Fetching inventory", options)
+  debugLog("[BeamInventory] Fetching inventory", options)
   const { objectId, scope, gamertag } = options
   return unwrap(
     inventoryGetByObjectId(
@@ -52,12 +53,12 @@ export const fetchInventory = (
 }
 
 export const fetchItems = (beam: Beam, gamertag?: string): Promise<ItemContentResponse> => {
-  console.log("[BeamInventory] Fetching items", { gamertag })
+  debugLog("[BeamInventory] Fetching items", { gamertag })
   return unwrap(inventoryGetItemsBasic(beam.requester, gamertag))
 }
 
 export const fetchCurrencies = (beam: Beam, gamertag?: string): Promise<CurrencyContentResponse> => {
-  console.log("[BeamInventory] Fetching currencies", { gamertag })
+  debugLog("[BeamInventory] Fetching currencies", { gamertag })
   return unwrap(inventoryGetCurrencyBasic(beam.requester, gamertag))
 }
 
@@ -66,7 +67,7 @@ export const fetchMultipliers = (
   objectId?: bigint | string,
   gamertag?: string,
 ): Promise<MultipliersGetResponse> => {
-  console.log("[BeamInventory] Fetching multipliers", { objectId, gamertag })
+  debugLog("[BeamInventory] Fetching multipliers", { objectId, gamertag })
   return unwrap(
     inventoryGetMultipliersByObjectId(
       beam.requester,
@@ -81,7 +82,7 @@ export const queryInventory = (
   payload: InventoryQueryRequest,
   options: Pick<InventoryScope, "objectId" | "gamertag"> = {},
 ): Promise<InventoryView> => {
-  console.log("[BeamInventory] Query inventory", { payload, options })
+  debugLog("[BeamInventory] Query inventory", { payload, options })
   return unwrap(
     inventoryPostByObjectId(
       beam.requester,
@@ -97,7 +98,7 @@ export const previewUpdate = (
   payload: InventoryUpdateRequest,
   options: Pick<InventoryScope, "objectId" | "gamertag"> = {},
 ) => {
-  console.log("[BeamInventory] Preview update", { options })
+  debugLog("[BeamInventory] Preview update", { options })
   return unwrap(
     inventoryPutPreviewByObjectId(
       beam.requester,
@@ -113,7 +114,7 @@ export const applyUpdate = (
   payload: InventoryUpdateRequest,
   options: Pick<InventoryScope, "objectId" | "gamertag"> = {},
 ) => {
-  console.log("[BeamInventory] Apply update", { options })
+  debugLog("[BeamInventory] Apply update", { options })
   return unwrap(
     inventoryPutByObjectId(
       beam.requester,
@@ -129,7 +130,7 @@ export const transferInventory = (
   payload: TransferRequest,
   options: Pick<InventoryScope, "objectId" | "gamertag"> = {},
 ) => {
-  console.log("[BeamInventory] Transfer inventory", { options })
+  debugLog("[BeamInventory] Transfer inventory", { options })
   return unwrap(
     inventoryPutTransferByObjectId(
       beam.requester,
@@ -144,7 +145,7 @@ export const reloadProxy = (
   beam: Beam,
   options: Pick<InventoryScope, "objectId" | "gamertag"> = {},
 ) => {
-  console.log("[BeamInventory] Reload proxy", { options })
+  debugLog("[BeamInventory] Reload proxy", { options })
   return unwrap(
     inventoryPutProxyReloadByObjectId(
       beam.requester,
@@ -159,7 +160,7 @@ export const endTransaction = (
   payload: EndTransactionRequest,
   options: Pick<InventoryScope, "objectId" | "gamertag"> = {},
 ): Promise<any> => {
-  console.log("[BeamInventory] End transaction", { options })
+  debugLog("[BeamInventory] End transaction", { options })
   return unwrap(
     inventoryDeleteTransactionByObjectId(
       beam.requester,

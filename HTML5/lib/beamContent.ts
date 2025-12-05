@@ -1,5 +1,6 @@
 import type { Beam, ContentBase } from "beamable-sdk"
 import getBeam from "@/lib/beam"
+import { debugLog } from "@/lib/debugLog"
 
 /**
  * Beam content helpers.
@@ -32,7 +33,7 @@ export async function resolveBallContent(): Promise<BallContent[]> {
   if (inFlight) return inFlight
 
   inFlight = (async () => {
-    console.log("[BeamContent] Resolving ball content...")
+    debugLog("[BeamContent] Resolving ball content...")
     const beam = await getBeam()
     const contentService = getContentService(beam as Beam)
     const balls = (await contentService.getByType({
@@ -43,7 +44,7 @@ export async function resolveBallContent(): Promise<BallContent[]> {
         ball.contentId = ball.id
       }
     })
-    console.log("[BeamContent] Retrieved ball content count:", balls.length)
+    debugLog("[BeamContent] Retrieved ball content count:", balls.length)
     cachedBalls = balls
     return balls
   })()
@@ -51,7 +52,7 @@ export async function resolveBallContent(): Promise<BallContent[]> {
   try {
     return await inFlight
   } finally {
-    console.log("[BeamContent] Resolve cycle complete")
+    debugLog("[BeamContent] Resolve cycle complete")
     inFlight = null
   }
 }
@@ -61,7 +62,7 @@ export function getKnownBalls(): BallContent[] {
 }
 
 export function resetBallContentCache() {
-  console.log("[BeamContent] Resetting ball content cache")
+  debugLog("[BeamContent] Resetting ball content cache")
   cachedBalls = null
   inFlight = null
 }

@@ -188,7 +188,6 @@ export default function useWalletBridge(): UseWalletBridgeResult {
           existing.location.href = targetUrl
           existing.focus?.()
           acknowledgeUserAction()
-          console.log(`[Stellar] Wallet window navigated for ${contextLabel}.`)
           return existing
         } catch (err) {
           console.warn("[Stellar] Failed to reuse wallet window, reopening...", err)
@@ -208,7 +207,6 @@ export default function useWalletBridge(): UseWalletBridgeResult {
         walletWindowRef.current = opened
         acknowledgeUserAction()
         opened.focus?.()
-        console.log(`[Stellar] Wallet window opened for ${contextLabel}.`)
         return opened
       }
       flagWalletPopupBlocked(targetUrl, contextLabel)
@@ -236,7 +234,6 @@ export default function useWalletBridge(): UseWalletBridgeResult {
         window.focus?.()
       } catch {}
       clearBlockedState()
-      console.log("[Stellar] Wallet window primed.")
       return opened
     }
     console.warn(
@@ -285,7 +282,6 @@ export default function useWalletBridge(): UseWalletBridgeResult {
         if (url && url !== "about:blank") {
           walletWindowRef.current = reopened
           clearBlockedState()
-          console.log("[Stellar] Wallet window auto-claimed.")
           return
         }
         reopened.close()
