@@ -5,10 +5,12 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import useBeamIdentity from "@/hooks/useBeamIdentity"
 import useWalletBridge from "@/hooks/useWalletBridge"
 import GameShell from "@/components/Game/GameShell"
-import { getMasterVolume, setMasterVolume } from "@/components/Game/audio"
+import useAudioSettings from "@/hooks/useAudioSettings"
+import useShop from "@/hooks/useShop"
+import useExternalIdentityFlow from "@/hooks/useExternalIdentityFlow"
+import useCampaignOverlay from "@/hooks/useCampaignOverlay"
 
 const SHOULD_LOG_RENDERS = process.env.NEXT_PUBLIC_TD_RENDER_DEBUG === "true"
-const VOLUME_STORAGE_KEY = "tower-destroyer-volume"
 const IS_DEV = process.env.NODE_ENV !== "production"
 
 function useRenderCounter(label: string, enabled: boolean) {
@@ -33,47 +35,20 @@ import { CAMPAIGN_STAGES, CAMPAIGN_STAGE_MAP, DEFAULT_STAGE_ID } from "@/compone
 import useCampaignProgress from "@/hooks/useCampaignProgress"
 import {
   resetBeamSession,
-  buildWalletConnectUrl,
-  subscribeToExternalContext,
-  requestExternalIdentityChallenge,
-  completeExternalIdentityChallenge,
-  EXTERNAL_AUTH_CONTEXT,
-  EXTERNAL_SIGN_CONTEXT,
 } from "@/lib/beam/player"
 import getBeam from "@/lib/beam"
-import { fetchInventory } from "@/lib/beamInventory"
 import { debugLog } from "@/lib/debugLog"
-import type { ExternalAddressSubscription } from "@/lib/beam/player"
-
-function formatSignatureErrorMessage(err: unknown): string {
-  const rawMessage =
-    typeof (err as any)?.message === "string"
-      ? (err as any).message
-      : typeof err === "string"
-        ? err
-        : (() => {
-            try {
-              return JSON.stringify(err)
-            } catch {
-              return "Unknown error"
-            }
-          })()
-
-  const lower = rawMessage.toLowerCase()
-  const beamErrorCode = typeof err === "object" && err !== null ? (err as any).error : undefined
-
-  if (lower.includes("external identity is unavailable") || beamErrorCode === "ExternalIdentityUnavailable") {
-    return "The connected Stellar Wallet is already attached to another Beamable account. Please try again with a different wallet."
-  }
-
-  return rawMessage || "Stellar signature failed. Please try again."
-}
 
 export default function TowerDestroyer() {
   useRenderCounter("TowerDestroyer", SHOULD_LOG_RENDERS)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [volume, setVolume] = useState(1)
-  const [showAudioSettings, setShowAudioSettings] = useState(false)
+  const {
+    volume,
+    showAudioSettings,
+    onVolumeChange,
+    onToggleAudioSettings,
+    onCloseAudioSettings,
+  } = useAudioSettings()
   const {
     beamReady,
     playerId,
@@ -108,13 +83,20 @@ export default function TowerDestroyer() {
   const activeStage = selectedStage ?? CAMPAIGN_STAGE_MAP.get(DEFAULT_STAGE_ID)!
   const totalStages = CAMPAIGN_STAGES.length
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0)
-  const [showShop, setShowShop] = useState(false)
+  const refreshInventory = useCallback(() => {
+    setInventoryRefreshKey((prev) => prev + 1)
+  }, [])
   const { ballTypes, ballTypeMap, ownedBallTypes, loading: ballLoadoutLoading } = useBallLoadout(
     readyForGame,
     inventoryRefreshKey,
   )
   const { amount: currencyAmount, loading: currencyLoading } = useCurrency(readyForGame, inventoryRefreshKey)
   const inventoryInitialized = readyForGame && !ballLoadoutLoading && !currencyLoading
+  const { showShop, openShop, closeShop, purchaseListing } = useShop({
+    inventoryInitialized,
+    onHidePlayerInfo: () => setShowPlayerInfo(false),
+    onRefreshInventory: refreshInventory,
+  })
   const {
     store: storeContent,
     listings: storeListings,
@@ -124,7 +106,6 @@ export default function TowerDestroyer() {
     enabled: inventoryInitialized,
     refreshKey: inventoryRefreshKey,
   })
-  const [campaignUnlocked, setCampaignUnlocked] = useState(false)
   const coinsSyncedRef = useRef(false)
   const {
     canvasRef,
@@ -166,266 +147,54 @@ export default function TowerDestroyer() {
     ? stageProgress.find((entry) => entry.stage.id === nextStage.id)
     : null
   const canAdvanceStage = Boolean(nextStage && nextStageProgress && nextStageProgress.status !== "locked")
+  const walletBridge = useWalletBridge()
+  const campaignWinStageRef = useRef<string | null>(null)
+  const {
+    campaignConfirmed,
+    shouldShowCampaignOverlay,
+    confirmCampaignStage,
+    showCommandDeck,
+    markCommandDeckSeen,
+    setCampaignConfirmed,
+    resetCampaignOverlay,
+  } = useCampaignOverlay({
+    readyForGame,
+    activeStage,
+    showPlayerInfo,
+    setShowPlayerInfo,
+  })
   const {
     pendingSignUrl,
-    setPendingSignUrl,
     signatureError,
-    setSignatureError,
-    blockedState,
-    clearBlockedState,
-    acknowledgeUserAction,
-    openWalletWindow,
-    primeWalletWindow,
-    closeWalletWindow,
-    reset: resetWalletBridge,
-  } = useWalletBridge()
-  const { blocked: walletPopupBlocked, url: walletPopupBlockedUrl, context: walletPopupContext } = blockedState
-  // External auth address subscription handle
-  const externalAddressSubRef = useRef<ExternalAddressSubscription | null>(null)
-  const externalSignatureSubRef = useRef<ExternalAddressSubscription | null>(null)
-  const campaignWinStageRef = useRef<string | null>(null)
-  // ChallengeSolution that we will carry through the process
-  const challengeSolutionRef = useRef<{ challenge_token?: string } | null>(null)
-  const walletConnectUrlRef = useRef<string | null>(null)
-  const buildSignUrlFromChallenge = useCallback(
-    (challengeToken: string) => {
-      const base = walletConnectUrlRef.current
-      if (!base) return null
-      try {
-        if (typeof window === 'undefined' || typeof window.atob !== 'function') {
-          console.warn('[Stellar] Cannot decode challenge token without window.atob')
-          return null
-        }
-        const [challengePayload] = String(challengeToken || '').split('.')
-        if (!challengePayload) return null
-        const decoded = window.atob(challengePayload)
-        const encoded = encodeURIComponent(decoded)
-        return `${base}&message=${encoded}`
-      } catch (err) {
-        console.warn('[Stellar] Failed to parse challenge token:', err)
-        return null
-      }
-    },
-    [],
-  )
-
-  const handleAttachExternalId = useCallback(() => {
-    setSignatureError(null)
-    acknowledgeUserAction()
-    if (pendingSignUrl) {
-      openWalletWindow(pendingSignUrl, "challenge signing", { allowNew: true })
-      return
-    }
-    setPendingSignUrl(null)
-    const primedWindow = primeWalletWindow()
-    ;(async () => {
-      try {
-        const { url } = await buildWalletConnectUrl(playerId || null)
-        walletConnectUrlRef.current = url
-        debugLog("[Stellar] Launching wallet flow:", url)
-        if (primedWindow && !primedWindow.closed) {
-          primedWindow.location.href = url
-          primedWindow.focus?.()
-          acknowledgeUserAction()
-          debugLog("[Stellar] Wallet window navigated for initial wallet connect.")
-        } else {
-          openWalletWindow(url, "initial wallet connect")
-        }
-        externalAddressSubRef.current?.stop?.()
-        externalAddressSubRef.current = null
-        externalSignatureSubRef.current?.stop?.()
-        externalSignatureSubRef.current = null
-        const handleAddress = async (payload: any) => {
-          try {
-            debugLog('[Stellar] ExternalAuthAddress message payload:', payload)
-            if (payload?.messageFull) {
-              debugLog('[Stellar] ExternalAuthAddress raw messageFull:', payload.messageFull)
-            }
-            const ctxRaw = (payload && (payload.Context ?? payload.context)) || null
-            const ctx = ctxRaw ? String(ctxRaw).toLowerCase() : null
-            if (ctx && ctx !== EXTERNAL_AUTH_CONTEXT) {
-              debugLog('[Stellar] Ignoring message for different context:', ctxRaw)
-              return
-            }
-            let value = (payload && (payload.Value ?? payload.value)) || null
-            if (!value && typeof payload?.messageFull === 'string') {
-              try {
-                const inner = JSON.parse(payload.messageFull)
-                value = inner?.Value ?? inner?.value ?? null
-              } catch {}
-            }
-            if (!value || typeof value !== 'string') {
-              console.warn('[Stellar] ExternalAuthAddress payload missing Value:', payload)
-              return
-            }
-            const challengeResp: any = await requestExternalIdentityChallenge(value)
-            const challengeToken =
-              challengeResp?.challenge_token || challengeResp?.challengeResponse?.challenge_token
-            if (!challengeToken) {
-              console.warn('[Stellar] No challenge_token returned from request:', challengeResp)
-              return
-            }
-            challengeSolutionRef.current = { challenge_token: challengeToken }
-            debugLog('[Stellar] challenge_token:', challengeToken)
-            const signUrl = buildSignUrlFromChallenge(challengeToken)
-            debugLog('[Stellar] Built sign URL from challenge:', signUrl || '[none]')
-            if (signUrl) {
-              setPendingSignUrl(signUrl)
-              debugLog('[Stellar] Stellar bridge ready. Click "Sign Stellar Wallet" to continue.')
-            } else {
-              console.warn('[Stellar] Unable to build sign URL - missing wallet bridge base or invalid payload.')
-            }
-          } catch (err) {
-            console.error('[Stellar] External ID challenge request error:', (err as any)?.message || err)
-          } finally {
-            externalAddressSubRef.current?.stop?.()
-            externalAddressSubRef.current = null
-            debugLog('[Stellar] ExternalAuthAddress subscription stopped after challenge request cycle.')
-          }
-        }
-        const handleSignature = async (payload: any) => {
-          try {
-            debugLog('[Stellar] ExternalAuthSignature message payload:', payload)
-            let signature = (payload && (payload.Value ?? payload.value)) || null
-            if (!signature && typeof payload?.messageFull === 'string') {
-              try {
-                const inner = JSON.parse(payload.messageFull)
-                signature = inner?.Value ?? inner?.value ?? null
-              } catch {}
-            }
-            if (!signature || typeof signature !== 'string') {
-              console.warn('[Stellar] ExternalAuthSignature payload missing Value:', payload)
-              return
-            }
-            const challengeToken = challengeSolutionRef.current?.challenge_token
-            if (!challengeToken) {
-              console.warn('[Stellar] Missing challenge_token when signature arrived')
-              return
-            }
-            await completeExternalIdentityChallenge(challengeToken, signature)
-            await refreshPlayerProfile()
-            debugLog('[Stellar] External identity attached via signature.')
-            closeWalletWindow()
-            setPendingSignUrl(null)
-            setSignatureError(null)
-            clearBlockedState()
-            externalSignatureSubRef.current?.stop?.()
-            externalSignatureSubRef.current = null
-            debugLog('[Stellar] ExternalAuthSignature subscription stopped after successful attachment.')
-          } catch (err) {
-            const message = formatSignatureErrorMessage(err)
-            setSignatureError(message)
-            console.error('[Stellar] External signature flow error:', (err as any)?.message || err)
-          }
-        }
-        externalAddressSubRef.current = await subscribeToExternalContext(EXTERNAL_AUTH_CONTEXT, handleAddress, {
-          intervalMs: 2000,
-        })
-        debugLog('[Stellar] Subscribed to ExternalAuthAddress notifications.')
-        externalSignatureSubRef.current = await subscribeToExternalContext(EXTERNAL_SIGN_CONTEXT, handleSignature, {
-          intervalMs: 2000,
-        })
-        debugLog('[Stellar] Subscribed to ExternalAuthSignature notifications.')
-      } catch (e) {
-        console.error('[Stellar] Failed to open External ID attach flow:', (e as any)?.message || e)
-      }
-    })()
-  }, [
-    setSignatureError,
-    pendingSignUrl,
-    openWalletWindow,
-    setPendingSignUrl,
-    primeWalletWindow,
+    walletPopupBlocked,
+    walletPopupBlockedUrl,
+    walletPopupContext,
+    handleAttachExternalId,
+    handleRetryAttach,
+    handleManualWalletOpen,
+  } = useExternalIdentityFlow({
     playerId,
-    acknowledgeUserAction,
-    clearBlockedState,
-    buildSignUrlFromChallenge,
+    aliasModalOpen,
     refreshPlayerProfile,
-    closeWalletWindow,
-  ])
-
-  const handleRetryAttach = useCallback(() => {
-    setSignatureError(null)
-    setPendingSignUrl(null)
-    clearBlockedState()
-    closeWalletWindow()
-  }, [clearBlockedState, closeWalletWindow, setPendingSignUrl, setSignatureError])
-
-  const handleManualWalletOpen = useCallback(() => {
-    if (!walletPopupBlockedUrl) {
-      return
-    }
-    acknowledgeUserAction()
-    openWalletWindow(walletPopupBlockedUrl, walletPopupContext || "Stellar wallet", { allowNew: true })
-  }, [acknowledgeUserAction, openWalletWindow, walletPopupBlockedUrl, walletPopupContext])
-
-
-  useEffect(() => {
-    return () => {
-      try {
-        externalAddressSubRef.current?.stop?.()
-      } catch {}
-      try {
-        externalSignatureSubRef.current?.stop?.()
-      } catch {}
-      closeWalletWindow()
-    }
-  }, [closeWalletWindow])
-
-  useEffect(() => {
-    if (aliasModalOpen) {
-      return
-    }
-    try {
-      externalAddressSubRef.current?.stop?.()
-    } catch {}
-    externalAddressSubRef.current = null
-    try {
-      externalSignatureSubRef.current?.stop?.()
-    } catch {}
-    externalSignatureSubRef.current = null
-    setPendingSignUrl(null)
-    setSignatureError(null)
-    resetWalletBridge()
-  }, [aliasModalOpen, resetWalletBridge, setPendingSignUrl, setSignatureError])
+    walletBridge: {
+      pendingSignUrl: walletBridge.pendingSignUrl,
+      setPendingSignUrl: walletBridge.setPendingSignUrl,
+      signatureError: walletBridge.signatureError,
+      setSignatureError: walletBridge.setSignatureError,
+      blockedState: walletBridge.blockedState,
+      acknowledgeUserAction: walletBridge.acknowledgeUserAction,
+      clearBlockedState: walletBridge.clearBlockedState,
+      openWalletWindow: walletBridge.openWalletWindow,
+      primeWalletWindow: walletBridge.primeWalletWindow,
+      closeWalletWindow: walletBridge.closeWalletWindow,
+      resetWalletBridge: walletBridge.reset,
+    },
+  })
 
   const handleAcknowledgeMechanics = useCallback(() => {
     if (pendingMechanics.length === 0) return
     acknowledgeMechanics(pendingMechanics)
   }, [acknowledgeMechanics, pendingMechanics])
-  const handleOpenShop = useCallback(() => {
-    if (!inventoryInitialized) return
-    setShowPlayerInfo(false)
-    setShowShop(true)
-  }, [inventoryInitialized, setShowPlayerInfo])
-
-  const handleCloseShop = useCallback(() => {
-    setShowShop(false)
-  }, [])
-
-  const handleRefreshCommerce = useCallback(() => {
-    setInventoryRefreshKey((prev) => prev + 1)
-  }, [])
-
-  const handlePurchaseListing = useCallback(
-    async (listingId: string) => {
-      try {
-        const beam = await getBeam()
-        if ((beam as any)?.stellarFederationClient?.purchaseBall) {
-          debugLog("[Commerce] Purchasing listing:", listingId)
-          await (beam as any).stellarFederationClient.purchaseBall({ purchaseId: listingId })
-          await fetchInventory(beam)
-          setInventoryRefreshKey((prev) => prev + 1)
-        } else {
-          throw new Error("PurchaseBall unavailable on StellarFederationClient")
-        }
-      } catch (err) {
-        console.warn("[Commerce] Purchase failed:", err)
-        throw err
-      }
-    },
-    [],
-  )
   useEffect(() => {
     if (!inventoryInitialized) return
     if (commerceLoading) return
@@ -437,36 +206,29 @@ export default function TowerDestroyer() {
     })
   }, [inventoryInitialized, commerceLoading, storeContent, storeListings, commerceError])
 
-  const [campaignConfirmed, setCampaignConfirmed] = useState(false)
-  const lastStageRef = useRef(activeStage.id)
-  const commandDeckSeenRef = useRef(false)
-  useEffect(() => {
-    if (showPlayerInfo) {
-      commandDeckSeenRef.current = true
-    } else if (!showPlayerInfo && commandDeckSeenRef.current) {
-      setCampaignUnlocked(true)
-    }
-  }, [showPlayerInfo])
-  useEffect(() => {
-    if (lastStageRef.current !== activeStage.id) {
-      lastStageRef.current = activeStage.id
-      setCampaignConfirmed(false)
-    }
-  }, [activeStage.id])
   useEffect(() => {
     if (!readyForGame) {
-      setCampaignUnlocked(false)
-      commandDeckSeenRef.current = false
-      setCampaignConfirmed(false)
       coinsSyncedRef.current = false
-      setShowShop(false)
+      closeShop()
     }
-  }, [readyForGame])
+  }, [readyForGame, closeShop])
   useEffect(() => {
     if (showPlayerInfo) {
       setInventoryRefreshKey((prev) => prev + 1)
     }
   }, [showPlayerInfo])
+
+  useEffect(() => {
+    if (showPlayerInfo) {
+      markCommandDeckSeen()
+    }
+  }, [showPlayerInfo, markCommandDeckSeen])
+
+  useEffect(() => {
+    if (!readyForGame) {
+      resetCampaignOverlay()
+    }
+  }, [readyForGame, resetCampaignOverlay])
 
   useEffect(() => {
     if (gameState === "playing") {
@@ -494,13 +256,6 @@ export default function TowerDestroyer() {
       }
     })()
   }, [gameState, readyForGame, coinsEarned])
-  const shouldShowCampaignOverlay =
-    campaignUnlocked && readyForGame && !showPlayerInfo && !campaignConfirmed
-
-  const handleConfirmCampaignStage = useCallback(() => {
-    setCampaignConfirmed(true)
-  }, [])
-
   const handleDebugSkipStage = useCallback(() => {
     if (!IS_DEV) return
     debugForceWin()
@@ -509,11 +264,9 @@ export default function TowerDestroyer() {
   const handleDebugFakeLogin = useCallback(() => {
     if (!IS_DEV) return
     debugFakeLogin()
-    commandDeckSeenRef.current = false
-    setCampaignUnlocked(false)
-    setCampaignConfirmed(false)
+    resetCampaignOverlay()
     setShowPlayerInfo(true)
-  }, [debugFakeLogin, setShowPlayerInfo])
+  }, [debugFakeLogin, resetCampaignOverlay, setShowPlayerInfo])
 
   async function handleResetPlayer() {
     setShowResetConfirm(true)
@@ -533,36 +286,6 @@ export default function TowerDestroyer() {
     window.location.reload()
   }
 
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    const stored = window.localStorage.getItem(VOLUME_STORAGE_KEY)
-    const parsed = stored !== null ? Number.parseFloat(stored) : Number.NaN
-    const initial = Number.isFinite(parsed) ? Math.min(1, Math.max(0, parsed)) : getMasterVolume()
-    setVolume(initial)
-    setMasterVolume(initial)
-  }, [])
-
-  const handleVolumeChange = useCallback((next: number) => {
-    const clamped = Math.min(1, Math.max(0, next))
-    setVolume(clamped)
-    setMasterVolume(clamped)
-    if (typeof window !== "undefined") {
-      try {
-        window.localStorage.setItem(VOLUME_STORAGE_KEY, clamped.toString())
-      } catch {
-        // Ignore write failures
-      }
-    }
-  }, [])
-
-  const handleToggleAudioSettings = useCallback(() => {
-    setShowAudioSettings((prev) => !prev)
-  }, [])
-
-  const handleCloseAudioSettings = useCallback(() => {
-    setShowAudioSettings(false)
-  }, [])
-
   const handleAdvanceCampaignStage = useCallback(() => {
     if (!nextStage || !canAdvanceStage) return
     selectStage(nextStage.id)
@@ -579,8 +302,8 @@ export default function TowerDestroyer() {
         onStartNextLoop: startNextLoop,
         onSelectStage: selectStage,
         onAcknowledgeMechanics: handleAcknowledgeMechanics,
-        onConfirm: handleConfirmCampaignStage,
-        onOpenShop: handleOpenShop,
+        onConfirm: confirmCampaignStage,
+        onOpenShop: openShop,
       }
     : undefined
 
@@ -634,11 +357,8 @@ export default function TowerDestroyer() {
         canShowRestart: hasShot && gameState === "playing",
         onRestart: resetGame,
         isAudioSettingsOpen: showAudioSettings,
-        onToggleAudioSettings: handleToggleAudioSettings,
-        onShowCommandDeck: () => {
-          setCampaignConfirmed(false)
-          setShowPlayerInfo(true)
-        },
+        onToggleAudioSettings: onToggleAudioSettings,
+        onShowCommandDeck: showCommandDeck,
         showDebugControls: IS_DEV,
         onDebugSkipStage: IS_DEV ? handleDebugSkipStage : undefined,
         onDebugFakeLogin: IS_DEV ? handleDebugFakeLogin : undefined,
@@ -693,21 +413,21 @@ export default function TowerDestroyer() {
           onClosePlayerInfo: () => setShowPlayerInfo(false),
           onRetry: resetGame,
           showAudioSettings,
-          onCloseAudioSettings: handleCloseAudioSettings,
+          onCloseAudioSettings,
           volume,
-          onVolumeChange: handleVolumeChange,
-          onOpenShop: handleOpenShop,
-          onCloseShop: handleCloseShop,
+          onVolumeChange,
+          onOpenShop: openShop,
+          onCloseShop: closeShop,
           showShop,
           commerceLoading,
           commerceError,
           storeContent,
           storeListings: storeListings ?? [],
           currencyAmount,
-          onRefreshCommerce: handleRefreshCommerce,
+          onRefreshCommerce: refreshInventory,
           ballTypeMap,
           ownedBallTypes,
-          onPurchaseListing: handlePurchaseListing,
+          onPurchaseListing: purchaseListing,
           showCampaignOverlay: shouldShowCampaignOverlay,
           campaignSelectionProps,
           campaignContext: {
