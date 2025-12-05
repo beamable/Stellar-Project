@@ -383,24 +383,10 @@ export default function TowerDestroyer() {
       externalSignatureSubRef.current?.stop?.()
     } catch {}
     externalSignatureSubRef.current = null
-    resetWalletBridge()
-  }, [aliasModalOpen, resetWalletBridge])
-
-  useEffect(() => {
-    if (aliasModalOpen) {
-      return
-    }
-    try {
-      externalAddressSubRef.current?.stop?.()
-    } catch {}
-    externalAddressSubRef.current = null
-    try {
-      externalSignatureSubRef.current?.stop?.()
-    } catch {}
-    externalSignatureSubRef.current = null
     setPendingSignUrl(null)
     setSignatureError(null)
-  }, [aliasModalOpen, setPendingSignUrl, setSignatureError])
+    resetWalletBridge()
+  }, [aliasModalOpen, resetWalletBridge, setPendingSignUrl, setSignatureError])
 
   const handleAcknowledgeMechanics = useCallback(() => {
     if (pendingMechanics.length === 0) return
