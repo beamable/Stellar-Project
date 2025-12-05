@@ -44,7 +44,7 @@ type WalletBridgeDeps = {
   blockedState: { blocked: boolean; url: string | null; context?: string | null }
   acknowledgeUserAction: () => void
   clearBlockedState: () => void
-  openWalletWindow: (url: string, context?: string, opts?: { allowNew?: boolean }) => void
+  openWalletWindow: (url: string, context?: string, opts?: { allowNew?: boolean }) => Window | null
   primeWalletWindow: () => Window | null
   closeWalletWindow: () => void
   resetWalletBridge: () => void
