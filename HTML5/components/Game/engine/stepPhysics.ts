@@ -29,8 +29,8 @@ type StepPhysicsOptions = {
   resetBall: () => void
   setRemainingTowers: Dispatch<SetStateAction<number>>
   remainingTowersRef: MutableRefObject<number>
-  coinsEarnedRef: MutableRefObject<number>
-  setCoinsEarned: Dispatch<SetStateAction<number>>
+  coinsEarnedRef?: MutableRefObject<number>
+  setCoinsEarned?: Dispatch<SetStateAction<number>>
   windZones?: WindZone[]
   windTimeMs?: number
   onAllTowersDestroyed?: () => "win" | "phase"
@@ -106,6 +106,13 @@ export default function stepPhysics({
   windTimeMs,
   onAllTowersDestroyed,
 }: StepPhysicsOptions) {
+  const coinsRef: MutableRefObject<number> = coinsEarnedRef ?? ({ current: 0 } as MutableRefObject<number>)
+  const applyCoinReward = (amount: number) => {
+    if (!Number.isFinite(amount) || amount === 0) return
+    coinsRef.current += amount
+    setCoinsEarned?.(coinsRef.current)
+  }
+
   ballsRef.current.forEach((ball) => {
     ball.lastX = ball.x
     ball.lastY = ball.y
@@ -225,8 +232,7 @@ export default function stepPhysics({
         ball.fireDestroyCount = fireDestroyCount + 1
         tower.destroyed = true
         const coinReward = tower.isSpecial ? 4 : 2
-        coinsEarnedRef.current += coinReward
-        setCoinsEarned(coinsEarnedRef.current)
+        applyCoinReward(coinReward)
         Audio.playTowerBreakSound(audioContextRef, towerPan)
         createParticles(particlesRef, tower.x + tower.width / 2, tower.y + tower.height / 2, "fire", tower.color)
         const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
@@ -265,8 +271,7 @@ export default function stepPhysics({
       if (tower.hits >= tower.maxHits) {
         tower.destroyed = true
         const coinReward = tower.isSpecial ? 4 : 2
-        coinsEarnedRef.current += coinReward
-        setCoinsEarned(coinsEarnedRef.current)
+        applyCoinReward(coinReward)
         Audio.playTowerBreakSound(audioContextRef, towerPan)
         createParticles(
           particlesRef,
@@ -304,21 +309,20 @@ export default function stepPhysics({
     towersRef.current.forEach((tower) => {
       if (tower.destroyed || laser.hitCount >= laser.maxHits) return
 
-      if (
-        probeX >= tower.x &&
-        probeX <= tower.x + tower.width &&
-        probeY >= tower.y &&
-        probeY <= tower.y + tower.height
-      ) {
-        tower.destroyed = true
-        const coinReward = tower.isSpecial ? 4 : 2
-        coinsEarnedRef.current += coinReward
-        setCoinsEarned(coinsEarnedRef.current)
-        const laserTowerCenterX = tower.x + tower.width / 2
-        Audio.playTowerBreakSound(audioContextRef, toStereoPan(laserTowerCenterX))
-        createLaserParticles(particlesRef, laserTowerCenterX, tower.y + tower.height / 2)
-        const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
-        setScore((prev) => prev + points)
+    if (
+      probeX >= tower.x &&
+      probeX <= tower.x + tower.width &&
+      probeY >= tower.y &&
+      probeY <= tower.y + tower.height
+    ) {
+      tower.destroyed = true
+      const coinReward = tower.isSpecial ? 4 : 2
+      applyCoinReward(coinReward)
+      const laserTowerCenterX = tower.x + tower.width / 2
+      Audio.playTowerBreakSound(audioContextRef, toStereoPan(laserTowerCenterX))
+      createLaserParticles(particlesRef, laserTowerCenterX, tower.y + tower.height / 2)
+      const points = tower.isSpecial ? CONST.POINTS_SPECIAL_TOWER : CONST.POINTS_NORMAL_TOWER
+      setScore((prev) => prev + points)
         laser.hitCount++
 
         if (laser.hitCount >= laser.maxHits) {
