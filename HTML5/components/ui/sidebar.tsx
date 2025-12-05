@@ -31,6 +31,15 @@ const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
+const DEFAULT_SKELETON_WIDTHS = ['55%', '65%', '72%', '60%', '80%']
+
+type SidebarSkeletonContextValue = {
+  nextWidthIndex: () => number
+  widths: string[]
+}
+
+const SidebarSkeletonContext =
+  React.createContext<SidebarSkeletonContextValue | null>(null)
 
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed'
@@ -451,14 +460,49 @@ function SidebarGroupContent({
   )
 }
 
-function SidebarMenu({ className, ...props }: React.ComponentProps<'ul'>) {
+function SidebarMenu({
+  className,
+  widths,
+  children,
+  ...props
+}: React.ComponentProps<'ul'> & { widths?: Array<string | number> }) {
+  const widthSequence = React.useMemo(() => {
+    if (!widths || widths.length === 0) {
+      return DEFAULT_SKELETON_WIDTHS
+    }
+    return widths.map((value) =>
+      typeof value === 'number' ? `${value}%` : value,
+    )
+  }, [widths])
+
+  const widthIndexRef = React.useRef(0)
+  widthIndexRef.current = 0
+
+  const nextWidthIndex = React.useCallback(() => {
+    const current = widthIndexRef.current
+    widthIndexRef.current = (current + 1) % widthSequence.length
+    return current
+  }, [widthSequence])
+
+  const skeletonContextValue = React.useMemo(
+    () => ({
+      nextWidthIndex,
+      widths: widthSequence,
+    }),
+    [nextWidthIndex, widthSequence],
+  )
+
   return (
-    <ul
-      data-slot="sidebar-menu"
-      data-sidebar="menu"
-      className={cn('flex w-full min-w-0 flex-col gap-1', className)}
-      {...props}
-    />
+    <SidebarSkeletonContext.Provider value={skeletonContextValue}>
+      <ul
+        data-slot="sidebar-menu"
+        data-sidebar="menu"
+        className={cn('flex w-full min-w-0 flex-col gap-1', className)}
+        {...props}
+      >
+        {children}
+      </ul>
+    </SidebarSkeletonContext.Provider>
   )
 }
 
@@ -602,11 +646,26 @@ function SidebarMenuBadge({
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
+  widthIndex,
   ...props
 }: React.ComponentProps<'div'> & {
   showIcon?: boolean
+  widthIndex?: number
 }) {
-  const width = '70%'
+  const skeletonContext = React.useContext(SidebarSkeletonContext)
+  const widths = skeletonContext?.widths ?? DEFAULT_SKELETON_WIDTHS
+
+  const resolvedWidthIndex = React.useMemo(() => {
+    if (typeof widthIndex === 'number') {
+      return widthIndex
+    }
+    return skeletonContext?.nextWidthIndex() ?? 0
+  }, [skeletonContext, widthIndex])
+
+  const width =
+    widths.length > 0
+      ? widths[resolvedWidthIndex % widths.length]
+      : DEFAULT_SKELETON_WIDTHS[0]
 
   return (
     <div

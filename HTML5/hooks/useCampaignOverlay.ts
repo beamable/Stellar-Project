@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { CampaignStage } from "@/components/Game/campaign"
 
 type CampaignOverlayOptions = {
@@ -28,7 +28,12 @@ export function useCampaignOverlay({
   setShowPlayerInfo,
 }: CampaignOverlayOptions): CampaignOverlayState {
   const [confirmedStageId, setConfirmedStageId] = useState<string | null>(null)
-  const [commandDeckSeen, setCommandDeckSeen] = useState(false)
+  const [commandDeckSeenState, setCommandDeckSeenState] = useState(false)
+  useEffect(() => {
+    if (!showPlayerInfo) return
+    if (commandDeckSeenState) return
+    setCommandDeckSeenState(true)
+  }, [commandDeckSeenState, showPlayerInfo])
 
   const confirmCampaignStage = useCallback(() => {
     setConfirmedStageId(activeStage.id)
@@ -40,16 +45,17 @@ export function useCampaignOverlay({
   }, [setShowPlayerInfo])
 
   const markCommandDeckSeen = useCallback(() => {
-    setCommandDeckSeen(true)
+    setCommandDeckSeenState(true)
   }, [])
 
+  const commandDeckSeen = commandDeckSeenState || showPlayerInfo
   const campaignUnlocked = commandDeckSeen && readyForGame
   const campaignConfirmed = confirmedStageId === activeStage.id
   const shouldShowCampaignOverlay = campaignUnlocked && !showPlayerInfo && !campaignConfirmed
 
   const resetCampaignOverlay = useCallback(() => {
     setConfirmedStageId(null)
-    setCommandDeckSeen(false)
+    setCommandDeckSeenState(false)
   }, [])
 
   const setCampaignConfirmed = useCallback(
