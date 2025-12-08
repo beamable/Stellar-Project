@@ -7,7 +7,9 @@ using StellarFederationCommon.Extensions;
 
 namespace Beamable.StellarFederation.Features.TransactionProcessor.Handlers;
 
-public class CurrencyAddHandler(CoinCurrencyAddHandler coinCurrencyAddHandler) : IService, ITransactionHandler
+public class CurrencyAddHandler(
+    CoinCurrencyAddHandler coinCurrencyAddHandler,
+    SupplyCurrencyAddHandler supplyCurrencyAddHandler) : IService, ITransactionHandler
 {
     public async Task HandleAsync(List<QueuedTransactionBase> transactions)
     {
@@ -16,6 +18,9 @@ public class CurrencyAddHandler(CoinCurrencyAddHandler coinCurrencyAddHandler) :
         {
             case FederationContentTypes.RegularCoinType:
                 await coinCurrencyAddHandler.HandleAsync(transactions);
+                return;
+            case FederationContentTypes.GoldCoinType:
+                await supplyCurrencyAddHandler.HandleAsync(transactions);
                 return;
             default:
                 throw new NotSupportedException($"No handler found for content type: {currencyAddInventoryRequest!.ContentId}");

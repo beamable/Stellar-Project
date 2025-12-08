@@ -1,5 +1,6 @@
 using System;
 using Beamable.Common.Dependencies;
+using Beamable.Common.Inventory;
 using Beamable.StellarFederation.Features.Contract.Models;
 using StellarFederationCommon.FederationContent;
 
@@ -14,6 +15,7 @@ public class ContentContractHandlerResolver(IDependencyProvider dependencyProvid
         {
             CoinCurrency => dependencyProvider.GetService<CoinCurrencyHandler>(),
             GoldCurrency => dependencyProvider.GetService<GoldCurrencyHandler>(),
+            ItemContent => dependencyProvider.GetService<ItemHandler>(),
             _ => throw new InvalidOperationException($"No handler found for content type: {model.ContentObject.GetType().Name}")
         };
     }

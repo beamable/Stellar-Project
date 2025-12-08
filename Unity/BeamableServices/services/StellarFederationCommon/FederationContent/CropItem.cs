@@ -3,7 +3,6 @@ using Beamable.Common.Content;
 using Beamable.Common.Inventory;
 using StellarFederationCommon.Extensions;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 namespace StellarFederationCommon.FederationContent
 {
@@ -30,7 +29,7 @@ namespace StellarFederationCommon.FederationContent
             };
         }
 
-        [SerializeField] private string name = "";
+        [SerializeField] private new string name = "";
         [SerializeField] private string description = "";
         [SerializeField] private string image = "";
         [SerializeField] private SerializableDictionaryStringToString customProperties = new SerializableDictionaryStringToString();

@@ -37,7 +37,7 @@ public class ContractService : IService
         _cliClient = cliClient;
         _beamContentService = beamContentService;
         _walletManagerService = walletManagerService;
-        SubscribeContentUpdateEvent(socketRequesterContext);
+        //SubscribeContentUpdateEvent(socketRequesterContext);
     }
 
     private void SubscribeContentUpdateEvent(SocketRequesterContext socketRequesterContext)
@@ -116,4 +116,6 @@ public class ContractService : IService
     {
         return await _contractCollection.TryUpsert(contract, id);
     }
+
+
 }

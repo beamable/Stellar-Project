@@ -479,7 +479,7 @@ public class StellarService : IService
 
     public async Task<SorobanLogsResponse> GetSorobanLogs(Block block, string[] contractIds)
     {
-        using (new Measure(nameof(GetLogs)))
+        using (new Measure(nameof(GetSorobanLogs)))
         {
             var rpcInstance = await SorobanInstance();
             var result = new SorobanLogsResponse
@@ -503,7 +503,7 @@ public class StellarService : IService
                     Cursor = !string.IsNullOrWhiteSpace(block.Cursor) ? block.Cursor : null
                 }
             });
-            if (eventsResponse?.Events is not null)
+            if (eventsResponse.Events is not null)
             {
                 foreach (var eventInfo in eventsResponse.Events)
                 {
@@ -513,7 +513,11 @@ public class StellarService : IService
 
                 if (eventsResponse.Events.Length > LogsLimit)
                 {
-                    result.LastCursor = eventsResponse?.Cursor ?? "";
+                    result.LastCursor = eventsResponse.Cursor ?? "";
+                }
+                else
+                {
+                    result.LastProcessedLedger = (uint)eventsResponse.LatestLedger.GetValueOrDefault(0);
                 }
             }
 

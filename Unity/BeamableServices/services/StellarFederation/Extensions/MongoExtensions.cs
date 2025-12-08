@@ -22,6 +22,7 @@ public static class MongoExtensions
 
         BsonClassMap.RegisterClassMap<CoinContract>(cm => cm.AutoMap());
         BsonClassMap.RegisterClassMap<GoldContract>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<ItemContract>(cm => cm.AutoMap());
 
 
         BsonClassMap.RegisterClassMap<QueuedTransactionBase>(cm => {

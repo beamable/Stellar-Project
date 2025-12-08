@@ -46,6 +46,9 @@
         <None Update="Features\Contract\Templates\gold.rs">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Features\Contract\Templates\nft.rs">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>

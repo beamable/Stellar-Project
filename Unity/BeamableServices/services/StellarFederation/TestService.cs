@@ -7,6 +7,7 @@ using Beamable.StellarFederation.Features.BlockProcessor;
 using Beamable.StellarFederation.Features.BlockProcessor.Decoder;
 using Beamable.StellarFederation.Features.BlockProcessor.Handlers;
 using Beamable.StellarFederation.Features.Common;
+using Beamable.StellarFederation.Features.Content;
 using Beamable.StellarFederation.Features.Contract;
 using Beamable.StellarFederation.Features.Contract.CliWrapper;
 using Beamable.StellarFederation.Features.Contract.Functions.Account.Models;
@@ -33,9 +34,10 @@ public class TestService : IService
     private readonly SorobanBlockProcessor _blockProcessor;
     private readonly HorizonBlockProcessor _horizonBlockProcessor;
     private readonly CliClient _cliClient;
+    private readonly BeamContentService _beamContentService;
 
 
-    public TestService(ContractProxy contractProxy, AccountsService accountsService, TransactionManager transactionManager, StellarService stellarService, CreateAccountBlockHandler createAccountBlockHandler, ContractService contractService, StellarRpcClient stellarRpcClient, Configuration configuration, SorobanBlockProcessor blockProcessor, HorizonBlockProcessor horizonBlockProcessor, CliClient cliClient)
+    public TestService(ContractProxy contractProxy, AccountsService accountsService, TransactionManager transactionManager, StellarService stellarService, CreateAccountBlockHandler createAccountBlockHandler, ContractService contractService, StellarRpcClient stellarRpcClient, Configuration configuration, SorobanBlockProcessor blockProcessor, HorizonBlockProcessor horizonBlockProcessor, CliClient cliClient, BeamContentService beamContentService)
     {
         _contractProxy = contractProxy;
         _accountsService = accountsService;
@@ -48,6 +50,7 @@ public class TestService : IService
         _blockProcessor = blockProcessor;
         _horizonBlockProcessor = horizonBlockProcessor;
         _cliClient = cliClient;
+        _beamContentService = beamContentService;
     }
 
     // public async Task Test(string hash)
@@ -91,7 +94,7 @@ public class TestService : IService
         // var transferDecoder = new SorobanEventDecoder<MintEventDto>("mint");
         // var transferEvents = transferDecoder.DecodeEvents(logs.Events);
         //await _blockProcessor.Handle();
-        await _horizonBlockProcessor.Handle();
+        await _contractService.InitializeContentContracts();
         var ie = 0;
 
         //await _contractService.InitializeContentContracts();
@@ -109,6 +112,7 @@ public class TestService : IService
 
     public async Task<string> Test2()
     {
-        return await _cliClient.Test();
+        await _blockProcessor.Handle();
+        return "";
     }
 }

@@ -125,10 +125,4 @@ public class CliClient : IService
         return string.Empty;
     }
 
-
-    public async Task<string> Test()
-    {
-        return await Execute(Executable, "-V");
-    }
-
 }

@@ -24,19 +24,27 @@ public class SorobanBlockProcessor(
         var fromBlockModel = await blockCollection.Get(await configuration.StellarRpc, StellarSettings.SorobanApi);
         if (fromBlockModel is null)
             return;
+
+        var newBlockNumber = fromBlockModel.BlockNumber;
+        var newCursor = fromBlockModel.Cursor;
+
         try
         {
             var allContracts = await contractService.GetAllContracts();
             var logs = await stellarService.GetSorobanLogs(fromBlockModel,
                 allContracts.Select(x => x.Address).ToArray());
+
             if (logs.Events.Count == 0)
             {
                 var block = await stellarService.GetCurrentLedgerSequence();
-                fromBlockModel.BlockNumber = block;
-                return;
+                newBlockNumber = block;
+                newCursor = string.Empty;
             }
-            fromBlockModel.BlockNumber = logs.LastProcessedLedger;
-            fromBlockModel.Cursor = logs.LastCursor;
+            else
+            {
+                newBlockNumber = logs.LastProcessedLedger;
+                newCursor = logs.LastCursor;
+            }
 
             //var mintDecoder = new SorobanEventDecoder<MintEventDto>("mint");
             //var mintEvents = mintDecoder.DecodeEvents(logs.Events);
@@ -50,7 +58,7 @@ public class SorobanBlockProcessor(
         }
         finally
         {
-            await blockCollection.InsertBlock(fromBlockModel);
+            await blockCollection.InsertSorobanBlock(newBlockNumber, newCursor);
         }
     }
 }

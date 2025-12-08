@@ -122,8 +122,8 @@ namespace Beamable.StellarFederation
 		[ClientCallable]
 		public async Promise<AccountResponse> GetAccount(string id)
 		{
-			var account = await Provider.GetService<AccountsService>().GetAccount(Context.UserId.ToString());
-			//var account = await Provider.GetService<AccountsService>().GetAccount(id);
+			//var account = await Provider.GetService<AccountsService>().GetAccount(Context.UserId.ToString());
+			var account = await Provider.GetService<AccountsService>().GetAccount(id);
 			return new AccountResponse
 			{
 				wallet = account.HasValue ? account.Value.Address : "",

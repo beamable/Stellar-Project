@@ -14,6 +14,7 @@ public class ContentHandlerFactory(
         return contentObject switch
         {
             CoinCurrency coinCurrency => serviceProvider.GetRequiredService<RegularCoinHandler>(),
+            GoldCurrency goldCurrency => serviceProvider.GetRequiredService<SupplyCoinHandler>(),
             //_ => throw new NotSupportedException($"ContentId '{contentObject.Id}' is not supported.")
             _ => null
         };

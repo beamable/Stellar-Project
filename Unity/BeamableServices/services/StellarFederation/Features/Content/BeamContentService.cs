@@ -37,12 +37,9 @@ public class BeamContentService : IService
                 var idParts = item.Id.Split('.');
                 return string.Join(".", idParts.Take(idParts.Length - 1));
             })
-            .Select(g => new
-            {
-                Content = new ContentContractsModel(g.Key, g.First())
-            });
+            .Select(g => new ContentContractsModel(g.Key, g.First()));
 
-        return currencies; // ADD itemsByType when contract is created
+        return currencies.Concat(itemsByType);
     }
 
     public async Task<IEnumerable<IContentObject>> FetchFederationContentForState(MicroserviceInfo microserviceInfo)

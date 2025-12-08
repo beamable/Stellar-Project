@@ -16,6 +16,46 @@ namespace StellarFederationCommon.Extensions
         public static string ToCurrencyModuleName(this CurrencyContent coinCurrency)
             => SanitizeModuleName(GetLastPartAfterDot(coinCurrency.Id)).ToLowerInvariant();
 
+
+        /// <summary>
+        /// ItemContent name (items.part)
+        /// </summary>
+        /// <param name="itemContent"></param>
+        /// <returns></returns>
+        public static string ToItemNameType(this IContentObject itemContent)
+        {
+            if (string.IsNullOrEmpty(itemContent.Id))
+                return "";
+
+            var firstDot = itemContent.Id.IndexOf('.');
+            if (firstDot == -1)
+                return itemContent.Id;
+
+            var secondDot = itemContent.Id.IndexOf('.', firstDot + 1);
+            return secondDot == -1 ? itemContent.Id : itemContent.Id[..secondDot];
+        }
+
+        /// <summary>
+        /// ItemContent type (items."part")
+        /// </summary>
+        /// <param name="contentId"></param>
+        /// <returns></returns>
+        public static string ToItemNameType(this string contentId)
+        {
+            if (string.IsNullOrEmpty(contentId))
+                return contentId;
+
+            var firstDot = contentId.IndexOf('.');
+            if (firstDot == -1)
+                return string.Empty;
+
+            var secondDot = contentId.IndexOf('.', firstDot + 1);
+            if (secondDot == -1)
+                return contentId.Substring(firstDot + 1); // only two parts
+
+            return SanitizeModuleName(contentId.Substring(firstDot + 1, secondDot - firstDot - 1));
+        }
+
         private static string GetLastPartAfterDot(this string contentId)
             => contentId.Contains('.') ? contentId[(contentId.LastIndexOf('.') + 1)..] : contentId;
 
