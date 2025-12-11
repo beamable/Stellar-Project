@@ -112,7 +112,7 @@ public class TestService : IService
 
     public async Task<string> Test2()
     {
-        await _blockProcessor.Handle();
+        await _contractProxy.GetItemBalance("GCETJ47OHSHT4VFWSAK3SYHXTVRS3U72MKMJH7JFSV5DSASPMJTP24OU","items.crop");
         return "";
     }
 }

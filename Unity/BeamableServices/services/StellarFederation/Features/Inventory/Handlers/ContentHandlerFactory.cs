@@ -1,6 +1,7 @@
 using System;
 using Beamable.Common.Content;
 using Beamable.Common.Dependencies;
+using Beamable.Common.Inventory;
 using Microsoft.Extensions.DependencyInjection;
 using StellarFederationCommon.FederationContent;
 
@@ -15,6 +16,7 @@ public class ContentHandlerFactory(
         {
             CoinCurrency coinCurrency => serviceProvider.GetRequiredService<RegularCoinHandler>(),
             GoldCurrency goldCurrency => serviceProvider.GetRequiredService<SupplyCoinHandler>(),
+            ItemContent item => serviceProvider.GetRequiredService<ItemStateHandler>(),
             //_ => throw new NotSupportedException($"ContentId '{contentObject.Id}' is not supported.")
             _ => null
         };

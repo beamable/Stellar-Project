@@ -58,6 +58,7 @@
       <Compile Remove="Features\Content\Handlers\ContentHandlerFactory.cs" />
       <Compile Remove="Features\Content\Handlers\IContentHandler.cs" />
       <Compile Remove="Features\Content\Handlers\RegularCoinHandler.cs" />
+      <Compile Remove="Features\Transactions\Storage\MintCollection.cs" />
     </ItemGroup>
 
     <ItemGroup>

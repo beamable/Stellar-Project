@@ -13,16 +13,9 @@ using StellarFederationCommon;
 
 namespace Beamable.StellarFederation.Features.Content;
 
-public class BeamContentService : IService
+public class BeamContentService(ContentService contentService) : IService
 {
-    private readonly ContentService _contentService;
-
     public const string FederationContentLocal = "stellar.federation.content.local";
-
-    public BeamContentService(ContentService contentService)
-    {
-        _contentService = contentService;
-    }
 
     public async Task<IEnumerable<ContentContractsModel>> FetchFederationContentForContracts()
     {
@@ -72,7 +65,7 @@ public class BeamContentService : IService
         return await GlobalCache.GetOrCreate<List<IContentObject>>(FederationContentLocal, async _ =>
         {
             var federatedTypes = StellarFederationCommonHelper.GetFederationTypes();
-            var manifest = await _contentService.GetManifest(new ContentQuery
+            var manifest = await contentService.GetManifest(new ContentQuery
             {
                 TypeConstraints = federatedTypes
             });

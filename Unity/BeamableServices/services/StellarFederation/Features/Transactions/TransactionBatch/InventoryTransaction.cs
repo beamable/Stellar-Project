@@ -20,5 +20,8 @@ public partial class TransactionBatchService
     {
         await _transactionQueueCollection.Insert(itemAddRequest);
     }
-
+    public async Task Insert(IEnumerable<ItemUpdateInventoryRequest> itemUpdateRequest)
+    {
+        await _transactionQueueCollection.Insert(itemUpdateRequest);
+    }
 }

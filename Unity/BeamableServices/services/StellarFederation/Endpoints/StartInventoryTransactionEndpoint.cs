@@ -89,6 +89,24 @@ public class StartInventoryTransactionEndpoint : IEndpoint
                 });
         await _transactionBatchService.Insert(itemAddRequest);
 
+        var itemUpdateRequest = updateItems
+            .Select(c =>
+                new ItemUpdateInventoryRequest
+                {
+                    Wallet = id,
+                    GamerTag = gamerTag,
+                    TransactionId = transactionId,
+                    UniqueTransactionId = transaction,
+                    ConcurrencyKey = c.contentId.ToItemModuleName(),
+                    FunctionName = nameof(ItemAddInventoryRequest),
+                    MicroserviceInfo = microserviceInfo,
+                    Status = TransactionStatus.Pending,
+                    ContentId = c.contentId,
+                    ProxyId = c.proxyId,
+                    Properties = c.properties
+                });
+        await _transactionBatchService.Insert(itemUpdateRequest);
+
         BackgroundServiceState.ResetDelay();
         });
 

@@ -67,7 +67,12 @@ namespace StellarFederationCommon.Extensions
         public static string ToCurrencyModuleName(this string coinCurrencyContentId)
             => SanitizeModuleName(GetLastPartAfterDot(coinCurrencyContentId)).ToLowerInvariant();
 
-        private static string ToContentType(this string contentId)
+        /// <summary>
+        /// items.tar
+        /// </summary>
+        /// <param name="contentId"></param>
+        /// <returns></returns>
+        public static string ToContentType(this string contentId)
             => contentId.Contains('.') ? contentId[..contentId.LastIndexOf('.')] : contentId;
 
         /// <summary>

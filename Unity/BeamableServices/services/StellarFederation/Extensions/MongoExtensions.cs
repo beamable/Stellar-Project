@@ -33,6 +33,7 @@ public static class MongoExtensions
         BsonClassMap.RegisterClassMap<CurrencyAddInventoryRequest>(cm => cm.AutoMap());
         BsonClassMap.RegisterClassMap<CurrencySubtractInventoryRequest>(cm => cm.AutoMap());
         BsonClassMap.RegisterClassMap<ItemAddInventoryRequest>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<ItemUpdateInventoryRequest>(cm => cm.AutoMap());
         BsonClassMap.RegisterClassMap<AccountCreateRequest>(cm => cm.AutoMap());
     }
 }
