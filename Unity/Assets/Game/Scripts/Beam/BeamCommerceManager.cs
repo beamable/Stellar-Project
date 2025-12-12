@@ -17,6 +17,7 @@ namespace Farm.Beam
         [Header("Currency")]
         [SerializeField] private CoinCurrencyRef coinRef;
         [SerializeField] private CurrencyRef testCoinRef;
+        [SerializeField] private bool useTestCoin = false;
 
         [Header("Store")] 
         [SerializeField] private StoreRef storeRefNf;
@@ -32,7 +33,7 @@ namespace Farm.Beam
         {
             await base.InitAsync(ct);
             await ResolveShopListings();
-            _beamContext.Api.InventoryService.Subscribe(testCoinRef.Id, OnCurrencyUpdated);
+            _beamContext.Api.InventoryService.Subscribe(GetCurrencyId(), OnCurrencyUpdated);
             IsReady = true;
         }
 
@@ -45,7 +46,7 @@ namespace Farm.Beam
         private void OnCurrencyUpdated(InventoryView inv)
         {
             var currency = inv.currencies;
-            currency.TryGetValue(testCoinRef.Id, out var value);
+            currency.TryGetValue(GetCurrencyId(), out var value);
             CurrentCoinCount = (int)value;
             OnCoinCountUpdated?.Invoke(CurrentCoinCount);
         }
@@ -60,7 +61,7 @@ namespace Farm.Beam
         {
             try
             {
-                await _stellarClient.UpdateCurrency(testCoinRef.Id, amount);
+                await _stellarClient.UpdateCurrency(GetCurrencyId(), amount);
                 Debug.Log($"Updated Currency to {amount}. Current Balance:{CurrentCoinCount}");
             }
             catch (Exception e)
@@ -95,6 +96,11 @@ namespace Farm.Beam
             {
                 Debug.LogError($"Failed to purchase listing: {e.Message}");
             }
+        }
+
+        private string GetCurrencyId()
+        {
+            return useTestCoin ? testCoinRef.Id : coinRef.Id;
         }
     }
 }

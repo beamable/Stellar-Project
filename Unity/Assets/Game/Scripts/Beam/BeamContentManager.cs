@@ -12,12 +12,13 @@ namespace Farm.Beam
     {
         [SerializeField] private CropItemRef[] cropsNfContentRefs;
         [SerializeField] private CropItemRef[] cropsContentRefs;
+        [SerializeField] private bool useFederatedContent = true;
 
         private const string DataPathProp = "DataSource";
         private const string YieldSellingPriceProp = "SellingPrice";
         private const string SeedBuyingPriceProp = "SeedPrice";
         
-        public List<PlantInfo> CropNfContent { get; private set; }
+        public List<PlantInfo> CropContent { get; private set; }
         
         public override async UniTask InitAsync(CancellationToken ct)
         {
@@ -30,19 +31,19 @@ namespace Farm.Beam
         public override async UniTask ResetAsync(CancellationToken ct)
         {
             await base.ResetAsync(ct);
-            CropNfContent.Clear();
+            CropContent.Clear();
         }
 
         private async UniTask SyncContentAsync(CancellationToken ct)
         {
-            CropNfContent = new List<PlantInfo>();
-
-            foreach (var cropRef in cropsNfContentRefs)
+            CropContent = new List<PlantInfo>();
+            var contentsToUse = useFederatedContent ? cropsContentRefs : cropsNfContentRefs;
+            foreach (var cropRef in contentsToUse)
             {
                 var cropResolved = await cropRef.Resolve();
                 var cropDataPath = cropResolved.CustomProperties.GetValueOrDefault(DataPathProp, "");
                 var data = Resources.Load<CropsData>(cropDataPath);
-                CropNfContent.Add(new PlantInfo
+                CropContent.Add(new PlantInfo
                 {
                     contentId = cropResolved.Id,
                     yieldSellPrice = cropResolved.CustomProperties.TryGetValue(YieldSellingPriceProp, out var sellingPrice) ? int.Parse(sellingPrice) : 0,
@@ -56,7 +57,7 @@ namespace Farm.Beam
         
         public PlantInfo GetCropInfo(string contentId)
         {
-            return CropNfContent.Find(c => c.contentId == contentId);
+            return CropContent.Find(c => c.contentId == contentId);
         }
     }
 }

@@ -20,6 +20,8 @@ namespace Farm.Beam
         [SerializeField] private CropItemRef defaultCropRef;
         [SerializeField] private CropItemRef testItemRef;
 
+        private bool _addingDefaultCrop = false;
+        private const string AnonymousAlias = "Anonymous";
         private BeamContentManager _contentManager;
         
         public bool IsRefreshing { get; private set; }
@@ -35,8 +37,20 @@ namespace Farm.Beam
             await base.InitAsync(ct);
             _contentManager = BeamManager.Instance.ContentManager;
             PlayerCrops = new List<PlantInfo>();
-            //await FetchInventory();
+            IsReady = true;
+            
+        }
+
+        private async void OnEnable()
+        {
+            await UniTask.WaitUntil(() => BeamManager.Instance.AccountManager.IsReady);
+            await UniTask.WaitUntil(IsAliasSet);
             _beamContext.Api.InventoryService.Subscribe(OnInvRefresh);
+        }
+
+        private bool IsAliasSet()
+        {
+            return !string.Equals(AnonymousAlias,BeamManager.Instance.AccountManager.CurrentAccount.Alias);
         }
 
         public override async UniTask ResetAsync(CancellationToken ct)
@@ -49,7 +63,7 @@ namespace Farm.Beam
         {
             FetchInventory(inv).ContinueWith(() =>
             {
-                IsReady = true;
+                IsRefreshing = false;
             });
         }
 
@@ -57,13 +71,11 @@ namespace Farm.Beam
         public async UniTask FetchInventory(InventoryView inv)
         {
             IsRefreshing = true;
-            //var inv = await GetCurrentInventoryView();
             await UpdateDefaultCropInfo(inv);
             
             if(inv.items.Count < 1) return;
             ProcessCropInstances(inv);
             await UniTask.Yield();
-            IsRefreshing = false;
             OnInventoryUpdated?.Invoke();
         }
 
@@ -97,7 +109,7 @@ namespace Farm.Beam
         }
 
         [ContextMenu("Add Crop")]
-        public async UniTask AddCrop() //TODO: update with param content id
+        public async UniTask TestAddCrop() //TODO: update with param content id
         {
             try
             {
@@ -143,15 +155,19 @@ namespace Farm.Beam
             var defaultCropInfo = _contentManager.GetCropInfo(defaultCropRef.Id);
             if (itemsGroup.items.Count < 1 || !itemsGroup.items.ContainsKey(defaultCropRef.Id))
             {
+                if(_addingDefaultCrop) return false;
+                _addingDefaultCrop = true;
                 var properties = new Dictionary<string, string>
                 {
                     { GameConstants.SeedsLeftProp, defaultCropInfo.seedsToPlant.ToString() },
                     { GameConstants.YieldProp, defaultCropInfo.yieldAmount.ToString() }
                 };
                 await _stellarClient.AddItem(defaultCropRef.Id, properties);
+                Debug.Log($"Adding item {defaultCropInfo.contentId} to inventory");
                 return false;
             }
 
+            _addingDefaultCrop = false;
             var cropInstances = itemsGroup.items[defaultCropRef.Id];
             var cropInstance = cropInstances[0];
 
