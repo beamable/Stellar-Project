@@ -83,6 +83,12 @@ public class StellarService : IService
         }
     }
 
+    public async ValueTask<Hash> GetNetworkHash()
+    {
+        await SetNetwork();
+        return new Hash(Network.Current!.NetworkId);
+    }
+
     public static CreateWalletResponse CreateWallet()
     {
         var keypair = KeyPair.Random();

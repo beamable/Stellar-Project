@@ -61,8 +61,4 @@
       <Compile Remove="Features\Transactions\Storage\MintCollection.cs" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Features\Content\Handlers\Models\" />
-    </ItemGroup>
-
 </Project>

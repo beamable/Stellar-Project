@@ -1,0 +1,60 @@
+using System;
+using System.Collections.Generic;
+using Beamable.Common;
+using Beamable.Common.Api.Inventory;
+using Beamable.Server;
+using StellarFederationCommon.FederationContent;
+
+namespace Beamable.StellarFederation;
+
+public partial class StellarFederation
+{
+    [ClientCallable]
+    public async Promise UpdateCurrency(string currencyContentId, int amount)
+    {
+        var invService = Services.Inventory;
+        await invService.AddCurrency(currencyContentId, amount);
+        BeamableLogger.Log($"Added {amount} of {currencyContentId} to inventory");
+    }
+
+
+    [ClientCallable]
+    public async Promise AddItem(string itemContentId, Dictionary<string, string>? properties = null)
+    {
+        var invService = Services.Inventory;
+        await invService.AddItem(itemContentId, properties);
+        BeamableLogger.Log($"Added {itemContentId} to inventory");
+    }
+
+    [ClientCallable]
+    public async Promise RemoveItem(string itemContentId, long instanceId)
+    {
+        var invService = Services.Inventory;
+        await invService.DeleteItem(itemContentId, instanceId);
+        BeamableLogger.Log($"Removed {itemContentId} from inventory");
+    }
+
+    /// <summary>
+    /// A list of dictionaries with instanceId and properties
+    /// </summary>
+    /// <param name="items"></param>
+    [ClientCallable]
+    public async Promise UpdateItems(List<CropUpdateRequest> items)
+    {
+        try
+        {
+            var invService = Services.Inventory;
+            var builder = new InventoryUpdateBuilder();
+            foreach (var item in items)
+            {
+                builder.UpdateItem(item.ContentId, item.InstanceId, item.Properties);
+            }
+
+            await invService.Update(builder);
+        }
+        catch (Exception e)
+        {
+            BeamableLogger.Log($"Error updating items: {e.Message}");
+        }
+    }
+}

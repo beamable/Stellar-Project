@@ -17,11 +17,9 @@ public partial class StellarFederation : IFederatedInventory<StellarWeb3External
         return await Provider.GetService<AuthenticateExternalEndpoint>()
             .Authenticate(token, challenge, solution);
     }
-    async Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3ExternalIdentity>.GetInventoryState(string id)
+    Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3ExternalIdentity>.GetInventoryState(string id)
     {
-        var microserviceInfo = MicroserviceMetadataExtensions.GetMetadata<StellarFederation, StellarWeb3ExternalIdentity>();
-        return await Provider.GetService<GetInventoryStateEndpoint>()
-            .GetInventoryState(id, microserviceInfo);
+        return new Promise<FederatedInventoryProxyState>();
     }
 
     async Promise<FederatedInventoryProxyState> IFederatedInventory<StellarWeb3ExternalIdentity>.StartInventoryTransaction(string id, string transaction, Dictionary<string, long> currencies, List<FederatedItemCreateRequest> newItems, List<FederatedItemDeleteRequest> deleteItems,

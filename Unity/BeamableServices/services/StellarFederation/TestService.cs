@@ -11,6 +11,7 @@ using Beamable.StellarFederation.Features.Content;
 using Beamable.StellarFederation.Features.Contract;
 using Beamable.StellarFederation.Features.Contract.CliWrapper;
 using Beamable.StellarFederation.Features.Contract.Functions.Account.Models;
+using Beamable.StellarFederation.Features.Contract.Functions.Approval.Models;
 using Beamable.StellarFederation.Features.Contract.Functions.Minting.Models;
 using Beamable.StellarFederation.Features.Contract.Models;
 using Beamable.StellarFederation.Features.Contract.Storage.Models;
@@ -18,6 +19,7 @@ using Beamable.StellarFederation.Features.Scheduler.Storage.Modles;
 using Beamable.StellarFederation.Features.Stellar;
 using Beamable.StellarFederation.Features.Transactions;
 using Beamable.StellarFederation.Features.Transactions.Models;
+using MongoDB.Bson;
 
 namespace Beamable.StellarFederation;
 
@@ -53,66 +55,9 @@ public class TestService : IService
         _beamContentService = beamContentService;
     }
 
-    // public async Task Test(string hash)
-    // {
-    //     var realmAccount = await _accountsService.GetOrCreateRealmAccount();
-    //
-    //     // var tx = await _stellarService.GetStellarTransaction(hash);
-    //     // var i = 0;
-    //     var invTx = Guid.NewGuid().ToString();
-    //     var tx = await _transactionManager.StartTransaction(new NewCustomTransaction(0, realmAccount.Address, invTx,
-    //         "testMint", "mint"));
-    //     await _transactionManager.RunAsyncBlock(tx, invTx, async () =>
-    //     {
-    //         await _contractProxy.CoinBatchMint(new MintCoinFunctionMessage(tx, "currency.coin.beam_coin",
-    //             ["GCVEPND367W4HISKCUOS4A4FYDUAOPBSRT6J7AY5FWUTKNF6VEIO2UHF"], [7]));
-    //     });
-    //
-    //     var invTx2= Guid.NewGuid().ToString();
-    //     var tx2 = await _transactionManager.StartTransaction(new NewCustomTransaction(0, realmAccount.Address, invTx2,
-    //         "testMint", "mint"));
-    //     await _transactionManager.RunAsyncBlock(tx2, invTx2, async () =>
-    //     {
-    //         await _contractProxy.CoinBatchMint(new MintCoinFunctionMessage(tx2, "currency.coin.beam_coin",
-    //             ["GCVEPND367W4HISKCUOS4A4FYDUAOPBSRT6J7AY5FWUTKNF6VEIO2UHF"], [8]));
-    //     });
-    //
-    // }
-    //
-
-    public async Task Test()
+    public async Task<string> Test()
     {
-        var realmAccount = await _accountsService.GetOrCreateRealmAccount();
-        var block = new Block
-        {
-            Network = await _configuration.StellarRpc,
-            Api = StellarSettings.SorobanApi,
-            Cursor = "",
-            BlockNumber = 1910621
-        };
-        // var logs = await _stellarService.GetSorobanLogs(block, ["CADXVUHVL6OVDO56DPIUQNVC3AZTUF2FKNP34DTP4ER7AVGVGOIIHXZB"]);
-        // var transferDecoder = new SorobanEventDecoder<MintEventDto>("mint");
-        // var transferEvents = transferDecoder.DecodeEvents(logs.Events);
-        //await _blockProcessor.Handle();
-        await _contractService.InitializeContentContracts();
-        var ie = 0;
-
-        //await _contractService.InitializeContentContracts();
-        //await _createAccountBlockHandler.Handle(1806810, 1806810);
-        // Task task1 = _accountsService.CreateNewAccount("123");
-        // Task task2 = _accountsService.CreateNewAccount("1234");
-        //
-        // await Task.WhenAll(task1, task2);
-        // var contract = await _contractService.GetByContentId<CoinContract>("currency.coin.beam_coin");
-        // await _stellarRpcClient.InvokeContractAsync(contract.Address, new BalanceFunctionMessage("currency.coin.beam_coin",
-        //     "GCETJ47OHSHT4VFWSAK3SYHXTVRS3U72MKMJH7JFSV5DSASPMJTP24OU"));
-
-        var i = 0;
-    }
-
-    public async Task<string> Test2()
-    {
-        await _contractProxy.GetItemBalance("GCETJ47OHSHT4VFWSAK3SYHXTVRS3U72MKMJH7JFSV5DSASPMJTP24OU","items.crop");
+        await _blockProcessor.Handle();
         return "";
     }
 }

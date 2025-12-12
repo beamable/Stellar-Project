@@ -26,7 +26,7 @@ public class NftCreateHandler(
         foreach (var transaction in typedTransactions)
         {
             var contract = await contractService.GetByContentId<ItemContract>(transaction.ContentId.ToContentType());
-            var tokenId = await counterCollection.GetNextCounterValue(transaction.ContentId);
+            var tokenId = await counterCollection.GetNextCounterValue(transaction.ContentId.ToContentType());
             var metadata = await metadataService.BuildMetadata(tokenId, transaction.ContentId, transaction.Properties);
             var metadataHash = await metadataService.SaveMetadata(metadata);
             mints.Add(new Mint

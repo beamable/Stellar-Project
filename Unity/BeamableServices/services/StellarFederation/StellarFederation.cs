@@ -49,7 +49,7 @@ namespace Beamable.StellarFederation
 				// Initialize Contracts
 #if !DEBUG
 				await initializer.GetService<Features.Contract.ContractService>().InitializeContentContracts();
-				await initializer.Provider.GetService<SchedulerService>().Start();
+				//await initializer.Provider.GetService<SchedulerService>().Start();
 #endif
 			}
 			catch (Exception ex)
@@ -120,10 +120,9 @@ namespace Beamable.StellarFederation
 		}
 
 		[ClientCallable]
-		public async Promise<AccountResponse> GetAccount(string id)
+		public async Promise<AccountResponse> GetAccount()
 		{
-			//var account = await Provider.GetService<AccountsService>().GetAccount(Context.UserId.ToString());
-			var account = await Provider.GetService<AccountsService>().GetAccount(id);
+			var account = await Provider.GetService<AccountsService>().GetAccount(Context.UserId.ToString());
 			return new AccountResponse
 			{
 				wallet = account.HasValue ? account.Value.Address : "",
@@ -132,67 +131,9 @@ namespace Beamable.StellarFederation
 		}
 
 		[ClientCallable]
-		public async Promise Test()
+		public async Promise<string> Test()
 		{
-			await Provider.GetService<TestService>().Test();
+			return await Provider.GetService<TestService>().Test();
 		}
-
-		[ClientCallable]
-		public async Promise<string> Test2()
-		{
-			return await Provider.GetService<TestService>().Test2();
-		}
-
-		#region Placehorders for moe: to be removed later and replaced with proper endpoints in game
-
-		[ClientCallable]
-		public async Promise UpdateCurrency(string currencyContentId, int amount)
-		{
-			var invService = Services.Inventory;
-			await invService.AddCurrency(currencyContentId, amount);
-			BeamableLogger.Log($"Added {amount} of {currencyContentId} to inventory");
-		}
-
-
-		[ClientCallable]
-		public async Promise AddItem(string itemContentId, Dictionary<string, string>? properties = null)
-		{
-			var invService = Services.Inventory;
-			await invService.AddItem(itemContentId, properties);
-			BeamableLogger.Log($"Added {itemContentId} to inventory");
-		}
-
-		[ClientCallable]
-		public async Promise RemoveItem(string itemContentId, long instanceId)
-		{
-			var invService = Services.Inventory;
-			await invService.DeleteItem(itemContentId, instanceId);
-			BeamableLogger.Log($"Removed {itemContentId} from inventory");
-		}
-
-		/// <summary>
-		/// A list of dictionaries with instanceId and properties
-		/// </summary>
-		/// <param name="items"></param>
-		[ClientCallable]
-		public async Promise UpdateItems(List<CropUpdateRequest> items)
-		{
-			try
-			{
-				var invService = Services.Inventory;
-				var builder = new InventoryUpdateBuilder();
-				foreach (var item in items)
-				{
-						builder.UpdateItem(item.ContentId, item.InstanceId, item.Properties);
-				}
-
-				await invService.Update(builder);
-			}
-			catch (Exception e)
-			{
-				BeamableLogger.Log($"Error updating items: {e.Message}");
-			}
-		}
-		#endregion
 	}
 }
