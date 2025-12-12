@@ -228,16 +228,12 @@ public class AccountsService : IService
         return await GetOrCreateAccount(accountName, microserviceInfo);
     }
 
-    // public async Task<List<Vault>> GetVaultsByPrefixAndBalance(string walletPrefix, string currencySymbol, long minBalance = 0)
-    // {
-    //     var vaults = await _vaultCollection.GetVaultsByPrefix(walletPrefix);
-    //     return vaults
-    //         .Where(v => v.VaultBalance != null && v.VaultBalance.Any(b => b.Symbol == currencySymbol && b.Balance >= minBalance))
-    //         .ToList();
-    // }
-    //
-    // public async Task SetCoinBalance(string accountName, string currencySymbol, long balance)
-    // {
-    //     await _vaultCollection.UpsertCoinBalance(accountName, new VaultBalance(currencySymbol, balance));
-    // }
+    public async Task<List<Account>> GetAccounts(long[] accountNames)
+    {
+        var getAccountTasks = accountNames.Select(a => GetAccount(a.ToString())).ToList();
+        var allResults = await Task.WhenAll(getAccountTasks);
+        return allResults
+            .OfType<Account>()
+            .ToList();
+    }
 }

@@ -1,5 +1,6 @@
 using System;
 using Beamable.StellarFederation.Features.Stellar.Models;
+using StellarDotnetSdk.Accounts;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Xdr;
 
@@ -32,5 +33,14 @@ public static class StellarRpcClientExtensions
     public static bool ShouldRetry(this StellarTransactionResult result)
     {
         return result.Status != StellarTransactionStatus.Accepted;
+    }
+
+    public static string ToAddressFromAuth(this StellarDotnetSdk.Operations.SorobanAuthorizationEntry entry)
+    {
+        var scAddress = entry.Credentials.ToXdr();
+        var addressToSign = scAddress.Address.Address;
+        var publicKeyBytes = addressToSign.AccountId.InnerValue.Ed25519.InnerValue;
+        var userKeyPair = KeyPair.FromPublicKey(publicKeyBytes);
+        return userKeyPair.Address;
     }
 }

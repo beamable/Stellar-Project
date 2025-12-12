@@ -89,6 +89,7 @@ impl {{toStructName Name}} {
 
     #[only_owner]
     pub fn batch_update_metadata(e: &Env, updates: Vec<(u32, String)>) {
+        let update_count = updates.len();
         let mut metadata: Map<u32, String> = e.storage()
             .instance()
             .get(&METADATA_KEY)
@@ -98,6 +99,10 @@ impl {{toStructName Name}} {
             metadata.set(token_id, metadata_uri);
         }
         e.storage().instance().set(&METADATA_KEY, &metadata);
+        e.events().publish(
+            (symbol_short!("meta_upd"),),
+            update_count
+        );
     }
 
     fn compose_uri(e: &Env, base_uri: String, suffix: String) -> String {

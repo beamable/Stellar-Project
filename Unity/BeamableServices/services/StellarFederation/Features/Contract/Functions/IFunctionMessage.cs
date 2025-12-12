@@ -12,6 +12,17 @@ public interface IFunctionMessage
     SCVal[] ToArgs();
 }
 
+public interface IFunctionMessageSponsor
+{
+    ObjectId[] TransactionIds { get; }
+    string ContentId { get; }
+    string FunctionName { get; }
+    string ConcurrencyKey { get; }
+    long[] GamerTags { get; }
+    uint[] ExpirationLedger { get; }
+    SCVal[] ToArgs();
+}
+
 public interface IFunctionNativeMessage
 {
     ObjectId TransactionId { get; }
