@@ -20,7 +20,7 @@ public class NftDeleteHandler(
     {
         var typedTransactions = transactions.Cast<ItemDeleteInventoryRequest>().ToList();
         var latestLedger = await stellarService.GetCurrentLedgerSequence();
-        var liveUntil = StellarServiceExtensions.ExpiresInDays(latestLedger, 10);
+        var liveUntil = StellarServiceExtensions.ExpiresInDays(latestLedger);
         var functionMessage = new DeleteItemFunctionMessage(
             typedTransactions.Select(x => x.TransactionId).ToArray(),
             typedTransactions.First().ContentId.ToContentType(),
