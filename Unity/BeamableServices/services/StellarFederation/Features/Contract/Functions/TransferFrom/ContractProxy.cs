@@ -6,9 +6,9 @@ namespace Beamable.StellarFederation.Features.Contract;
 
 public partial class ContractProxy
 {
-    public async Task TransferFrom(string owner, string contentId)
+    public async Task<string> TransferFrom(CoinTransferFromFunctionMessage coinTransferFromFunctionMessage)
     {
-        var contract = await GetContract<ContractBase>(contentId);
-        //var message = new CoinTransferFromFunctionMessage()
+        var contract = await GetContract<ContractBase>(coinTransferFromFunctionMessage.ContentId);
+        return await _stellarRpcClient.SendTransactionAsync(contract.Address, coinTransferFromFunctionMessage);
     }
 }

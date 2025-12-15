@@ -13,7 +13,8 @@ namespace Beamable.StellarFederation.Features.Stellar;
 public static class StellarServiceExtensions
 {
     private const uint LedgersPerDay = 17_280; //5 sec per ledger
-    public static uint ExpiresInDays(uint currentLedger, uint days)
+    private const uint LedgersExpiresInDays = 30;
+    public static uint ExpiresInDays(uint currentLedger, uint days = LedgersExpiresInDays)
         => currentLedger + (LedgersPerDay * days);
 
     public static TransactionBuilder AddCreateAccountOperation(this TransactionBuilder builder, KeyPair keyPair, StellarAmount startingAmount)

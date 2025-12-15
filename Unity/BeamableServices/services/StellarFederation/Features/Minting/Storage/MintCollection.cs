@@ -105,6 +105,7 @@ public class MintCollection : IService
 			    Builders<Mint>.Update
 				    .Set(x => x.Metadata, request.Metadata)
 				    .Set(x => x.MetadataHash, request.MetadataHash)
+				    .Set(x => x.MintState, MintState.Modified)
 				)).ToList();
 
 		await collection.BulkWriteAsync(updates, new BulkWriteOptions

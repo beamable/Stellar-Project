@@ -5,5 +5,5 @@ public class UpdateMetadataRequest
     public uint TokenId { get; set; }
     public NftExternalMetadata Metadata { get; set; } = null!;
 
-    public string MetadataHash { get; set; }
+    public string MetadataHash { get; set; } = "";
 }

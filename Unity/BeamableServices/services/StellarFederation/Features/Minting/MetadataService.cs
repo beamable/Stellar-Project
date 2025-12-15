@@ -21,8 +21,7 @@ namespace Beamable.StellarFederation.Features.Minting;
 public class MetadataService(
     IContentApi contentApi,
     ContentService contentService,
-    Configuration configuration,
-    MintCollection mintCollection)
+    Configuration configuration)
     : IService
 {
     private readonly HttpClient _httpClient = new();

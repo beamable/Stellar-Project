@@ -93,13 +93,32 @@ public class TransactionQueueCollection(IStorageObjectConnectionProvider storage
         }
     }
 
+    // public async Task<IEnumerable<string>> GetPotentialWorkGroupsOld(CancellationToken cancellationToken)
+    // {
+    //     var collection = await Get<QueuedTransactionBase>();
+    //     var filter = Builders<QueuedTransactionBase>.Filter.In(x => x.Status, TransactionProcessValidStatus);
+    //     var cursor = await collection.DistinctAsync(tx => tx.ConcurrencyKey, filter, null, cancellationToken);
+    //     var results = await cursor.ToListAsync(cancellationToken);
+    //     return results?.Where(x => !string.IsNullOrWhiteSpace(x)).Select(s => s!) ?? [];
+    // }
+
     public async Task<IEnumerable<string>> GetPotentialWorkGroups(CancellationToken cancellationToken)
     {
         var collection = await Get<QueuedTransactionBase>();
-        var filter = Builders<QueuedTransactionBase>.Filter.In(x => x.Status, TransactionProcessValidStatus);
-        var cursor = await collection.DistinctAsync(tx => tx.ConcurrencyKey, filter, null, cancellationToken);
-        var results = await cursor.ToListAsync(cancellationToken);
-        return results?.Where(x => !string.IsNullOrWhiteSpace(x)).Select(s => s!) ?? [];
+        // Get all keys currently being processed
+        var processingFilter = Builders<QueuedTransactionBase>.Filter.Eq(x => x.Status, TransactionStatus.Processing);
+        var processingKeysCursor = await collection.DistinctAsync(tx => tx.ConcurrencyKey, processingFilter, null, cancellationToken);
+        var processingKeys = (await processingKeysCursor.ToListAsync(cancellationToken))?.ToHashSet() ?? [];
+
+        // Get keys with valid statuses (Pending/Retrying)
+        var validFilter = Builders<QueuedTransactionBase>.Filter.In(x => x.Status, TransactionProcessValidStatus);
+        var validKeysCursor = await collection.DistinctAsync(tx => tx.ConcurrencyKey, validFilter, null, cancellationToken);
+        var validKeys = await validKeysCursor.ToListAsync(cancellationToken);
+
+        // Return valid keys that aren't currently processing
+        return validKeys?
+            .Where(x => !string.IsNullOrWhiteSpace(x) && !processingKeys.Contains(x))
+            .Select(s => s!) ?? [];
     }
 
     public async Task<List<TTransaction>> FetchBatch<TTransaction>(string concurrencyKey, CancellationToken cancellationToken) where TTransaction : QueuedTransactionBase

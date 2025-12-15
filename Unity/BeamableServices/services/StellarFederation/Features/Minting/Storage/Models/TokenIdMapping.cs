@@ -4,5 +4,5 @@ public record TokenIdMapping
 {
     public string ContentId { get; set; } = null!;
     public uint TokenId { get; set; }
-    public string MetadataHash { get; set; }
+    public string MetadataHash { get; set; } = "";
 }

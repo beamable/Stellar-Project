@@ -19,5 +19,6 @@ public record Mint : TokenIdMapping
 public enum MintState
 {
     Created,
+    Modified,
     Deleted
 }

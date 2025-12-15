@@ -1,7 +1,5 @@
-using System.Linq;
-using System.Reflection;
 using Beamable.Common.Dependencies;
-using Beamable.StellarFederation.Extensions;
+using Beamable.StellarFederation.Endpoints.Commerce;
 
 namespace Beamable.StellarFederation.Endpoints;
 
@@ -13,5 +11,6 @@ public static class ServiceRegistration
         builder.AddScoped<StartInventoryTransactionEndpoint>();
         builder.AddScoped<GetInventoryStateEndpoint>();
         builder.AddScoped<AuthenticateExternalEndpoint>();
+        builder.AddScoped<GetListingsEndpoint>();
     }
 }

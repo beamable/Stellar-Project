@@ -10,7 +10,7 @@ namespace Beamable.StellarFederation.Features.Contract;
 
 public partial class ContractProxy
 {
-    private const long MinApprovalAmount = 10000;
+    private const long MaxApproval = 10_000_000_000;
 
     public async Task<CoinAllowanceResponse> GetCoinAllowance(string owner, string contentId)
     {
@@ -23,8 +23,9 @@ public partial class ContractProxy
             return new CoinAllowanceResponse(0);
 
         var reader = new XdrDataInputStream(Convert.FromBase64String(balanceResponse));
-        var transactionResult = TransactionResult.Decode(reader);
-        return new CoinAllowanceResponse(transactionResult.Ext.Discriminant);
+        var scVal = SCVal.Decode(reader);
+        var amount = (long)scVal.I128.Lo.InnerValue;
+        return new CoinAllowanceResponse(amount);
     }
 
     public async Task<string> CoinApproval(CoinApprovalFunctionRequest request)
@@ -32,7 +33,7 @@ public partial class ContractProxy
         var contract = await GetContract<ContractBase>(request.ContentId);
         var contractAccount = await _accountsService.GetAccount(request.ContentId);
         var latestLedger = await _stellarService.GetCurrentLedgerSequence();
-        var liveUntil = StellarServiceExtensions.ExpiresInDays(latestLedger, 10);
+        var liveUntil = StellarServiceExtensions.ExpiresInDays(latestLedger);
         var message = new CoinApprovalFunctionMessage(
             request.TransactionIds,
             request.ContentId,
@@ -40,9 +41,7 @@ public partial class ContractProxy
             request.GamerTags,
             request.From,
             Enumerable.Repeat(contractAccount!.Value.Address, request.Amount.Length).ToArray(),
-            request.Amount
-                .Select(amount => amount < MinApprovalAmount ? MinApprovalAmount : amount)
-                .ToArray(),
+            Enumerable.Repeat(MaxApproval, request.Amount.Length).ToArray(),
             Enumerable.Repeat(liveUntil, request.Amount.Length).ToArray());
         return await _stellarRpcClient.SendDecoupledTransactionAsync(contract.Address, message);
     }
