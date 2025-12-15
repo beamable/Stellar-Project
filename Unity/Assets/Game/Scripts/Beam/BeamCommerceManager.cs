@@ -34,7 +34,6 @@ namespace Farm.Beam
             await base.InitAsync(ct);
             await ResolveShopListings();
             _beamContext.Api.InventoryService.Subscribe(GetCurrencyId(), OnCurrencyUpdated);
-            IsReady = true;
         }
 
 
@@ -43,9 +42,10 @@ namespace Farm.Beam
             await base.ResetAsync(ct);
         }
 
-        private void OnCurrencyUpdated(InventoryView inv)
+        private void OnCurrencyUpdated(InventoryView view)
         {
-            var currency = inv.currencies;
+            if (!BeamManager.Instance.InventoryManager.IsDirty(view)) return; 
+            var currency = view.currencies;
             currency.TryGetValue(GetCurrencyId(), out var value);
             CurrentCoinCount = (int)value;
             OnCoinCountUpdated?.Invoke(CurrentCoinCount);
@@ -87,6 +87,7 @@ namespace Farm.Beam
             {
                 await _beamContext.Api.CommerceService.Purchase(storeRefNf.Id, listing.Id);
                 await _beamContext.Inventory.Refresh();
+                await BeamManager.Instance.InventoryManager.ForceIsRefreshing();
                 await UniTask.WaitUntil(()=> !BeamManager.Instance.InventoryManager.IsRefreshing);
                 var crop = BeamManager.Instance.ContentManager.GetCropInfo(listing.offer.obtainItems[0].contentId);
                 if(crop == null) return;

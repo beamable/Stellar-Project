@@ -92,7 +92,7 @@ namespace Farm.UI
             inventoryPanel.ForceCloseInventory();
         }
 
-        public async UniTask GoToSleep(int currentDay)
+        public async UniTask SleepThenWakeUp(int currentDay)
         {
             await FadeIn();
             await ShowSleepTexts(currentDay);
@@ -100,8 +100,9 @@ namespace Farm.UI
 
             await UniTask.Yield();
             
+            await BeamManager.Instance.InventoryManager.UpdateCropInfos();
+            await BeamManager.Instance.InventoryManager.ForcedStellarMintWaitingTime();
             OnPlayerAwoken?.Invoke();
-            BeamManager.Instance.InventoryManager.UpdateCropInfos().Forget();
             await FadeOut();
         }
 
@@ -130,10 +131,10 @@ namespace Farm.UI
         public void OpenInventory()
         {
             inventoryPanel.OpenInventory();
-            if(!inventoryPanel.gameObject.activeSelf)
-            {
-                BeamManager.Instance.InventoryManager.UpdateCropInfos().Forget();
-            }
+            // if(!inventoryPanel.gameObject.activeSelf)
+            // {
+            //     BeamManager.Instance.InventoryManager.UpdateCropInfos().Forget();
+            // }
         }
 
         public void OnCloseHowToPlay()

@@ -53,6 +53,8 @@ namespace Farm.Player
         private const string YieldTab = "Yield Shop";
         private const string ShopTab = "Seeds Shop";
 
+        public bool WaitTillCurrencyUpdate { get; private set; }
+
         #endregion
 
         #region Unity Methods
@@ -126,6 +128,7 @@ namespace Farm.Player
         private void UpdatePlayerCurrency(int obj)
         {
             currencyValue.text = PlayerCurrency.ToString();
+            if (WaitTillCurrencyUpdate) SetLoadingBlocker(false);
         }
 
         public void OpenInventory()
@@ -215,10 +218,16 @@ namespace Farm.Player
             IEnumerator WaitAndDeactivate()
             {
                 yield return new WaitForSeconds(3);
-                if (autoDeactivate) gameObject.SetActive(false);
+                if (autoDeactivate)
+                {
+                    gameObject.SetActive(false);
+                    SetWaitTillCurrencyUpdate(false);
+                }
             }
             
         }
+        
+        public void SetWaitTillCurrencyUpdate(bool wait) => WaitTillCurrencyUpdate = wait;
         
         #endregion
         

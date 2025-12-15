@@ -1,5 +1,6 @@
 using System;
 using Beamable.Common.Shop;
+using Cysharp.Threading.Tasks;
 using Farm.Beam;
 using Farm.Managers;
 using Farm.Player;
@@ -72,9 +73,10 @@ namespace Farm.Game.Scripts.MainMenu
             try
             {
                 _mainMenuShop.SetLoadingBlocker(true);
+                _mainMenuShop.SetIsPurchasing(true);
                 await BeamManager.Instance.CommerceManager.PurchaseListing(_listing);
-                _mainMenuShop.SetLoadingBlocker(false);
                 AudioManager.Instance.PlaySfx(8);
+                await UniTask.WaitUntil(()=> !_mainMenuShop.IsPurchasing);
                 _isOwned = true;
                 SetButtonsStatus();
             }

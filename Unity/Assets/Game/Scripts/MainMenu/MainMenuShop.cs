@@ -42,6 +42,7 @@ namespace Farm.Game.Scripts.MainMenu
 
         #region Variables
         
+        
         private const string InventoryTabText = "Inventory";
         private const string ShopTabText = "Crop Shop";
 
@@ -51,6 +52,7 @@ namespace Farm.Game.Scripts.MainMenu
         private List<PlantInfo> PlayerCrops => BeamManager.Instance.InventoryManager.PlayerCrops;
         private List<ListingContent> StoreListings => BeamManager.Instance.CommerceManager.Listings;
 
+        public bool IsPurchasing { get; private set; }
         #endregion
 
         #region Unity_Methods
@@ -109,6 +111,8 @@ namespace Farm.Game.Scripts.MainMenu
         private void UpdatePlayerCurrency(int currency)
         {
             currencyValue.text = PlayerCurrency.ToString();
+            IsPurchasing = false;
+            SetLoadingBlocker(false);
         }
         
         public void SetLoadingBlocker(bool isLoading, bool autoDeactivate = false, string text = "Loading...")
@@ -122,7 +126,11 @@ namespace Farm.Game.Scripts.MainMenu
             IEnumerator WaitAndDeactivate()
             {
                 yield return new WaitForSeconds(3);
-                if (autoDeactivate) loadingPanel.SetActive(false);
+                if (autoDeactivate)
+                {
+                    loadingPanel.SetActive(false);
+                    IsPurchasing = false;
+                }
             }
             
         }
@@ -174,5 +182,10 @@ namespace Farm.Game.Scripts.MainMenu
         }
 
         #endregion
+
+        public void SetIsPurchasing(bool purchasing)
+        {
+            this.IsPurchasing = purchasing;
+        }
     }
 }

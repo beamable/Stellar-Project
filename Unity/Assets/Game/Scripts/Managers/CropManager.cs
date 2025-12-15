@@ -18,6 +18,7 @@ namespace Farm.Managers
             new Dictionary<GameConstants.CropType, PlantInfo>();
 
         public static event Action<PlantInfo> OnCropInfoUpdated;
+        public static event Action UpdateInventory;
         
         protected override void OnAfterInitialized()
         {
@@ -33,6 +34,27 @@ namespace Farm.Managers
             }
             
             UiManager.Instance.PopulateInventory(BeamManager.Instance.InventoryManager.PlayerCrops);
+        }
+
+        private void OnEnable()
+        {
+            BeamInventoryManager.OnInventoryUpdated += UpdateDictionary;
+        }
+        
+        private void OnDisable()
+        {
+            BeamInventoryManager.OnInventoryUpdated -= UpdateDictionary;
+        }
+
+        //Update CropsDictionary 
+        private void UpdateDictionary()
+        {
+            CropsDictionary.Clear();
+            foreach (var plant in BeamManager.Instance.InventoryManager.PlayerCrops)
+            {
+                CropsDictionary[plant.cropData.cropType] = plant;
+            }
+            UpdateInventory?.Invoke();
         }
 
         //TODO: Remove this later
@@ -72,7 +94,9 @@ namespace Farm.Managers
             if(plant == null) return;
             var totalYield = extraYield + plant.cropData.yield;
             plant.yieldAmount += totalYield;
+            Debug.Log($"Added {totalYield} to {plant.cropData.cropType} yield");
             OnCropInfoUpdated?.Invoke(plant);
+            Debug.Log($"New yield for {plant.cropData.cropType}: {plant.yieldAmount}");
         }
 
         public void UseYield(GameConstants.CropType cropType, int yieldToConsume)

@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Beamable;
 using Beamable.Common.Api.Inventory;
 using Beamable.Common.Content;
 using Beamable.Player;
 using Cysharp.Threading.Tasks;
 using Farm.Helpers;
+using Farm.Managers;
 using StellarFederationCommon.FederationContent;
 using UnityEngine;
 
@@ -17,9 +19,14 @@ namespace Farm.Beam
     {
         #region Variables
 
+        [Header("Stellar Mint")]
+        [SerializeField] private int stellarMintTime;
+        
+        [Header("Crop Refs")]
         [SerializeField] private CropItemRef defaultCropRef;
         [SerializeField] private CropItemRef testItemRef;
 
+        private int _lastInvHash;
         private bool _addingDefaultCrop = false;
         private const string AnonymousAlias = "Anonymous";
         private BeamContentManager _contentManager;
@@ -47,7 +54,17 @@ namespace Farm.Beam
             await UniTask.WaitUntil(IsAliasSet);
             _beamContext.Api.InventoryService.Subscribe(OnInvRefresh);
         }
-
+        
+        // public void SubScribeToCropMangerEvents()
+        // {
+        //     CropManager.OnCropInfoUpdated += UpdateCropInfos;
+        // }
+        //
+        // public void UnSubScribeToCropMangerEvents()
+        // {
+        //     CropManager.OnCropInfoUpdated
+        // }
+        
         private bool IsAliasSet()
         {
             return !string.Equals(AnonymousAlias,BeamManager.Instance.AccountManager.CurrentAccount.Alias);
@@ -59,16 +76,19 @@ namespace Farm.Beam
             PlayerCrops.Clear();
         }
 
-        private void OnInvRefresh(InventoryView inv)
+        private void OnInvRefresh(InventoryView view)
         {
-            FetchInventory(inv).ContinueWith(() =>
+            if (!IsDirty(view) && PlayerCrops.Count > 1) return; 
+            Debug.LogWarning($"On Inventory Refresh called...Now Refreshing...");
+            FetchInventory(view).ContinueWith(() =>
             {
                 IsRefreshing = false;
+                Debug.LogWarning($"Inventory Refreshed");
             });
         }
 
         [ContextMenu("Fetch Inventory" )]
-        public async UniTask FetchInventory(InventoryView inv)
+        private async UniTask FetchInventory(InventoryView inv)
         {
             IsRefreshing = true;
             await UpdateDefaultCropInfo(inv);
@@ -108,30 +128,6 @@ namespace Farm.Beam
             }
         }
 
-        [ContextMenu("Add Crop")]
-        public async UniTask TestAddCrop() //TODO: update with param content id
-        {
-            try
-            {
-                if (await IsItemOwned(testItemRef.Id))
-                {
-                    Debug.LogWarning($"Item {testItemRef.Id} already owned");
-                    return;
-                }
-                var cropInfo = _contentManager.GetCropInfo(testItemRef.Id);
-                var properties = new Dictionary<string, string>
-                {
-                    { GameConstants.SeedsLeftProp, cropInfo.seedsToPlant.ToString() },
-                    { GameConstants.YieldProp, cropInfo.yieldAmount.ToString() }
-                };
-                await _stellarClient.AddItem(testItemRef.Id, properties);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to add crop: {e.Message}");
-            }
-        }
-        
         public PlantInfo TryGetCropInfoByInstanceId(long instanceId)
         {
             return CropInstancesDictionary.GetValueOrDefault(instanceId);
@@ -253,6 +249,7 @@ namespace Farm.Beam
                 };
                 itemsToUpdate.Add(itemToUpdate);
                 await _stellarClient.UpdateItems(itemsToUpdate);
+                IsRefreshing = true;
             }
             catch (Exception e)
             {
@@ -264,6 +261,41 @@ namespace Farm.Beam
         {
             return PlayerCrops.Any(crop => crop.contentId == contentId && crop.IsOwned);
         }
+
+        public async UniTask ForcedStellarMintWaitingTime()
+        {
+            await UniTask.WaitForSeconds(stellarMintTime);
+        }
+
+        public async UniTask ForceIsRefreshing()
+        {
+            IsRefreshing = true;
+            await UniTask.Yield();
+        }
         
+        public bool IsDirty(InventoryView view)
+        {
+            unchecked
+            {
+                int hash = 17;
+
+                foreach (var kvp in view.items)
+                {
+                    hash = hash * 23 + kvp.Key.GetHashCode();
+                    hash = hash * 23 + kvp.Value.Count;
+                }
+
+                foreach (var kvp in view.currencies)
+                {
+                    hash = hash * 23 + kvp.Key.GetHashCode();
+                    hash = hash * 23 + kvp.Value.GetHashCode();
+                }
+
+                Debug.Log($"Inventory Hash: {hash} vs last has {_lastInvHash}");
+                if (hash == _lastInvHash) return false;
+                _lastInvHash = hash;
+                return true;
+            }
+        }
     }
 }
