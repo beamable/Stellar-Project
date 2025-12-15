@@ -98,7 +98,7 @@ public class StartInventoryTransactionEndpoint : IEndpoint
                     TransactionId = transactionId,
                     UniqueTransactionId = transaction,
                     ConcurrencyKey = c.contentId.ToItemModuleName(),
-                    FunctionName = nameof(ItemAddInventoryRequest),
+                    FunctionName = nameof(ItemUpdateInventoryRequest),
                     MicroserviceInfo = microserviceInfo,
                     Status = TransactionStatus.Pending,
                     ContentId = c.contentId,
@@ -106,6 +106,23 @@ public class StartInventoryTransactionEndpoint : IEndpoint
                     Properties = c.properties
                 });
         await _transactionBatchService.Insert(itemUpdateRequest);
+
+        var itemDeleteRequest = deleteItems
+            .Select(c =>
+                new ItemDeleteInventoryRequest
+                {
+                    Wallet = id,
+                    GamerTag = gamerTag,
+                    TransactionId = transactionId,
+                    UniqueTransactionId = transaction,
+                    ConcurrencyKey = c.contentId.ToItemModuleName(),
+                    FunctionName = nameof(ItemDeleteInventoryRequest),
+                    MicroserviceInfo = microserviceInfo,
+                    Status = TransactionStatus.Pending,
+                    ContentId = c.contentId,
+                    ProxyId = c.proxyId
+                });
+        await _transactionBatchService.Insert(itemDeleteRequest);
 
         BackgroundServiceState.ResetDelay();
         });

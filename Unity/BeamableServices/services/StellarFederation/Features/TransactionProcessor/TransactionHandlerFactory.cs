@@ -17,6 +17,7 @@ public class TransactionHandlerFactory(IDependencyProvider serviceProvider) : IS
             nameof(ItemAddInventoryRequest) => serviceProvider.GetRequiredService<NftCreateHandler>(),
             nameof(ItemUpdateInventoryRequest) => serviceProvider.GetRequiredService<NftUpdateHandler>(),
             nameof(CurrencySubtractInventoryRequest) => serviceProvider.GetRequiredService<CurrencySubtractHandler>(),
+            nameof(ItemDeleteInventoryRequest) => serviceProvider.GetRequiredService<NftDeleteHandler>(),
             _ => throw new NotSupportedException($"No handler found for transaction type: {transactionType.Name}")
         };
     }

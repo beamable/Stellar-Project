@@ -24,4 +24,9 @@ public partial class TransactionBatchService
     {
         await _transactionQueueCollection.Insert(itemUpdateRequest);
     }
+
+    public async Task Insert(IEnumerable<ItemDeleteInventoryRequest> itemDeleteRequest)
+    {
+        await _transactionQueueCollection.Insert(itemDeleteRequest);
+    }
 }

@@ -12,7 +12,7 @@ public interface IFunctionMessage
     SCVal[] ToArgs();
 }
 
-public interface IFunctionMessageSponsor
+public interface IFunctionMessageDecouple
 {
     ObjectId[] TransactionIds { get; }
     string ContentId { get; }

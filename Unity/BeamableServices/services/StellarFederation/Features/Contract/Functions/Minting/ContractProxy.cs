@@ -29,6 +29,12 @@ public partial class ContractProxy
         return await _stellarRpcClient.SendTransactionAsync(contract.Address, request);
     }
 
+    public async Task<string> ItemBatchBurn(DeleteItemFunctionMessage request)
+    {
+        var contract = await GetContract<ItemContract>(request.ContentId);
+        return await _stellarRpcClient.SendDecoupledTransactionAsync(contract.Address, request);
+    }
+
     public async Task<List<uint>> GetItemBalance(string wallet, string contentId)
     {
         var contract = await GetContract<ContractBase>(contentId);
