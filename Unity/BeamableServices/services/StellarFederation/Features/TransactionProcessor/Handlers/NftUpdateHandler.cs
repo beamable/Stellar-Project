@@ -3,11 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Beamable.StellarFederation.Features.Contract;
 using Beamable.StellarFederation.Features.Contract.Functions.Minting.Models;
-using Beamable.StellarFederation.Features.Contract.Storage.Models;
 using Beamable.StellarFederation.Features.Minting;
 using Beamable.StellarFederation.Features.Minting.Models;
 using Beamable.StellarFederation.Features.Minting.Storage;
-using Beamable.StellarFederation.Features.Minting.Storage.Models;
 using Beamable.StellarFederation.Features.Transactions.Storage.Models;
 using StellarFederationCommon.Extensions;
 
@@ -15,7 +13,6 @@ namespace Beamable.StellarFederation.Features.TransactionProcessor.Handlers;
 
 public class NftUpdateHandler(
     MetadataService metadataService,
-    ContractService contractService,
     ContractProxy contractProxy,
     MintCollection mintCollection) : IService, ITransactionHandler
 {
