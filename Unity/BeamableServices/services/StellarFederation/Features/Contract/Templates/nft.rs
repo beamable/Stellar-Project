@@ -9,7 +9,7 @@ const MAX_URI_LEN: usize = 256;
 
 #[contracttype]
 pub enum DataKey {
-    WalletTokens(Address), // Maps wallet -> Vec<u128>
+    WalletTokens(Address), // Maps wallet -> Vec<u32>
 }
 
 #[contract]

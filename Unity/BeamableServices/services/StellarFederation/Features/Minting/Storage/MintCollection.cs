@@ -29,7 +29,7 @@ public class MintCollection : IService
 				new CreateIndexModel<Mint>(Builders<Mint>.IndexKeys.Ascending(x => x.ContractName).Ascending(x => x.TokenId).Ascending(x => x.ContentId)),
 				new CreateIndexModel<Mint>(Builders<Mint>.IndexKeys.Ascending(x => x.ContractName).Ascending(x => x.InitialOwnerAddress).Ascending(x => x.ContentId)),
 				new CreateIndexModel<Mint>(Builders<Mint>.IndexKeys.Ascending(x => x.TransactionHash)),
-				new CreateIndexModel<Mint>(Builders<Mint>.IndexKeys.Ascending(x => x.ContractName).Ascending(x => x.ContentId))
+				new CreateIndexModel<Mint>(Builders<Mint>.IndexKeys.Ascending(x => x.ContractName).Ascending(x => x.TokenId).Ascending(x => x.MintState))
 			]);
 		}
 
@@ -52,36 +52,28 @@ public class MintCollection : IService
 			.ToList();
 	}
 
-	public async Task<bool> DidAccountReceiveToken(string accountAddress, string contentId)
-	{
-		var collection = await Get();
-		return await collection
-			.Find(x => x.ContentId == contentId && x.InitialOwnerAddress == accountAddress)
-			.AnyAsync();
-	}
-
-	public async Task<List<Mint>> GetTokenMints(string contractName, IEnumerable<uint> tokenIds)
+	public async Task<List<Mint>> GetTokenMints(string contractName, IEnumerable<uint> tokenIds, MintState mintState = MintState.Created)
 	{
 		var collection = await Get();
 		var mints = await collection
-			.Find(x => x.ContractName == contractName && tokenIds.Contains(x.TokenId))
+			.Find(x => x.ContractName == contractName && tokenIds.Contains(x.TokenId) && x.MintState == mintState)
 			.ToListAsync();
 		return mints;
 	}
 
-	public async Task<Mint> GetTokenMint(string contractName, string contentId)
+	public async Task<Mint> GetTokenMint(string contractName, string contentId, MintState mintState = MintState.Created)
 	{
 		var collection = await Get();
 		var mint = await collection
-			.Find(x => x.ContractName == contractName && x.ContentId == contentId)
+			.Find(x => x.ContractName == contractName && x.ContentId == contentId && x.MintState == mintState)
 			.FirstOrDefaultAsync();
 		return mint;
 	}
 
-	public async Task<Mint?> GetTokenMint(string contractName, uint tokenId)
+	public async Task<Mint?> GetTokenMint(string contractName, uint tokenId, MintState mintState = MintState.Created)
 	{
 		var collection = await Get();
-		return await collection.Find(x => x.ContractName == contractName && tokenId == x.TokenId)
+		return await collection.Find(x => x.ContractName == contractName && tokenId == x.TokenId && x.MintState == mintState)
 			.FirstOrDefaultAsync();
 	}
 
@@ -121,27 +113,14 @@ public class MintCollection : IService
 		});
 	}
 
-	public async Task DeleteMintByTransactionHash(string transactionHash)
+	public async Task UpdateMintState(uint[] ids, MintState mintState)
 	{
-		if (!string.IsNullOrEmpty(transactionHash))
-		{
-			var collection = await Get();
-			await collection.DeleteManyAsync(x => x.TransactionHash == transactionHash);
-		}
-	}
+		if (ids.Length == 0)
+			return;
 
-	public async Task<long> CountMints(string contractName, string contentId)
-	{
 		var collection = await Get();
-		return await collection.Find(x => x.ContractName == contractName && x.ContentId == contentId)
-			.CountDocumentsAsync();
-	}
-
-	public async Task UpdateAllChains(string newContractName)
-	{
-		var collection = await Get();
-		var update = Builders<Mint>.Update.Set(t => t.ContractName, newContractName);
-		var filter = Builders<Mint>.Filter.Empty;
+		var filter = Builders<Mint>.Filter.In(x => x.TokenId, ids);
+		var update = Builders<Mint>.Update.Set(x => x.MintState, mintState);
 		await collection.UpdateManyAsync(filter, update);
 	}
 }

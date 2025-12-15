@@ -212,7 +212,7 @@ public class StellarRpcClient : IService
         }
     }
 
-    public async Task<string> SendDecoupledTransactionAsync<TContractMessage>(string contractAddress, TContractMessage functionMessage) where TContractMessage : IFunctionMessageSponsor
+    public async Task<string> SendDecoupledTransactionAsync<TContractMessage>(string contractAddress, TContractMessage functionMessage) where TContractMessage : IFunctionMessageDecouple
     {
         while (true)
         {
@@ -235,7 +235,7 @@ public class StellarRpcClient : IService
         }
     }
 
-    private async Task<string> SendDecoupledTransactionInternalAsync<TContractMessage>(string contractAddress, TContractMessage functionMessage) where TContractMessage : IFunctionMessageSponsor
+    private async Task<string> SendDecoupledTransactionInternalAsync<TContractMessage>(string contractAddress, TContractMessage functionMessage) where TContractMessage : IFunctionMessageDecouple
     {
         using (new Measure(functionMessage.FunctionName))
         {

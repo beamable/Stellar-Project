@@ -12,7 +12,7 @@ public record CoinApprovalFunctionMessage(
     string[] From,
     string[] Spender,
     long[] Amount,
-    uint[] ExpirationLedger) : IFunctionMessageSponsor
+    uint[] ExpirationLedger) : IFunctionMessageDecouple
 {
     public string FunctionName => "batch_approve";
     public SCVal[] ToArgs() =>
