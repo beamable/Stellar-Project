@@ -18,7 +18,7 @@ public class TransferBlockHandler(
         var transactionLogs = await transactionLogCollection.GetByChainTransactionHashes(logsEvents.Select(l => l.TransactionHash));
         await transactionLogCollection.SetMintedDone(transactionLogs.Select(x => x.Id));
         await transactionQueueCollection.Delete(transactionLogs.Select(x => x.Id));
-        await lockManagerService.ReleaseLock(transactionLogs.Select(x => x.ConcurrencyKey));
+        await lockManagerService.ReleaseLock(transactionLogs.SelectMany(x => x.ConcurrencyKey));
         await playerStateService.Update(transactionLogs.Select(x => x.PlayerUserId));
     }
 }

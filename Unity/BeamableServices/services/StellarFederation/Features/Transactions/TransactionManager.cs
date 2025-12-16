@@ -123,7 +123,9 @@ public class TransactionManager : IService
             Request = request as string ?? JsonSerializer.Serialize(request, JsonSerializerOptions),
             Path = path,
             OperationName = operationName,
-            ConcurrencyKey = concurrencyKey
+            ConcurrencyKey = string.IsNullOrWhiteSpace(concurrencyKey)
+                ? []
+                : [concurrencyKey]
         });
 
         Interlocked.Increment(ref _inflightTransactions);

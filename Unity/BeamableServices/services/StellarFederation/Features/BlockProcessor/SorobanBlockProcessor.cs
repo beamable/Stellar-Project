@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Beamable.Common;
 using Beamable.StellarFederation.Extensions;
-using Beamable.StellarFederation.Features.BlockProcessor.Decoder;
 using Beamable.StellarFederation.Features.BlockProcessor.Handlers;
 using Beamable.StellarFederation.Features.Common;
 using Beamable.StellarFederation.Features.Contract;
