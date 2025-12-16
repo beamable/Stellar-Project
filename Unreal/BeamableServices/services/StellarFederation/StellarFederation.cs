@@ -109,7 +109,7 @@ namespace Beamable.StellarFederation
 
 
 		[ClientCallable]
-		public async Promise<bool> AddItem(string itemContentId, Dictionary<string, string>? properties = null)
+		public async Promise<bool> AddUniqueItem(string itemContentId, Dictionary<string, string>? properties = null)
 		{
 			try
 			{
