@@ -44,17 +44,24 @@ namespace Farm.Beam
             await base.InitAsync(ct);
             _contentManager = BeamManager.Instance.ContentManager;
             PlayerCrops = new List<PlantInfo>();
+            CropInstancesDictionary = new Dictionary<long, PlantInfo>();
             IsReady = true;
-            
+            await _beamContext.Inventory.Refresh();
         }
 
-        private async void OnEnable()
+        private void OnEnable()
+        {
+            OnEnableInit().Forget();
+        }
+
+        private async UniTask OnEnableInit()
         {
             await UniTask.WaitUntil(() => BeamManager.Instance.AccountManager.IsReady);
             await UniTask.WaitUntil(IsAliasSet);
+            await UniTask.WaitUntil(()=> this.IsReady);
             _beamContext.Api.InventoryService.Subscribe(OnInvRefresh);
         }
-        
+
         // public void SubScribeToCropMangerEvents()
         // {
         //     CropManager.OnCropInfoUpdated += UpdateCropInfos;
@@ -74,11 +81,17 @@ namespace Farm.Beam
         {
             await base.ResetAsync(ct);
             PlayerCrops.Clear();
+            CropInstancesDictionary.Clear();
+            _lastInvHash = 0;
+            IsRefreshing = false;
+            _addingDefaultCrop = false;
         }
 
         private void OnInvRefresh(InventoryView view)
         {
-            if (!IsDirty(view) && PlayerCrops.Count > 1) return; 
+            if (!IsReady || IsRefreshing) return;
+            if (!IsDirty(view) && PlayerCrops.Count > 0) return; 
+            IsRefreshing = true;
             Debug.LogWarning($"On Inventory Refresh called...Now Refreshing...");
             FetchInventory(view).ContinueWith(() =>
             {
@@ -90,7 +103,6 @@ namespace Farm.Beam
         [ContextMenu("Fetch Inventory" )]
         private async UniTask FetchInventory(InventoryView inv)
         {
-            IsRefreshing = true;
             await UpdateDefaultCropInfo(inv);
             
             if(inv.items.Count < 1) return;
@@ -280,6 +292,11 @@ namespace Farm.Beam
             await UniTask.Yield();
         }
         
+        /// <summary>
+        /// Checks if the inventory has changed since the last time it was checked
+        /// </summary>
+        /// <param name="view"></param>
+        /// <returns></returns>
         public bool IsDirty(InventoryView view)
         {
             unchecked
@@ -290,6 +307,15 @@ namespace Farm.Beam
                 {
                     hash = hash * 23 + kvp.Key.GetHashCode();
                     hash = hash * 23 + kvp.Value.Count;
+                    foreach (var item in kvp.Value)
+                    {
+                        hash = hash * 23 + item.id.GetHashCode();
+                        foreach (var prop in item.properties)
+                        {
+                            hash = hash * 23 + prop.Key.GetHashCode();
+                            hash = hash * 23 + prop.Value.GetHashCode();
+                        }
+                    }
                 }
 
                 foreach (var kvp in view.currencies)
