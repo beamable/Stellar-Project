@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Beamable.StellarFederation.Features.Contract.Functions.Approval.Models;
 using Beamable.StellarFederation.Features.Contract.Storage.Models;
 using Beamable.StellarFederation.Features.Stellar;
+using Beamable.StellarFederation.Features.Stellar.Extensions;
 using StellarDotnetSdk.Xdr;
 
 namespace Beamable.StellarFederation.Features.Contract;
@@ -24,7 +25,7 @@ public partial class ContractProxy
 
         var reader = new XdrDataInputStream(Convert.FromBase64String(balanceResponse));
         var scVal = SCVal.Decode(reader);
-        var amount = (long)scVal.I128.Lo.InnerValue;
+        var amount = scVal.ToInt64OrZero();
         return new CoinAllowanceResponse(amount);
     }
 

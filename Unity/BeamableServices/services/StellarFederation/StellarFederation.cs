@@ -8,9 +8,7 @@ using Beamable.StellarFederation.BackgroundService;
 using Beamable.StellarFederation.Endpoints;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
-using Beamable.StellarFederation.Features.Scheduler;
 using StellarFederationCommon;
-using StellarFederationCommon.FederationContent;
 using StellarFederationCommon.Models.Response;
 
 namespace Beamable.StellarFederation
@@ -128,12 +126,6 @@ namespace Beamable.StellarFederation
 				wallet = account.HasValue ? account.Value.Address : "",
 				created = account?.Created ?? false
 			};
-		}
-
-		[ClientCallable]
-		public async Promise<string> Test()
-		{
-			return await Provider.GetService<TestService>().Test();
 		}
 	}
 }

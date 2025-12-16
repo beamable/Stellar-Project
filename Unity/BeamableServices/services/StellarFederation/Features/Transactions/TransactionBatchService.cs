@@ -42,12 +42,6 @@ public partial class TransactionBatchService : IService
         }
     }
 
-    //Only if lock on concurrencyKey is acquired
-    // public async Task<List<QueuedTransactionBase>> FetchBatch(string concurrencyKey, CancellationToken cancellationToken)
-    // {
-    //     return await _transactionQueueCollection.FetchBatch<QueuedTransactionBase>(concurrencyKey, cancellationToken);
-    // }
-
     public async Task<List<QueuedTransactionBase>> FetchBatch(List<string> concurrencyKeys, CancellationToken cancellationToken)
     {
         return await _transactionQueueCollection.FetchBatch2<QueuedTransactionBase>(concurrencyKeys, cancellationToken);
@@ -60,7 +54,6 @@ public partial class TransactionBatchService : IService
 
     public async Task StartBatch(List<QueuedTransactionBase> transactions)
     {
-        //var results = await transactions.TransformWithKeys(_contentService.GetContentObjects);
         await _processorService.Start(transactions);
     }
 

@@ -36,6 +36,7 @@ public static class MongoExtensions
         BsonClassMap.RegisterClassMap<ItemUpdateInventoryRequest>(cm => cm.AutoMap());
         BsonClassMap.RegisterClassMap<ItemDeleteInventoryRequest>(cm => cm.AutoMap());
         BsonClassMap.RegisterClassMap<AccountCreateRequest>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<AccountCloseRequest>(cm => cm.AutoMap());
     }
 }
 
