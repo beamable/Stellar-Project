@@ -124,7 +124,7 @@ namespace StellarFederationCommon.Extensions
         /// <summary>
         /// Warrior type name
         /// </summary>
-        public const string WarriorItemType = "warrior";
+        public const string WarriorItemType = "warrioritem";
 
     }
 }
