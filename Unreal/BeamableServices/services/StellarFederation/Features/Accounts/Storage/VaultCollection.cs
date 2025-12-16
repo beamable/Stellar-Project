@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Beamable.Server;
 using Beamable.StellarFederation.Features.Accounts.Storage.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Beamable.StellarFederation.Features.Accounts.Storage;
@@ -59,4 +61,50 @@ public class VaultCollection(IStorageObjectConnectionProvider storageObjectConne
             return false;
         }
     }
+
+    public async Task SetCreated(string name)
+    {
+        var collection = await Get();
+        var update = Builders<Vault>.Update.Set(x => x.Created, true);
+        await collection.UpdateOneAsync(x => x.Name == name, update);
+    }
+    
+    public async Task SetCreated(IEnumerable<string> names)
+    {
+        var collection = await Get();
+        var filter = Builders<Vault>.Filter.In(x => x.Name, names);
+        var update = Builders<Vault>.Update
+            .Set(x => x.Created, true);
+        await collection.UpdateManyAsync(filter, update);
+    }
+
+    // public async Task<List<Vault>> GetVaultsByPrefix(string prefix)
+    // {
+    //     var collection = await Get();
+    //     var filter = Builders<Vault>.Filter.Regex(x => x.Name, new MongoDB.Bson.BsonRegularExpression($"^{prefix}"));
+    //     return await collection.Find(filter).ToListAsync();
+    // }
+    //
+    // public async Task UpsertCoinBalance(string accountName, VaultBalance balance)
+    // {
+    //     var collection = await Get();
+    //     var filter = Builders<Vault>.Filter.Eq(v => v.Name, accountName);
+    //     var setStageBson = new BsonDocument("$set",
+    //         new BsonDocument(nameof(Vault.VaultBalance),
+    //             new BsonDocument("$concatArrays", new BsonArray
+    //             {
+    //                 new BsonDocument("$filter", new BsonDocument
+    //                 {
+    //                     { "input", new BsonDocument("$ifNull", new BsonArray { "$VaultBalance", new BsonArray() }) },
+    //                     { "as", "b" },
+    //                     { "cond", new BsonDocument("$ne", new BsonArray { "$$b.Symbol", balance.Symbol }) }
+    //                 }),
+    //                 new BsonArray { balance.ToBsonDocument() }
+    //             })
+    //         )
+    //     );
+    //     var update = Builders<Vault>.Update.Pipeline(new[] { setStageBson });
+    //     var updateOptions = new UpdateOptions { IsUpsert = true };
+    //     await collection.UpdateOneAsync(filter, update, updateOptions);
+    // }
 }

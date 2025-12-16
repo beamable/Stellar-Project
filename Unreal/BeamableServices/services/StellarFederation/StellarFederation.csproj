@@ -4,7 +4,6 @@
         <!-- All Microservices must have the value, "service" -->
         <BeamProjectType>service</BeamProjectType>
         <Nullable>enable</Nullable>
-        <GenerateClientCode>true</GenerateClientCode>
     </PropertyGroup>
 
     <!-- These are special Beamable parameters that we use to keep the beamable packages in-sync to the CLI version your project is using. -->
@@ -27,18 +26,39 @@
         <PackageReference Include="Beamable.Microservice.SourceGen" Version="$(BeamableVersion)" OutputItemType="Analyzer" />
         <PackageReference Include="Handlebars.Net" Version="2.1.6" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.1" />
         <PackageReference Include="stellar-dotnet-sdk" Version="14.0.1" />
+        
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\StellarFederationCommon\StellarFederationCommon.csproj" />
-        <ProjectReference Include="..\StellarFederationStorage\StellarFederationStorage.csproj" />
+      <ProjectReference Include="..\StellarFederationCommon\StellarFederationCommon.csproj" />
+      <ProjectReference Include="..\StellarFederationStorage\StellarFederationStorage.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <None Update="Tools\stellar.zip">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+        <None Include="Features\Contract\Templates\**\*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Features\Contract\Templates\gold.rs">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Features\Contract\Templates\nft.rs">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Features\BlockProcessor\NativeBlockProcessor.cs" />
+      <Compile Remove="Features\Content\Handlers\Models\BaseMessage.cs" />
+      <Compile Remove="Features\Content\Handlers\Models\RegularCoinBurnMessage.cs" />
+      <Compile Remove="Features\Content\Handlers\ContentHandlerFactory.cs" />
+      <Compile Remove="Features\Content\Handlers\IContentHandler.cs" />
+      <Compile Remove="Features\Content\Handlers\RegularCoinHandler.cs" />
+      <Compile Remove="Features\Transactions\Storage\MintCollection.cs" />
     </ItemGroup>
 
 </Project>

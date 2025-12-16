@@ -1,5 +1,7 @@
 using System.Numerics;
 using Beamable.Server;
+using Beamable.StellarFederation.Features.Contract.Storage.Models;
+using Beamable.StellarFederation.Features.Transactions.Storage.Models;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -12,6 +14,29 @@ public static class MongoExtensions
     {
         BsonSerializer.RegisterSerializer(new BigIntegerNullableSerializer());
         BsonSerializer.RegisterSerializer(new BigIntegerSerializer());
+
+        BsonClassMap.RegisterClassMap<ContractBase>(cm => {
+            cm.AutoMap();
+            cm.SetIsRootClass(true);
+        });
+
+        BsonClassMap.RegisterClassMap<CoinContract>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<GoldContract>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<ItemContract>(cm => cm.AutoMap());
+
+
+        BsonClassMap.RegisterClassMap<QueuedTransactionBase>(cm => {
+            cm.AutoMap();
+            cm.SetIsRootClass(true);
+        });
+
+        BsonClassMap.RegisterClassMap<CurrencyAddInventoryRequest>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<CurrencySubtractInventoryRequest>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<ItemAddInventoryRequest>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<ItemUpdateInventoryRequest>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<ItemDeleteInventoryRequest>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<AccountCreateRequest>(cm => cm.AutoMap());
+        BsonClassMap.RegisterClassMap<AccountCloseRequest>(cm => cm.AutoMap());
     }
 }
 

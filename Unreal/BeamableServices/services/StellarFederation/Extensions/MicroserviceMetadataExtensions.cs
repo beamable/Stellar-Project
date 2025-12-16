@@ -4,6 +4,7 @@ using System.Reflection;
 using Beamable.Common;
 using Beamable.Common.Api.Auth;
 using Beamable.Server;
+using StellarFederationCommon;
 
 namespace Beamable.StellarFederation.Extensions;
 
@@ -31,6 +32,16 @@ public static class MicroserviceMetadataExtensions
             providerService = microserviceInfo.MicroserviceName,
             providerNamespace = microserviceInfo.MicroserviceNamespace
         };
+
+    public static bool IsLocalDevInstance()
+    {
+        return !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("NAME_PREFIX"));
+    }
 }
 
-public record MicroserviceInfo(string MicroserviceName, string MicroserviceNamespace);
+public record MicroserviceInfo(string MicroserviceName, string MicroserviceNamespace)
+{
+    public static MicroserviceInfo Default()
+        => new (StellarFederationSettings.MicroserviceName,
+            StellarFederationSettings.StellarIdentityName);
+}

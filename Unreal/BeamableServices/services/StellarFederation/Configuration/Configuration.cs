@@ -38,13 +38,27 @@ public class Configuration : IService
     /// Configuration namespace is configured in the <see cref="ConfigurationNamespace"/> constant.
     /// </summary>
 
-    public ValueTask<string> StellarRpc => GetValue(nameof(StellarRpc), "");
+    public ValueTask<string> StellarRpc => GetValue(nameof(StellarRpc), "https://soroban-testnet.stellar.org");
+    public ValueTask<string> StellarHorizon => GetValue(nameof(StellarHorizon), "https://horizon-testnet.stellar.org");
 
     // "public" or "test"
     public ValueTask<string> StellarNetwork => GetValue(nameof(StellarNetwork), StellarSettings.TestNetwork);
     public ValueTask<string> StellarFaucet => GetValue(nameof(StellarFaucet), "https://friendbot.stellar.org/");
     public ValueTask<int> AuthenticationChallengeTtlSec => GetValue(nameof(AuthenticationChallengeTtlSec), 600);
+    public ValueTask<string> NftExternalUrl => GetValue(nameof(NftExternalUrl), "https://www.example.com/");
     public ValueTask<string> WalletConnectBridgeUrl => GetValue(nameof(WalletConnectBridgeUrl), "");
+    public ValueTask<int> NumberOfWorkingWallets => GetValue(nameof(NumberOfWorkingWallets), 50);
+    public ValueTask<int> MaxNumberOffWorkingWallets => GetValue(nameof(MaxNumberOffWorkingWallets), 100);
+    public ValueTask<long> XlmMinimalAmountInStroops => GetValue<long>(nameof(XlmMinimalAmountInStroops), 10_000_000);
+    public ValueTask<int> CoinTransferPercentage => GetValue(nameof(CoinTransferPercentage), 10);
+    public ValueTask<int> TransactionTimeoutSec => GetValue(nameof(TransactionTimeoutSec), 300);
+    public ValueTask<uint> BaseFeeInStroops => GetValue<uint>(nameof(BaseFeeInStroops), 100);
+    public ValueTask<int> MessageQueueBatchLimit => GetValue(nameof(MessageQueueBatchLimit), 50);
+    public ValueTask<int> MessageQueueBatchLimitNative => GetValue(nameof(MessageQueueBatchLimitNative), 20);
+    public ValueTask<uint> MinExtraResourceFeeInStroops => GetValue<uint>(nameof(MinExtraResourceFeeInStroops), 100_000);
+    public ValueTask<int> ExtraResourceFeePercentage => GetValue(nameof(ExtraResourceFeePercentage), 5);
+    public ValueTask<int> FetchLogsCronSeconds => GetValue(nameof(FetchLogsCronSeconds), 5);
+    public ValueTask<uint> FetchLogsBlockSize => GetValue(nameof(FetchLogsBlockSize), 100u);
 
     private async ValueTask<T> GetValue<T>(string key, T defaultValue) where T : IConvertible
     {
