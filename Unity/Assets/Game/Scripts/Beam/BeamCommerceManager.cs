@@ -54,14 +54,15 @@ namespace Farm.Beam
         [ContextMenu("Add Coins")]
         public async void AddCurrency()
         {
-            await UpdateCoinAmount(50);
+            await UpdateInventory(50);
         }
         
-        public async UniTask UpdateCoinAmount(int amount)
+        public async UniTask UpdateInventory(int amount)
         {
             try
             {
-                await _stellarClient.UpdateCurrency(GetCurrencyId(), amount);
+                var itemsToUpdate = BeamManager.Instance.InventoryManager.GetCropUpdateRequests();
+                await _stellarClient.UpdateInventory(GetCurrencyId(), amount, itemsToUpdate);
                 Debug.Log($"Updated Currency to {amount}. Current Balance:{CurrentCoinCount}");
             }
             catch (Exception e)

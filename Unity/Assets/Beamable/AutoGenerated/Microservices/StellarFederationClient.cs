@@ -90,12 +90,64 @@ namespace Beamable.Server.Clients
         /// Call the Test method on the StellarFederation microservice
         /// <see cref="Beamable.StellarFederation.StellarFederation.Test"/>
         /// </summary>
-        public Beamable.Common.Promise<Beamable.Common.Unit> Test(long block)
+        public Beamable.Common.Promise<string> Test()
         {
-            object raw_block = block;
             System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
-            serializedFields.Add("block", raw_block);
-            return this.Request<Beamable.Common.Unit>("StellarFederation", "Test", serializedFields);
+            return this.Request<string>("StellarFederation", "Test", serializedFields);
+        }
+        
+        /// <summary>
+        /// Call the ExternalAddress method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.ExternalAddress"/>
+        /// </summary>
+        public Beamable.Common.Promise<Beamable.Common.Unit> ExternalAddress()
+        {
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "ExternalAddress", serializedFields);
+        }
+        
+        /// <summary>
+        /// Call the ExternalSignature method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.ExternalSignature"/>
+        /// </summary>
+        public Beamable.Common.Promise<Beamable.Common.Unit> ExternalSignature()
+        {
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "ExternalSignature", serializedFields);
+        }
+        
+        /// <summary>
+        /// Call the Jobs method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.Jobs"/>
+        /// </summary>
+        public Beamable.Common.Promise<StellarFederationCommon.Models.Response.SchedulerJobResponse> Jobs(bool enable)
+        {
+            object raw_enable = enable;
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            serializedFields.Add("enable", raw_enable);
+            return this.Request<StellarFederationCommon.Models.Response.SchedulerJobResponse>("StellarFederation", "Jobs", serializedFields);
+        }
+        
+        /// <summary>
+        /// Call the BlockProcessor method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.BlockProcessor"/>
+        /// </summary>
+        public Beamable.Common.Promise<Beamable.Common.Unit> BlockProcessor()
+        {
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "BlockProcessor", serializedFields);
+        }
+        
+        /// <summary>
+        /// Call the GetListings method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.GetListings"/>
+        /// </summary>
+        public Beamable.Common.Promise<StellarFederationCommon.Store.GetListingsResponse> GetListings(string storeId)
+        {
+            object raw_storeId = storeId;
+            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
+            serializedFields.Add("storeId", raw_storeId);
+            return this.Request<StellarFederationCommon.Store.GetListingsResponse>("StellarFederation", "GetListings", serializedFields);
         }
         
         /// <summary>
@@ -153,45 +205,19 @@ namespace Beamable.Server.Clients
         }
         
         /// <summary>
-        /// Call the ExternalAddress method on the StellarFederation microservice
-        /// <see cref="Beamable.StellarFederation.StellarFederation.ExternalAddress"/>
+        /// Call the UpdateInventory method on the StellarFederation microservice
+        /// <see cref="Beamable.StellarFederation.StellarFederation.UpdateInventory"/>
         /// </summary>
-        public Beamable.Common.Promise<Beamable.Common.Unit> ExternalAddress()
+        public Beamable.Common.Promise<Beamable.Common.Unit> UpdateInventory(string currencyContentId, int amount, System.Collections.Generic.List<StellarFederationCommon.FederationContent.CropUpdateRequest> items)
         {
+            object raw_currencyContentId = currencyContentId;
+            object raw_amount = amount;
+            object raw_items = items;
             System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
-            return this.Request<Beamable.Common.Unit>("StellarFederation", "ExternalAddress", serializedFields);
-        }
-        
-        /// <summary>
-        /// Call the ExternalSignature method on the StellarFederation microservice
-        /// <see cref="Beamable.StellarFederation.StellarFederation.ExternalSignature"/>
-        /// </summary>
-        public Beamable.Common.Promise<Beamable.Common.Unit> ExternalSignature()
-        {
-            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
-            return this.Request<Beamable.Common.Unit>("StellarFederation", "ExternalSignature", serializedFields);
-        }
-        
-        /// <summary>
-        /// Call the Jobs method on the StellarFederation microservice
-        /// <see cref="Beamable.StellarFederation.StellarFederation.Jobs"/>
-        /// </summary>
-        public Beamable.Common.Promise<Beamable.Common.Unit> Jobs(bool enable)
-        {
-            object raw_enable = enable;
-            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
-            serializedFields.Add("enable", raw_enable);
-            return this.Request<Beamable.Common.Unit>("StellarFederation", "Jobs", serializedFields);
-        }
-        
-        /// <summary>
-        /// Call the BlockProcessor method on the StellarFederation microservice
-        /// <see cref="Beamable.StellarFederation.StellarFederation.BlockProcessor"/>
-        /// </summary>
-        public Beamable.Common.Promise<Beamable.Common.Unit> BlockProcessor()
-        {
-            System.Collections.Generic.Dictionary<string, object> serializedFields = new System.Collections.Generic.Dictionary<string, object>();
-            return this.Request<Beamable.Common.Unit>("StellarFederation", "BlockProcessor", serializedFields);
+            serializedFields.Add("currencyContentId", raw_currencyContentId);
+            serializedFields.Add("amount", raw_amount);
+            serializedFields.Add("items", raw_items);
+            return this.Request<Beamable.Common.Unit>("StellarFederation", "UpdateInventory", serializedFields);
         }
     }
     
@@ -199,7 +225,7 @@ namespace Beamable.Server.Clients
     {
         
         [System.SerializableAttribute()]
-        internal sealed class ParameterSystem_Int64 : MicroserviceClientDataWrapper<long>
+        internal sealed class ParameterSystem_Boolean : MicroserviceClientDataWrapper<bool>
         {
         }
         
@@ -219,12 +245,12 @@ namespace Beamable.Server.Clients
         }
         
         [System.SerializableAttribute()]
-        internal sealed class ParameterSystem_Collections_Generic_List_StellarFederationCommon_FederationContent_CropUpdateRequest : MicroserviceClientDataWrapper<System.Collections.Generic.List<StellarFederationCommon.FederationContent.CropUpdateRequest>>
+        internal sealed class ParameterSystem_Int64 : MicroserviceClientDataWrapper<long>
         {
         }
         
         [System.SerializableAttribute()]
-        internal sealed class ParameterSystem_Boolean : MicroserviceClientDataWrapper<bool>
+        internal sealed class ParameterSystem_Collections_Generic_List_StellarFederationCommon_FederationContent_CropUpdateRequest : MicroserviceClientDataWrapper<System.Collections.Generic.List<StellarFederationCommon.FederationContent.CropUpdateRequest>>
         {
         }
     }

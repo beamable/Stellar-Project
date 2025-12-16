@@ -203,22 +203,7 @@ namespace Farm.Beam
             if(PlayerCrops.Count < 1) return;
             try
             {
-                var itemsToUpdate = new List<CropUpdateRequest>();
-
-                foreach (var crop in PlayerCrops)
-                {
-                    var itemToUpdate = new CropUpdateRequest()
-                    {
-                        ContentId = crop.contentId,
-                        InstanceId = crop.instanceId,
-                        Properties = new Dictionary<string, string>()
-                        {
-                            {GameConstants.SeedsLeftProp, crop.seedsToPlant.ToString()},
-                            {GameConstants.YieldProp, crop.yieldAmount.ToString()}
-                        }
-                    };
-                    itemsToUpdate.Add(itemToUpdate);
-                }
+                var itemsToUpdate = GetCropUpdateRequests();
 
                 await _stellarClient.UpdateItems(itemsToUpdate);
                 Debug.Log($"Inventory updated with new crop info");
@@ -227,6 +212,28 @@ namespace Farm.Beam
             {
                 Debug.LogError($"Failed to update inventory: {e.Message}");
             }
+        }
+
+        public List<CropUpdateRequest> GetCropUpdateRequests()
+        {
+            var itemsToUpdate = new List<CropUpdateRequest>();
+
+            foreach (var crop in PlayerCrops)
+            {
+                var itemToUpdate = new CropUpdateRequest()
+                {
+                    ContentId = crop.contentId,
+                    InstanceId = crop.instanceId,
+                    Properties = new Dictionary<string, string>()
+                    {
+                        {GameConstants.SeedsLeftProp, crop.seedsToPlant.ToString()},
+                        {GameConstants.YieldProp, crop.yieldAmount.ToString()}
+                    }
+                };
+                itemsToUpdate.Add(itemToUpdate);
+            }
+
+            return itemsToUpdate;
         }
 
         public async UniTask UpdateSpecificCropInfo(string contentId, int yieldAmount, int seedsLeft)
