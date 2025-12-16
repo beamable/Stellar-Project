@@ -52,28 +52,31 @@ public class MintCollection : IService
 			.ToList();
 	}
 
-	public async Task<List<Mint>> GetTokenMints(string contractName, IEnumerable<uint> tokenIds, MintState mintState = MintState.Created)
+	public async Task<List<Mint>> GetTokenMints(string contractName, IEnumerable<uint> tokenIds, IEnumerable<MintState>? mintStates = null)
 	{
 		var collection = await Get();
+		var states = mintStates ?? DefaultMintStates;
 		var mints = await collection
-			.Find(x => x.ContractName == contractName && tokenIds.Contains(x.TokenId) && x.MintState == mintState)
+			.Find(x => x.ContractName == contractName && tokenIds.Contains(x.TokenId) && states.Contains(x.MintState))
 			.ToListAsync();
 		return mints;
 	}
 
-	public async Task<Mint> GetTokenMint(string contractName, string contentId, MintState mintState = MintState.Created)
+	public async Task<Mint> GetTokenMint(string contractName, string contentId, IEnumerable<MintState>? mintStates = null)
 	{
 		var collection = await Get();
+		var states = mintStates ?? DefaultMintStates;
 		var mint = await collection
-			.Find(x => x.ContractName == contractName && x.ContentId == contentId && x.MintState == mintState)
+			.Find(x => x.ContractName == contractName && x.ContentId == contentId && states.Contains(x.MintState))
 			.FirstOrDefaultAsync();
 		return mint;
 	}
 
-	public async Task<Mint?> GetTokenMint(string contractName, uint tokenId, MintState mintState = MintState.Created)
+	public async Task<Mint?> GetTokenMint(string contractName, uint tokenId, IEnumerable<MintState>? mintStates = null)
 	{
 		var collection = await Get();
-		return await collection.Find(x => x.ContractName == contractName && tokenId == x.TokenId && x.MintState == mintState)
+		var states = mintStates ?? DefaultMintStates;
+		return await collection.Find(x => x.ContractName == contractName && tokenId == x.TokenId && states.Contains(x.MintState))
 			.FirstOrDefaultAsync();
 	}
 
@@ -124,4 +127,7 @@ public class MintCollection : IService
 		var update = Builders<Mint>.Update.Set(x => x.MintState, mintState);
 		await collection.UpdateManyAsync(filter, update);
 	}
+
+	private static readonly IReadOnlyCollection<MintState> DefaultMintStates =
+		[MintState.Created, MintState.Modified];
 }
