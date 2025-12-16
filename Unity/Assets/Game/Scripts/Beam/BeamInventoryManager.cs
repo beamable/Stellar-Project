@@ -25,9 +25,10 @@ namespace Farm.Beam
         [Header("Crop Refs")]
         [SerializeField] private CropItemRef defaultCropRef;
         [SerializeField] private CropItemRef testItemRef;
-
+        
         private int _lastInvHash;
         private bool _addingDefaultCrop = false;
+        private bool _isReseting = false;
         private const string AnonymousAlias = "Anonymous";
         private BeamContentManager _contentManager;
         
@@ -38,7 +39,9 @@ namespace Farm.Beam
         public static event Action OnInventoryUpdated;
 
         #endregion
-        
+
+        #region Init
+
         public override async UniTask InitAsync(CancellationToken ct)
         {
             await base.InitAsync(ct);
@@ -47,6 +50,10 @@ namespace Farm.Beam
             CropInstancesDictionary = new Dictionary<long, PlantInfo>();
             IsReady = true;
             await _beamContext.Inventory.Refresh();
+            if (!_isReseting) return;
+            
+            await FetchInventory(await GetCurrentInventoryView());
+            _isReseting = false;
         }
 
         private void OnEnable()
@@ -62,16 +69,6 @@ namespace Farm.Beam
             _beamContext.Api.InventoryService.Subscribe(OnInvRefresh);
         }
 
-        // public void SubScribeToCropMangerEvents()
-        // {
-        //     CropManager.OnCropInfoUpdated += UpdateCropInfos;
-        // }
-        //
-        // public void UnSubScribeToCropMangerEvents()
-        // {
-        //     CropManager.OnCropInfoUpdated
-        // }
-        
         private bool IsAliasSet()
         {
             return !string.Equals(AnonymousAlias,BeamManager.Instance.AccountManager.CurrentAccount.Alias);
@@ -85,18 +82,19 @@ namespace Farm.Beam
             _lastInvHash = 0;
             IsRefreshing = false;
             _addingDefaultCrop = false;
+            _isReseting = true;
         }
+
+        #endregion
 
         private void OnInvRefresh(InventoryView view)
         {
             if (!IsReady || IsRefreshing) return;
             if (!IsDirty(view) && PlayerCrops.Count > 0) return; 
             IsRefreshing = true;
-            Debug.LogWarning($"On Inventory Refresh called...Now Refreshing...");
             FetchInventory(view).ContinueWith(() =>
             {
                 IsRefreshing = false;
-                Debug.LogWarning($"Inventory Refreshed");
             });
         }
 
@@ -171,7 +169,6 @@ namespace Farm.Beam
                     { GameConstants.YieldProp, defaultCropInfo.yieldAmount.ToString() }
                 };
                 await _stellarClient.AddItem(defaultCropRef.Id, properties);
-                Debug.Log($"Adding item {defaultCropInfo.contentId} to inventory");
                 return false;
             }
 
@@ -218,7 +215,6 @@ namespace Farm.Beam
                 var itemsToUpdate = GetCropUpdateRequests();
 
                 await _stellarClient.UpdateItems(itemsToUpdate);
-                Debug.Log($"Inventory updated with new crop info");
             }
             catch (Exception e)
             {
@@ -324,7 +320,6 @@ namespace Farm.Beam
                     hash = hash * 23 + kvp.Value.GetHashCode();
                 }
 
-                Debug.Log($"Inventory Hash: {hash} vs last has {_lastInvHash}");
                 if (hash == _lastInvHash) return false;
                 _lastInvHash = hash;
                 return true;
