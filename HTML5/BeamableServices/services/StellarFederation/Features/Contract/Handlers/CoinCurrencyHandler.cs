@@ -48,18 +48,21 @@ public class CoinCurrencyHandler : IService, IContentContractHandler
                 throw new ContractException($"{model.ContentObject.Id} is not a {nameof(CoinCurrency)}");
 
             BeamableLogger.Log($"Creating contract for {model.ContentObject.Id}...");
-            var realmAccount = await _accountsService.GetOrCreateRealmAccount();
-            await _cliClient.CreateProject(coinCurrency.ToModuleName());
+            var moduleName = coinCurrency.ToCurrencyModuleName();
+            var contractAccount = await _accountsService.GetAccount(model.ContentObject.Id);
+            if (contractAccount is null)
+                throw new ContractException($"Account for {model.ContentObject.Id} is not created.");
+            await _cliClient.CreateProject(moduleName);
             await WriteContractTemplate(coinCurrency);
-            await _cliClient.CopyContractCode(coinCurrency.ToModuleName());
-            await _cliClient.CompileContract(coinCurrency.ToModuleName());
-            var contractAddress = await _cliClient.DeployContract(coinCurrency.ToModuleName(), realmAccount);
-            await _contractService.UpsertContract(new CoinContract
-            {
-                ContentId = model.ContentObject.Id,
-                Address = contractAddress.Trim()
-            }, model.ContentObject.Id);
-            BeamableLogger.Log($"Created contract for {coinCurrency.Id}");
+            await _cliClient.CopyContractCode(moduleName);
+            await _cliClient.CompileContract(moduleName);
+             var contractAddress = await _cliClient.DeployContract(moduleName, contractAccount.Value);
+             await _contractService.UpsertContract(new CoinContract
+             {
+                 ContentId = model.ContentObject.Id,
+                 Address = contractAddress.Trim()
+             }, model.ContentObject.Id);
+            BeamableLogger.Log($"Created contract for {coinCurrency.Id} with address {contractAddress}");
         }
         catch (Exception e)
         {
@@ -72,7 +75,7 @@ public class CoinCurrencyHandler : IService, IContentContractHandler
         var itemTemplate = await File.ReadAllTextAsync("Features/Contract/Templates/coin.rs");
         var template = Handlebars.Compile(itemTemplate);
         var itemResult = template(coinCurrency);
-        var contractPath = $"{CliClient.ContractSourcePath}/{coinCurrency.ToModuleName()}.rc";
+        var contractPath = $"{CliClient.ContractSourcePath}/{coinCurrency.ToCurrencyModuleName()}.rc";
         await ContractWriter.WriteContract(contractPath, itemResult);
     }
 }

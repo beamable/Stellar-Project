@@ -21,7 +21,7 @@ public class CliClient : IService
 
     public const string ContractSourcePath = "/beamApp/sources";
 
-    private const int ProcessTimeoutMs = 60000;
+    private const int ProcessTimeoutMs = 900000;
 
     public CliClient(Configuration configuration)
     {
@@ -75,6 +75,11 @@ public class CliClient : IService
     public async Task<string> DeployContract(string moduleName, Account ownerAccount)
     {
         return await Execute(Executable, $"contract deploy --wasm target/wasm32v1-none/release/{moduleName}.optimized.wasm --source-account {ownerAccount.SecretSeed} --network {await _configuration.StellarNetwork} --alias {moduleName} -- --initial_owner {ownerAccount.Address}");
+    }
+
+    public async Task<string> DeployAssetContract(string moduleName, Account issuer)
+    {
+        return await Execute(Executable, $"contract asset deploy --source {issuer.SecretSeed} --network {await _configuration.StellarNetwork} --asset {moduleName}:{issuer.Address}");
     }
 
     private static async Task<string> ExecuteShell(string command, string workingDirectory = ContractsWorkingDirectory)

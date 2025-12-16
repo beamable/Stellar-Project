@@ -31,6 +31,8 @@ namespace SuiFederationCommon.Models.Notifications
                     jsonObject.ToObject<ExternalAuthSignatureNotification>(serializer),
                 nameof(PlayerNotificationContext.ExternalAuthAddress) =>
                     jsonObject.ToObject<ExternalAuthAddressNotification>(serializer),
+                nameof(PlayerNotificationContext.CustodialAccountCreated) =>
+                    jsonObject.ToObject<CustodialAccountCreatedNotification>(serializer),
 
                 _ => throw new NotSupportedException($"Context '{context}' is not supported.")
             };

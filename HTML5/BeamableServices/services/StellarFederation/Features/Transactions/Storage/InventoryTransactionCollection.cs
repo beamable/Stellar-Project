@@ -6,21 +6,16 @@ using MongoDB.Driver;
 
 namespace Beamable.StellarFederation.Features.Transactions.Storage;
 
-public class InventoryTransactionCollection : IService
+public class InventoryTransactionCollection(IStorageObjectConnectionProvider storageObjectConnectionProvider)
+    : IService
 {
-    private readonly IStorageObjectConnectionProvider _storageObjectConnectionProvider;
     private IMongoCollection<TransactionRecord>? _collection;
-
-    public InventoryTransactionCollection(IStorageObjectConnectionProvider storageObjectConnectionProvider)
-    {
-        _storageObjectConnectionProvider = storageObjectConnectionProvider;
-    }
 
     private async ValueTask<IMongoCollection<TransactionRecord>> Get()
     {
         if (_collection is null)
         {
-            var db = await _storageObjectConnectionProvider.StellarFederationStorageDatabase();
+            var db = await storageObjectConnectionProvider.StellarFederationStorageDatabase();
             _collection = db.GetCollection<TransactionRecord>("inventory-transaction");
             await _collection.Indexes.CreateOneAsync(new CreateIndexModel<TransactionRecord>(Builders<TransactionRecord>.
                 IndexKeys.Ascending(x => x.ExpireAt), new CreateIndexOptions { ExpireAfter = TimeSpan.Zero }));
