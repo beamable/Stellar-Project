@@ -46,6 +46,7 @@ public class Configuration : IService
     public ValueTask<string> StellarFaucet => GetValue(nameof(StellarFaucet), "https://friendbot.stellar.org/");
     public ValueTask<int> AuthenticationChallengeTtlSec => GetValue(nameof(AuthenticationChallengeTtlSec), 600);
     public ValueTask<string> NftExternalUrl => GetValue(nameof(NftExternalUrl), "https://www.example.com/");
+    public ValueTask<bool> InitializeContracts => GetValue(nameof(InitializeContracts), false);
     public ValueTask<string> WalletConnectBridgeUrl => GetValue(nameof(WalletConnectBridgeUrl), "");
     public ValueTask<int> NumberOfWorkingWallets => GetValue(nameof(NumberOfWorkingWallets), 50);
     public ValueTask<int> MaxNumberOffWorkingWallets => GetValue(nameof(MaxNumberOffWorkingWallets), 100);

@@ -27,8 +27,9 @@ public class ContractService : IService
     private readonly CliClient _cliClient;
     private readonly BeamContentService _beamContentService;
     private readonly WalletManagerService _walletManagerService;
+    private readonly Configuration _configuration;
 
-    public ContractService(SocketRequesterContext socketRequesterContext, LockManagerService lockManagerService, ContractCollection contractCollection, StellarService stellarService, ContentContractHandlerResolver contractHandlerResolver, CliClient cliClient, BeamContentService beamContentService, WalletManagerService walletManagerService)
+    public ContractService(SocketRequesterContext socketRequesterContext, LockManagerService lockManagerService, ContractCollection contractCollection, StellarService stellarService, ContentContractHandlerResolver contractHandlerResolver, CliClient cliClient, BeamContentService beamContentService, WalletManagerService walletManagerService, Configuration configuration)
     {
         _lockManagerService = lockManagerService;
         _contractCollection = contractCollection;
@@ -37,7 +38,8 @@ public class ContractService : IService
         _cliClient = cliClient;
         _beamContentService = beamContentService;
         _walletManagerService = walletManagerService;
-        //SubscribeContentUpdateEvent(socketRequesterContext);
+        _configuration = configuration;
+        SubscribeContentUpdateEvent(socketRequesterContext);
     }
 
     private void SubscribeContentUpdateEvent(SocketRequesterContext socketRequesterContext)
@@ -64,6 +66,7 @@ public class ContractService : IService
 
     public async Task InitializeContentContracts()
     {
+        var initializeContracts = await _configuration.InitializeContracts;
         try
         {
             _ = Extensions.TaskExtensions.RunAsyncBlock(async () =>
@@ -73,19 +76,22 @@ public class ContractService : IService
                 await _stellarService.Initialize();
                 _cliClient.Initialize();
 
-                var models = (await _beamContentService.FetchFederationContentForContracts()).ToList();
-                await _walletManagerService.CreateContractWallets(models.Select(m => m.Key).ToList());
-
-                BeamableLogger.Log("Waiting on contract wallets...");
-                await Task.Delay(TimeSpan.FromSeconds(5));
-
-                foreach (var model in models)
+                if (initializeContracts)
                 {
-                    var handler = _contractHandlerResolver.Resolve(model);
-                    await handler.HandleContract(model);
-                }
+                    var models = (await _beamContentService.FetchFederationContentForContracts()).ToList();
+                    await _walletManagerService.CreateContractWallets(models.Select(m => m.Key).ToList());
 
-                BeamableLogger.Log("All contracts initialized.");
+                    BeamableLogger.Log("Waiting on contract wallets...");
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+
+                    foreach (var model in models)
+                    {
+                        var handler = _contractHandlerResolver.Resolve(model);
+                        await handler.HandleContract(model);
+                    }
+
+                    BeamableLogger.Log("All contracts initialized.");
+                }
             });
         }
         finally
