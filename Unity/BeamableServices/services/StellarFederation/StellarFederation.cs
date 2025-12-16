@@ -48,7 +48,7 @@ namespace Beamable.StellarFederation
 				// Initialize Contracts
 #if !DEBUG
 				await initializer.GetService<Features.Contract.ContractService>().InitializeContentContracts();
-				await initializer.Provider.GetService<SchedulerService>().Start();
+				await initializer.Provider.GetService<Features.Scheduler.SchedulerService>().Start();
 #endif
 			}
 			catch (Exception ex)
