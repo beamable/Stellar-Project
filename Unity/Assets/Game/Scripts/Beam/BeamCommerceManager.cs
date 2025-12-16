@@ -17,6 +17,7 @@ namespace Farm.Beam
         [Header("Currency")]
         [SerializeField] private CoinCurrencyRef coinRef;
         [SerializeField] private CurrencyRef testCoinRef;
+        [SerializeField] private bool useTestCoin = false;
 
         [Header("Store")] 
         [SerializeField] private StoreRef storeRefNf;
@@ -32,8 +33,7 @@ namespace Farm.Beam
         {
             await base.InitAsync(ct);
             await ResolveShopListings();
-            _beamContext.Api.InventoryService.Subscribe(testCoinRef.Id, OnCurrencyUpdated);
-            IsReady = true;
+            _beamContext.Api.InventoryService.Subscribe(GetCurrencyId(), OnCurrencyUpdated);
         }
 
 
@@ -42,10 +42,11 @@ namespace Farm.Beam
             await base.ResetAsync(ct);
         }
 
-        private void OnCurrencyUpdated(InventoryView inv)
+        private void OnCurrencyUpdated(InventoryView view)
         {
-            var currency = inv.currencies;
-            currency.TryGetValue(testCoinRef.Id, out var value);
+            if (!BeamManager.Instance.InventoryManager.IsDirty(view)) return; 
+            var currency = view.currencies;
+            currency.TryGetValue(GetCurrencyId(), out var value);
             CurrentCoinCount = (int)value;
             OnCoinCountUpdated?.Invoke(CurrentCoinCount);
         }
@@ -53,14 +54,15 @@ namespace Farm.Beam
         [ContextMenu("Add Coins")]
         public async void AddCurrency()
         {
-            await UpdateCoinAmount(50);
+            await UpdateInventory(50);
         }
         
-        public async UniTask UpdateCoinAmount(int amount)
+        public async UniTask UpdateInventory(int amount)
         {
             try
             {
-                await _stellarClient.UpdateCurrency(testCoinRef.Id, amount);
+                var itemsToUpdate = BeamManager.Instance.InventoryManager.GetCropUpdateRequests();
+                await _stellarClient.UpdateInventory(GetCurrencyId(), amount, itemsToUpdate);
                 Debug.Log($"Updated Currency to {amount}. Current Balance:{CurrentCoinCount}");
             }
             catch (Exception e)
@@ -86,6 +88,7 @@ namespace Farm.Beam
             {
                 await _beamContext.Api.CommerceService.Purchase(storeRefNf.Id, listing.Id);
                 await _beamContext.Inventory.Refresh();
+                await BeamManager.Instance.InventoryManager.ForceIsRefreshing();
                 await UniTask.WaitUntil(()=> !BeamManager.Instance.InventoryManager.IsRefreshing);
                 var crop = BeamManager.Instance.ContentManager.GetCropInfo(listing.offer.obtainItems[0].contentId);
                 if(crop == null) return;
@@ -95,6 +98,11 @@ namespace Farm.Beam
             {
                 Debug.LogError($"Failed to purchase listing: {e.Message}");
             }
+        }
+
+        private string GetCurrencyId()
+        {
+            return useTestCoin ? testCoinRef.Id : coinRef.Id;
         }
     }
 }

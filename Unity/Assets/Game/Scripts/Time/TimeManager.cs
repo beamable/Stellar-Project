@@ -60,7 +60,7 @@ namespace Farm.Time
         {
             _isSleeping = true;
             CurrentDay++;
-            UiManager.Instance.GoToSleep(CurrentDay).Forget();
+            UiManager.Instance.SleepThenWakeUp(CurrentDay).Forget();
             AudioManager.Instance.StopMusic(null);
             AudioManager.Instance.PlaySfx(1);
         }

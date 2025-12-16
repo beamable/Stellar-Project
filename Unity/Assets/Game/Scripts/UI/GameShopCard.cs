@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using Farm.Beam;
 using Farm.Managers;
 using Farm.Player;
@@ -100,9 +101,10 @@ namespace Farm.UI
             try
             {
                 _inventory.SetLoadingBlocker(true);
-                await BeamManager.Instance.CommerceManager.UpdateCoinAmount(-CurrentPlant.seedBuyPrice);
+                _inventory.SetWaitTillCurrencyUpdate(true);
+                await BeamManager.Instance.CommerceManager.UpdateInventory(-CurrentPlant.seedBuyPrice);
                 CropManager.Instance.AddSeeds(CurrentPlant.cropData.cropType, 1);
-                _inventory.SetLoadingBlocker(false);
+                await UniTask.WaitUntil(()=> !_inventory.WaitTillCurrencyUpdate);
                 AudioManager.Instance.PlaySfx(8);
             }
             catch (Exception e)
@@ -117,10 +119,11 @@ namespace Farm.UI
             try
             {
                 _inventory.SetLoadingBlocker(true);
-                await BeamManager.Instance.CommerceManager.UpdateCoinAmount(CurrentPlant.yieldSellPrice);
+                _inventory.SetWaitTillCurrencyUpdate(true);
+                await BeamManager.Instance.CommerceManager.UpdateInventory(CurrentPlant.yieldSellPrice);
                 CropManager.Instance.UseYield(CurrentPlant.cropData.cropType, 1);
+                await UniTask.WaitUntil(()=> !_inventory.WaitTillCurrencyUpdate);
                 SetButtonsStatus();
-                _inventory.SetLoadingBlocker(false);
                 AudioManager.Instance.PlaySfx(9);
             }
             catch (Exception e)
@@ -135,11 +138,12 @@ namespace Farm.UI
             try
             {
                 _inventory.SetLoadingBlocker(true);
+                _inventory.SetWaitTillCurrencyUpdate(true);
                 var totalSellPrice = CurrentPlant.yieldAmount * CurrentPlant.yieldSellPrice;
-                await BeamManager.Instance.CommerceManager.UpdateCoinAmount(totalSellPrice);
+                await BeamManager.Instance.CommerceManager.UpdateInventory(totalSellPrice);
                 CropManager.Instance.UseYield(CurrentPlant.cropData.cropType, CurrentPlant.yieldAmount);
+                await UniTask.WaitUntil(()=> !_inventory.WaitTillCurrencyUpdate);
                 SetButtonsStatus();
-                _inventory.SetLoadingBlocker(false);
                 AudioManager.Instance.PlaySfx(9);
             }
             catch (Exception e)

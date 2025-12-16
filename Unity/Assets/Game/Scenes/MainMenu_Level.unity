@@ -1153,6 +1153,7 @@ MonoBehaviour:
   - {fileID: 1045877090}
   - {fileID: 608750037}
   - {fileID: 1006716721}
+  mainMenuSceneIndex: 0
 --- !u!1 &317360789
 GameObject:
   m_ObjectHideFlags: 0
@@ -2512,6 +2513,7 @@ MonoBehaviour:
   - Id: items.crop.Crop_Carrot
   - Id: items.crop.Crop_Pumpkin
   - Id: items.crop.Crop_Tomato
+  useFederatedContent: 1
 --- !u!4 &608750038
 Transform:
   m_ObjectHideFlags: 0
@@ -11241,7 +11243,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Farm.Beam.BeamInventoryManager
   defaultCropRef:
-    Id: items.crop.Crop_Carrot_NF
+    Id: items.crop.Crop_Carrot
   testItemRef:
     Id: items.crop.Crop_Tomato_NF
 --- !u!1 &1037035133
@@ -11442,6 +11444,7 @@ MonoBehaviour:
     Id: currency.coin.beam_coin
   testCoinRef:
     Id: currency.gems
+  useTestCoin: 0
   storeRefNf:
     Id: stores.Store_Nf
 --- !u!1 &1054368905
