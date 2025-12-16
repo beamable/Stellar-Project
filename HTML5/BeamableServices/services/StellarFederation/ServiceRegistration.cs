@@ -1,8 +1,10 @@
 using System.Linq;
 using System.Reflection;
 using Beamable.Common.Dependencies;
+using Beamable.StellarFederation.BackgroundService;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Transactions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Beamable.StellarFederation;
 
@@ -14,7 +16,10 @@ public static class ServiceRegistration
             .GetDerivedTypes<IService>()
             .ToList()
             .ForEach(serviceType => builder.AddSingleton(serviceType));
+    }
 
-        builder.AddScoped<TransactionManager>();
+    public static void AddBackgroundServiceFeatures(this IServiceCollection services)
+    {
+        services.AddSingleton<BackoffDelayManager>();
     }
 }

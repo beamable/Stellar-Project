@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Beamable.Common;
 using Microsoft.Extensions.Caching.Memory;
@@ -58,7 +59,7 @@ public static class GlobalCache
         return value;
     }
 
-    public static void Remove(string key)
+    public static void Invalidate(string key)
     {
         try
         {
@@ -67,6 +68,21 @@ public static class GlobalCache
         catch (Exception ex)
         {
             BeamableLogger.LogWarning($"Disposing cache entry for '{key}' threw an exception.", ex);
+        }
+    }
+
+    public static void InvalidateAccountCache(IEnumerable<string> keys)
+    {
+        try
+        {
+            foreach (var key in keys)
+            {
+                Invalidate($"account-{key}");
+            }
+        }
+        catch (Exception)
+        {
+            // ignored
         }
     }
 }

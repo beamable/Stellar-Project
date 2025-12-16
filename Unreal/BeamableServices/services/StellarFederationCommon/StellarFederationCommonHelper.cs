@@ -18,8 +18,12 @@ namespace StellarFederationCommon
         {
             return Assembly.GetExecutingAssembly()
                 .GetTypes()
-                .Where(t => t.Namespace == "StellarFederationCommon.FederationContent")
+                .Where(t =>
+                    t.Namespace == "StellarFederationCommon.FederationContent" &&
+                    !ExcludedSuffixes.Any(s => t.Name.EndsWith(s)))
                 .ToHashSet();
         }
+
+        private static readonly string[] ExcludedSuffixes = { "Request", "Base", "Ref", "Link" };
     }
 }

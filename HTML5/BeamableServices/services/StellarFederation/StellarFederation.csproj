@@ -26,6 +26,7 @@
         <PackageReference Include="Beamable.Microservice.SourceGen" Version="$(BeamableVersion)" OutputItemType="Analyzer" />
         <PackageReference Include="Handlebars.Net" Version="2.1.6" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.1" />
         <PackageReference Include="stellar-dotnet-sdk" Version="14.0.1" />
         
     </ItemGroup>
@@ -42,6 +43,22 @@
         <None Include="Features\Contract\Templates\**\*">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Features\Contract\Templates\gold.rs">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Features\Contract\Templates\nft.rs">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Features\BlockProcessor\NativeBlockProcessor.cs" />
+      <Compile Remove="Features\Content\Handlers\Models\BaseMessage.cs" />
+      <Compile Remove="Features\Content\Handlers\Models\RegularCoinBurnMessage.cs" />
+      <Compile Remove="Features\Content\Handlers\ContentHandlerFactory.cs" />
+      <Compile Remove="Features\Content\Handlers\IContentHandler.cs" />
+      <Compile Remove="Features\Content\Handlers\RegularCoinHandler.cs" />
+      <Compile Remove="Features\Transactions\Storage\MintCollection.cs" />
     </ItemGroup>
 
 </Project>
