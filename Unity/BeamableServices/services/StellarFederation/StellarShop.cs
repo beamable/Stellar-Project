@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Beamable.Common;
 using Beamable.Common.Api.Inventory;
 using Beamable.Server;
@@ -31,6 +32,30 @@ public partial class StellarFederation
         var invService = Services.Inventory;
         await invService.AddItem(itemContentId, properties);
         BeamableLogger.Log($"Added {itemContentId} to inventory");
+    }
+
+    [ClientCallable(""), SwaggerCategory("Commerce")]
+    public async Promise<bool> AddUniqueItem(string itemContentId, Dictionary<string, string>? properties = null)
+    {
+        try
+        {
+            var invService = Services.Inventory;
+            var all = await invService.GetCurrent();
+            if (all.items.Any(item => itemContentId == item.Key))
+            {
+                BeamableLogger.LogWarning($"Item {itemContentId} already exists in inventory");
+                return false;
+            }
+
+            await invService.AddItem(itemContentId, properties);
+            BeamableLogger.Log($"Added {itemContentId} to inventory");
+            return true;
+        }
+        catch (Exception e)
+        {
+            BeamableLogger.LogWarning($"Failed to add item {itemContentId}: {e.Message}");
+            return false;
+        }
     }
 
     [ClientCallable(""), SwaggerCategory("Commerce")]

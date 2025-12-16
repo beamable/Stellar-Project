@@ -20,4 +20,9 @@ public static class StringExtensions
     public static string FromBase64(this string base64)
         => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64));
 
+    private static string ContentIdToTypeName(this string contentId)
+        => contentId[..contentId.LastIndexOf('.')];
+
+    public static string ContentIdToConcurrencyKey(this string contentId)
+        => contentId.StartsWithFast("items") ? contentId.ContentIdToTypeName() : contentId;
 }

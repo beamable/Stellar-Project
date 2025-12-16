@@ -9,9 +9,10 @@ public readonly record struct StellarAmount
     private long TotalUnits { get; }
     private int Decimals { get; }
 
-    public static readonly StellarAmount NativeZero = new(0, NativeDecimals);
+    public static readonly StellarAmount NativeZero = new(0);
+    public static readonly StellarAmount NativeOne = new(10000000);
 
-    private StellarAmount(long totalUnits, int decimals)
+    public StellarAmount(long totalUnits, int decimals = NativeDecimals)
     {
         if (decimals is < 0 or > 18)
             throw new ArgumentOutOfRangeException(nameof(decimals), "Decimals must be between 0 and 18.");
@@ -51,18 +52,23 @@ public readonly record struct StellarAmount
         return new StellarAmount(totalUnits, decimals);
     }
 
-    public decimal ToDecimal()
+    public decimal ToXlm()
     {
         if (Decimals == 0) return TotalUnits;
         var factor = (decimal)Math.Pow(10, Decimals);
         return TotalUnits / factor;
     }
 
-    public string ToFormattedString()
+    public string ToXlmString()
     {
-        var value = ToDecimal();
+        var value = ToXlm();
         var format = "F" + Decimals.ToString(CultureInfo.InvariantCulture);
         return value.ToString(format, CultureInfo.InvariantCulture);
+    }
+
+    public override string ToString()
+    {
+        return ToXlmString();
     }
 
     private static void EnsureMatchingDecimals(StellarAmount a, StellarAmount b)
@@ -73,6 +79,11 @@ public readonly record struct StellarAmount
                 $"Cannot perform arithmetic on amounts with different decimal precisions ({a.Decimals} and {b.Decimals}).");
         }
     }
+
+    public static implicit operator long(StellarAmount amount) => amount.TotalUnits;
+
+    public static implicit operator StellarAmount(long stroops) =>
+        new (stroops, NativeDecimals);
 
     public static StellarAmount operator +(StellarAmount a, StellarAmount b)
     {
