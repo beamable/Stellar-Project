@@ -25,7 +25,7 @@ public class CreateAccountBlockHandler(
         await vaultCollection.SetCreated(transactionLogs.Select(x => x.PlayerUserId.ToString()));
         await transactionQueueCollection.Delete(transactionLogs.Select(x => x.Id));
         GlobalCache.InvalidateAccountCache(transactionLogs.Select(x => x.PlayerUserId.ToString()));
-        await lockManagerService.ReleaseLock(transactionLogs.Select(x => x.ConcurrencyKey));
+        await lockManagerService.ReleaseLock(transactionLogs.SelectMany(x => x.ConcurrencyKey));
         _ = playerNotificationService.SendPlayerNotification(transactionLogs.Select(x => x.PlayerUserId),
             new CustodialAccountCreatedNotification());
     }

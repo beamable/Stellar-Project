@@ -94,7 +94,7 @@ public class TransactionLogCollection : IService
 		if (!string.IsNullOrWhiteSpace(concurrencyKey))
 		{
 			updates.Add(
-				Builders<TransactionLog>.Update.Set(x => x.ConcurrencyKey, concurrencyKey)
+				Builders<TransactionLog>.Update.AddToSet(x => x.ConcurrencyKey, concurrencyKey)
 			);
 		}
 

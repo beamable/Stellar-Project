@@ -8,6 +8,7 @@ using Beamable.StellarFederation.BackgroundService;
 using Beamable.StellarFederation.Endpoints;
 using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Accounts;
+using Beamable.StellarFederation.Features.Contract;
 using StellarFederationCommon;
 using StellarFederationCommon.Models.Response;
 
@@ -46,8 +47,8 @@ namespace Beamable.StellarFederation
 
 				// Initialize Contracts
 #if !DEBUG
-				//await initializer.GetService<Features.Contract.ContractService>().InitializeContentContracts();
-				//await initializer.Provider.GetService<SchedulerService>().Start();
+				await initializer.GetService<Features.Contract.ContractService>().InitializeContentContracts();
+				await initializer.Provider.GetService<SchedulerService>().Start();
 #endif
 			}
 			catch (Exception ex)
@@ -71,6 +72,12 @@ namespace Beamable.StellarFederation
 			var account = await Provider.GetService<AccountsService>()
 				.GetOrCreateRealmAccount();
 			return account.Address;
+		}
+
+		[AdminOnlyCallable]
+		public async Promise InitializeContentContracts()
+		{
+			await Provider.GetService<ContractService>().InitializeContentContracts();
 		}
 
 		async Promise<FederatedAuthenticationResponse> IFederatedLogin<StellarWeb3Identity>.Authenticate(string token, string challenge, string solution)

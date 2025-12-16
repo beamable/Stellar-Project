@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Beamable.StellarFederation.Extensions;
 using Beamable.StellarFederation.Features.Transactions;
 using Microsoft.Extensions.Logging;
 
@@ -38,7 +37,7 @@ public class StellarBackgroundService : Microsoft.Extensions.Hosting.BackgroundS
                 var potentialWorkKeys = await _batchService.GetPotentialWorkGroups(stoppingToken);
                 var lockedGroups = new List<string>();
                 // 2. Iterate through the potential groups and ATTEMPT to lock the first one we can.
-                foreach (var key in potentialWorkKeys.Shuffle()) // Randomize the order to avoid thundering herd.
+                foreach (var key in potentialWorkKeys)
                 {
                     if (!await _batchService.AcquireLock(key, 60))
                     {
@@ -103,12 +102,6 @@ public class StellarBackgroundService : Microsoft.Extensions.Hosting.BackgroundS
         {
             await TryReleaseLock(concurrencyKeys);
         }
-    }
-
-    private Task TryReleaseLock(string? lockedKey)
-    {
-        if (lockedKey is null || _batchService is null) return Task.CompletedTask;
-        return _batchService.ReleaseLock(lockedKey);
     }
 
     private Task TryReleaseLock(List<string>? lockedKeys)
