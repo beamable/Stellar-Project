@@ -23,11 +23,13 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category = "Stellar")
 	static void GetStellarSettings(FString& MicroserviceId, FString& FederationId,
-	                               FString& StellarExternalId, FString& AddressChannel, FString& SignatureChannel)
+	                               FString& StellarExternalId, FString& CustodialChannel, 
+	                               FString& AddressChannel, FString& SignatureChannel)
 	{
 		MicroserviceId = TEXT("StellarFederation");
 		FederationId = TEXT("StellarIdentity");
 		StellarExternalId = TEXT("StellarExternalIdentity");
+		CustodialChannel = TEXT("custodial-account-created");
 		AddressChannel = TEXT("external-auth-address");
 		SignatureChannel = TEXT("external-auth-signature");
 	}

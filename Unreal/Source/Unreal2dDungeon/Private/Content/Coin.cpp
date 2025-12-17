@@ -1,4 +1,4 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Content/StellarCoin.h"
+#include "Content/Coin.h"

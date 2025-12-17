@@ -5,16 +5,16 @@
 #include "CoreMinimal.h"
 #include "Content/BeamContentTypes/BeamCurrencyContent.h"
 #include "UObject/Object.h"
-#include "StellarCoin.generated.h"
+#include "GoldCoin.generated.h"
 
 UCLASS(BlueprintType)
-class UNREAL2DDUNGEON_API UStellarCoin : public UBeamCurrencyContent
+class UNREAL2DDUNGEON_API UGoldCoin : public UBeamCurrencyContent
 {
 	GENERATED_BODY()
-	
+
 public:
 	UFUNCTION()
-	void GetContentType_StellarCoin(FString& Result){Result = TEXT("coin");}
+	void GetContentType_GoldCoin(FString& Result){Result = TEXT("gold");}
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName name;
@@ -26,5 +26,6 @@ public:
 	FString image;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	FString description;
-	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	int64 totalSupply;
 };

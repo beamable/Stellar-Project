@@ -3,18 +3,18 @@
 #include "CoreMinimal.h"
 #include "BeamBackend/BeamBaseResponseBodyInterface.h"
 #include "Serialization/BeamJsonSerializable.h"
-#include "Serialization/BeamJsonUtils.h"
+#include "Unreal2dDungeonMicroserviceClients/Public/AutoGen/StoreView.h"
 
-#include "StellarFederationAddItemResponse.generated.h"
+#include "GetListingsResponse.generated.h"
 
 UCLASS(BlueprintType, Category="Beam", DefaultToInstanced, EditInlineNew)
-class UNREAL2DDUNGEONMICROSERVICECLIENTS_API UStellarFederationAddItemResponse : public UObject, public IBeamJsonSerializableUObject, public IBeamBaseResponseBodyInterface
+class UNREAL2DDUNGEONMICROSERVICECLIENTS_API UGetListingsResponse : public UObject, public IBeamJsonSerializableUObject, public IBeamBaseResponseBodyInterface
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="B Value", Category="Beam")
-	bool bValue = {};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Stores", Category="Beam")
+	TArray<UStoreView*> Stores = {};
 
 	virtual void DeserializeRequestResponse(UObject* RequestData, FString ResponseContent) override;
 

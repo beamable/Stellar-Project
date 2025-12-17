@@ -8,7 +8,7 @@
 #include "BeamBackend/BeamFullResponse.h"
 
 #include "Unreal2dDungeonMicroserviceClients/Public/AutoGen/AddItemRequestArgs.h"
-#include "Unreal2dDungeonMicroserviceClients/Public/AutoGen/StellarFederationAddItemResponse.h"
+#include "Serialization/BeamPlainTextResponseBody.h"
 
 #include "StellarFederationAddItemRequest.generated.h"
 
@@ -41,7 +41,7 @@ public:
 };
 
 UDELEGATE(BlueprintAuthorityOnly)
-DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnStellarFederationAddItemSuccess, FBeamRequestContext, Context, UStellarFederationAddItemRequest*, Request, UStellarFederationAddItemResponse*, Response);
+DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnStellarFederationAddItemSuccess, FBeamRequestContext, Context, UStellarFederationAddItemRequest*, Request, UBeamPlainTextResponseBody*, Response);
 
 UDELEGATE(BlueprintAuthorityOnly)
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnStellarFederationAddItemError, FBeamRequestContext, Context, UStellarFederationAddItemRequest*, Request, FBeamErrorResponse, Error);
@@ -49,5 +49,5 @@ DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnStellarFederationAddItemError, FBeamRequ
 UDELEGATE(BlueprintAuthorityOnly)
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnStellarFederationAddItemComplete, FBeamRequestContext, Context, UStellarFederationAddItemRequest*, Request);
 
-using FStellarFederationAddItemFullResponse = FBeamFullResponse<UStellarFederationAddItemRequest*, UStellarFederationAddItemResponse*>;
+using FStellarFederationAddItemFullResponse = FBeamFullResponse<UStellarFederationAddItemRequest*, UBeamPlainTextResponseBody*>;
 DECLARE_DELEGATE_OneParam(FOnStellarFederationAddItemFullResponse, FStellarFederationAddItemFullResponse);
