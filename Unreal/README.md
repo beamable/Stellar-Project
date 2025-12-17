@@ -29,6 +29,7 @@ Use this quest log to navigate the Unreal client and its Beamable + Stellar inte
 - 🪪 Identity: implements `IFederatedLogin`/`IFederatedInventory` for `StellarWeb3Identity` and `StellarWeb3ExternalIdentity`; `AuthenticateEndpoint` / `AuthenticateExternalEndpoint` manage custodial vs external login.
 - 📡 Gameplay endpoints: `StellarConfiguration`, `UpdateCurrency`, `AddItem` (with duplicate guard), `RemoveItem`, `PurchaseWarrior` (Commerce API), `DoOwnWarrior` (ownership check). Inventory transaction endpoints are scaffolded for federation sync.
 - 🧰 Clients: Generated into `Plugins/Unreal2dDungeonMicroserviceClients` (`UBeamStellarFederationApi`), giving Blueprint and C++ access with retry contexts and operation handles.
+- [Microservice readme](BeamableServices/README.md)
 
 ## 🔐 Identity & Wallets
 - 🔒 Custodial: Beam auth slots map to Stellar federation IDs; microservice keeps realm wallet and validates config before serving requests.

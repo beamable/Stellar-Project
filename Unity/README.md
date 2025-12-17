@@ -31,6 +31,7 @@ Use this quest log to navigate the Unity farming client and the Stellar-backed B
 - ⚙️ Initialization (`StellarFederation.InitializeServices`): set up Mongo extensions, validate realm config, create realm wallet, initialize Soroban contracts, and start the scheduler (non-DEBUG builds).
 - 📡 Client-callables: `StellarConfiguration`, `CreateAccount`, `GetAccount`, inventory helpers (`UpdateCurrency`, `AddItem`, `RemoveItem`, `UpdateItems`), plus admin `Jobs`/`BlockProcessor`.
 - 🔔 External callbacks: `ExternalAddress` and `ExternalSignature` feed wallet-connect bridge responses and trigger player notifications.
+- [Microservice readme](BeamableServices/README.md)
 
 ## 🔐 Identity & Wallets
 - 🔒 Custodial path: `AccountsService` keeps encrypted seeds in `VaultCollection` (Mongo `vault`), auto-creates the realm wallet (`default-account`), and serves auth for Beam users with a stored wallet.

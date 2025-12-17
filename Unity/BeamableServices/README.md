@@ -123,9 +123,9 @@ MongoDB collections store all persistent data:
 
 Pre-built Soroban contract templates for common game use cases:
 
-- **coin.rs**: Fungible token implementation for in-game currencies
-- **gold.rs**: Example currency with custom transfer logic
-- **nft.rs**: Non-fungible token implementation for unique items
+- **coin.rs**: Fungible token implementation for in-game currencies, [readme](services/StellarFederation/Features/Contract/Templates/coin.rs.README.md)
+- **gold.rs**: Example currency with custom transfer logic, [readme](services/StellarFederation/Features/Contract/Templates/gold.rs.README.md)
+- **nft.rs**: Non-fungible token implementation for unique items, [readme](services/StellarFederation/Features/Contract/Templates/nft.rs.README.md)
 
 Templates use Handlebars syntax for parameterization (token name, symbol, admin account, etc.).
 

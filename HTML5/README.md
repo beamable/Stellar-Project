@@ -48,6 +48,17 @@ NEXT_PUBLIC_DEBUG_LOGS=true
 - &#x1F4E6; **Content / Inventory / Commerce (`lib/beamContent.ts`, `lib/beamInventory.ts`, `lib/commerceManager.ts`)**: Content fetch and caching, inventory helpers over the generated OpenAPI calls, store + listing resolution with cache keys by store/manifest.
 - &#x1F3D7;&#xFE0F; **Game loop and UX (`components/Game/*`, `hooks/*`)**: Canvas physics and state, campaign progression, ball loadouts, currency sync, shop purchases, identity bootstrap, wallet pop-up orchestration, and overlays for player info and campaign flow.
 
+
+## Microservice Core (StellarFederation)
+- Location: `BeamableServices/services/StellarFederation`.
+- Identity namespaces: custodial `StellarWeb3Identity`, external `StellarWeb3ExternalIdentity` (`StellarFederationCommon/StellarFederationCommon.cs`).
+- Startup (`Program.cs`): preload common assembly, prepare microservice, register shutdown hook, and start the hosted background worker.
+- DI: `ServiceRegistration.AddFeatures` auto-registers `IService` types; `Endpoints/ServiceRegistration` wires auth/inventory endpoints.
+- Initialization (`StellarFederation.InitializeServices`): set up Mongo extensions, validate realm config, create realm wallet, initialize Soroban contracts, and start the scheduler (non-DEBUG builds).
+- Client-callables: `StellarConfiguration`, `CreateAccount`, `GetAccount`, inventory helpers (`UpdateCurrency`, `AddItem`, `RemoveItem`, `UpdateItems`), plus admin `Jobs`/`BlockProcessor`.
+- External callbacks: `ExternalAddress` and `ExternalSignature` feed wallet-connect bridge responses and trigger player notifications.
+- [Microservice readme](BeamableServices/README.md)
+
 ## Workflow Tips
 - &#x1F4CC; Keep `.beamable/connection-configuration.json` aligned with your target cluster; prefer env overrides for quick host/env switches.
 - &#x1FA9F; If a popup blocker prevents wallet attach, use the logged URL or enable popups and retry.
