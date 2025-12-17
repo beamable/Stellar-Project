@@ -317,6 +317,33 @@ namespace StellarFederationCommon.FederationContent
 
 **2. Create Content Instances**
 
+Content instances are **JSON files** that represent published Beamable content entries.
+
+- **Location (HTML5 projects)**: Create them under `.beamable/content/<PID>/global/` where `<PID>` is your Beamable project id (for example, `.beamable/content/DE_1923097525143560/global/`).
+- **Naming conventions (prefixes)**:
+  - Currencies must start with `currency` (example: `currency.coin.beam_coin`)
+  - Items must start with `items` (example: `items.ball.FireBall`)
+  - Listings must start with `listings` (example: `listings.Listing_Fire`)
+  - Stores must start with `stores` (example: `stores.Store_Nf`)
+
+**CLI workflow (sync local JSONs to your realm)**
+- `dotnet beam init`: Authenticate and bind the local project to your target CID/PID/host.
+- `dotnet beam content status`: Verify what your realm currently has published (and confirm you're targeting the right `global` manifest).
+- `dotnet beam content publish`: Publish your local `.beamable/content/<PID>/global/*` JSONs to the realm so the project uses the updated remote content.
+
+**Getting the manifest id (`referenceManifestId`) when creating new content JSONs**
+- `referenceManifestId` must match the **uid of the currently-published `global` manifest** in your realm.
+- The easiest way to get it is to run `dotnet beam content publish` once; the publish response includes a manifest object like `{\"id\":\"global\",\"uid\":\"<MANIFEST_UID>\",...}`. Use that `uid` value in your content JSONs.
+- If you're copying content JSONs from Unity, the `referenceManifestId` is frequently wrong for your HTML5 realm. Re-publish and update the JSONs to use your realm's current manifest `uid`.
+
+Beamable currently doesn't provide a public documentation site listing “default” JSON shapes for each built-in content type. For now, the easiest starting point is to take the content JSONs in this repo (under the HTML5 project's `.beamable/content/...`) and adjust them to your liking.
+
+**Alternative authoring workflow (recommended if you're already using Unity):**
+- Create a Unity project and add the Beamable Unity SDK.
+- Add content classes that match the exact properties of the content types you defined in `StellarFederationCommon/FederationContent/`.
+- Use the Unity Beamable **Content Manager** to create/edit the content entries.
+- Copy the generated `.beamable` folder (or just the `.beamable/content/<PID>/global/` subtree) from the Unity project into your HTML5 project.
+
 **3. Smart Contract Deployment**
 
 When a player first acquires an item of your custom content type:
