@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import type { Beam } from "beamable-sdk"
 import getBeam from "@/lib/beam"
 import { debugLog } from "@/lib/debugLog"
+import { waitForMintingDelayOffset } from "@/lib/mintingDelay"
 
 type UseCoinSyncOptions = {
   readyForGame: boolean
@@ -41,6 +42,7 @@ export function useCoinSync({
           const payload = { currencyContentId, amount: coinsEarned }
           debugLog("[Coins] Syncing earned coins to server:", payload)
           await client.updateCurrency(payload)
+          await waitForMintingDelayOffset()
           onInventoryRefresh()
         } else {
           console.warn("[Coins] StellarFederationClient.updateCurrency unavailable; skipping sync.")

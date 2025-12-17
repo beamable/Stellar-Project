@@ -4,6 +4,7 @@ import { useCallback, useState } from "react"
 import { debugLog } from "@/lib/debugLog"
 import getBeam from "@/lib/beam"
 import { fetchInventory } from "@/lib/beamInventory"
+import { waitForMintingDelayOffset } from "@/lib/mintingDelay"
 import type { Beam } from "beamable-sdk"
 
 type UseShopOptions = {
@@ -41,6 +42,7 @@ export function useShop({ inventoryInitialized, onHidePlayerInfo, onRefreshInven
         if (beam.stellarFederationClient?.purchaseBall) {
           debugLog("[Commerce] Purchasing listing:", listingId)
           await beam.stellarFederationClient.purchaseBall({ purchaseId: listingId })
+          await waitForMintingDelayOffset()
           await fetchInventory(beam)
           onRefreshInventory()
         } else {
