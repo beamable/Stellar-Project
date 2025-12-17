@@ -220,7 +220,7 @@ namespace Farm.Player
                 yield return new WaitForSeconds(3);
                 if (autoDeactivate)
                 {
-                    gameObject.SetActive(false);
+                    loadingPanel.SetActive(false);
                     SetWaitTillCurrencyUpdate(false);
                 }
             }

@@ -1,5 +1,5 @@
 {
-  "SnapshotTimestamp": 1764865662302,
+  "SnapshotTimestamp": 1765901249425,
   "ManifestId": "global",
   "ProjectData": {
     "PID": "DE_1925146714814465",
@@ -11,6 +11,85 @@
   },
   "IsAutoSnapshot": true,
   "contents": {
+    "currency.coin.beam_coin": {
+      "properties": {
+        "clientPermission": {
+          "data": {
+            "write_self": false
+          }
+        },
+        "decimals": {
+          "data": 0
+        },
+        "description": {
+          "data": "Beam in game currency"
+        },
+        "external": {
+          "data": {
+            "service": "StellarFederation",
+            "namespace": "StellarIdentity"
+          }
+        },
+        "image": {
+          "data": "https://cdn-icons-png.flaticon.com/128/15388/15388507.png"
+        },
+        "name": {
+          "data": "None"
+        },
+        "startingAmount": {
+          "data": 125
+        },
+        "symbol": {
+          "data": "BMK"
+        }
+      },
+      "tags": [],
+      "Checksum": "325014b9402ef14ab1b87f3cfc8fdec094e52cb7"
+    },
+    "currency.gold.aurum": {
+      "properties": {
+        "_decimals": {
+          "data": 0
+        },
+        "_description": {
+          "data": "Gold coin game currency"
+        },
+        "_image": {
+          "data": "https://www.svgrepo.com/show/366853/add.svg"
+        },
+        "_name": {
+          "data": "Gold coin"
+        },
+        "_symbol": {
+          "data": "GLD"
+        },
+        "_totalSupply": {
+          "data": 100000
+        },
+        "clientPermission": {
+          "data": {
+            "write_self": false
+          }
+        },
+        "external": {
+          "data": {
+            "namespace": "StellarIdentity",
+            "service": "StellarFederation"
+          }
+        },
+        "icon": {
+          "data": {
+            "referenceKey": "",
+            "subObjectName": ""
+          }
+        },
+        "startingAmount": {
+          "data": 0
+        }
+      },
+      "tags": [],
+      "Checksum": "b2a548a421f70f9b52e3994a7187307d87359754"
+    },
     "currency.stellarcoin.StellarCoin_Gems": {
       "properties": {
         "clientPermission": {
@@ -71,6 +150,12 @@
         "description": {
           "data": "Colder than Death!"
         },
+        "external": {
+          "data": {
+            "namespace": "StellarIdentity",
+            "service": "StellarFederation"
+          }
+        },
         "image": {
           "data": "https://cdn.pixabay.com/photo/2025/12/01/16/57/zero-9988667_1280.png"
         },
@@ -79,7 +164,7 @@
         }
       },
       "tags": [],
-      "Checksum": "b5defbcf3364f72829e6ba9d06b843fb0c130aae"
+      "Checksum": "b0d87ab420ef37c53ed1a1f5056fea6c6d4ed22c"
     },
     "items.warrioritem.Warrior_RedHood": {
       "properties": {
@@ -98,6 +183,12 @@
         "description": {
           "data": "Red Slash!"
         },
+        "external": {
+          "data": {
+            "namespace": "StellarIdentity",
+            "service": "StellarFederation"
+          }
+        },
         "image": {
           "data": "https://cdn.pixabay.com/photo/2025/12/01/16/58/16-58-07-314_640.png"
         },
@@ -106,7 +197,7 @@
         }
       },
       "tags": [],
-      "Checksum": "019a4cb39cecfe808debb2a44d6d592ffbf4c372"
+      "Checksum": "f18ff35a5c358ffa0ebce51206c1b645120d1879"
     },
     "items.warrioritem.Warrior_Scorpio": {
       "properties": {
@@ -125,6 +216,12 @@
         "description": {
           "data": "Get Over Here!"
         },
+        "external": {
+          "data": {
+            "namespace": "StellarIdentity",
+            "service": "StellarFederation"
+          }
+        },
         "image": {
           "data": "https://cdn.pixabay.com/photo/2025/12/01/16/56/scorpio-9988666_1280.png"
         },
@@ -133,7 +230,7 @@
         }
       },
       "tags": [],
-      "Checksum": "d5e94dd3fe1300be242d95ad8606c1c11f11c519"
+      "Checksum": "21099fd68bc4e54351525a7478cbfaecff5d4657"
     },
     "listings.Listing_ColdZero": {
       "properties": {
@@ -165,13 +262,13 @@
         "price": {
           "data": {
             "type": "currency",
-            "symbol": "currency.stellarcoin.StellarCoin_Gems",
+            "symbol": "currency.coin.beam_coin",
             "amount": 2000
           }
         }
       },
       "tags": [],
-      "Checksum": "6b9564c8eaaad76c50438de704868f9e3aa591b4"
+      "Checksum": "d409a4a9799b1d7957bc87c59ea20518ec63e3c9"
     },
     "listings.Listing_Scorpio": {
       "properties": {
@@ -203,13 +300,13 @@
         "price": {
           "data": {
             "type": "currency",
-            "symbol": "currency.stellarcoin.StellarCoin_Gems",
+            "symbol": "currency.coin.beam_coin",
             "amount": 500
           }
         }
       },
       "tags": [],
-      "Checksum": "b56fb619dfe23a4384c6810f20f21b22c9e8827a"
+      "Checksum": "7a5903d42d4c8ecd3f932db7b5029a0211c7d0af"
     },
     "stores.Store_Characters": {
       "properties": {

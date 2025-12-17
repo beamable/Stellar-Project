@@ -6,7 +6,7 @@
 
 #include "Unreal2dDungeonMicroserviceClients/Public/AutoGen/SubSystems/BeamStellarFederationApi.h"
 #include "Unreal2dDungeonMicroserviceClients/Public/AutoGen/SubSystems/StellarFederation/StellarFederationAddItemRequest.h"
-#include "Unreal2dDungeonMicroserviceClients/Public/AutoGen/StellarFederationAddItemResponse.h"
+#include "Serialization/BeamPlainTextResponseBody.h"
 
 #define LOCTEXT_NAMESPACE "K2BeamNode_ApiRequest_StellarFederationAddItem"
 
@@ -49,7 +49,7 @@ UClass* UK2BeamNode_ApiRequest_StellarFederationAddItem::GetRequestClass() const
 
 UClass* UK2BeamNode_ApiRequest_StellarFederationAddItem::GetResponseClass() const
 {
-	return UStellarFederationAddItemResponse::StaticClass();
+	return UBeamPlainTextResponseBody::StaticClass();
 }
 
 FString UK2BeamNode_ApiRequest_StellarFederationAddItem::GetRequestSuccessDelegateName() const

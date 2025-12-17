@@ -1,0 +1,51 @@
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "BeamBackend/BeamBaseRequestInterface.h"
+#include "BeamBackend/BeamRequestContext.h"
+#include "BeamBackend/BeamErrorResponse.h"
+#include "BeamBackend/BeamFullResponse.h"
+
+#include "Serialization/BeamPlainTextResponseBody.h"
+
+#include "StellarFederationInitializeContentContractsRequest.generated.h"
+
+UCLASS(BlueprintType)
+class UNREAL2DDUNGEONMICROSERVICECLIENTS_API UStellarFederationInitializeContentContractsRequest : public UObject, public IBeamBaseRequestInterface
+{
+	GENERATED_BODY()
+	
+public:
+
+	// Path Params
+	
+	
+	// Query Params
+	
+
+	// Body Params
+	
+
+	// Beam Base Request Declaration
+	UStellarFederationInitializeContentContractsRequest() = default;
+
+	virtual void BuildVerb(FString& VerbString) const override;
+	virtual void BuildRoute(FString& RouteString) const override;
+	virtual void BuildBody(FString& BodyString) const override;
+
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Category="Beam|StellarFederation|Utils|Make/Break", DisplayName="Make StellarFederationInitializeContentContracts",  meta=(DefaultToSelf="RequestOwner", AdvancedDisplay="RequestOwner", AutoCreateRefTerm="CustomHeaders"))
+	static UStellarFederationInitializeContentContractsRequest* Make(UObject* RequestOwner, TMap<FString, FString> CustomHeaders);
+};
+
+UDELEGATE(BlueprintAuthorityOnly)
+DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnStellarFederationInitializeContentContractsSuccess, FBeamRequestContext, Context, UStellarFederationInitializeContentContractsRequest*, Request, UBeamPlainTextResponseBody*, Response);
+
+UDELEGATE(BlueprintAuthorityOnly)
+DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnStellarFederationInitializeContentContractsError, FBeamRequestContext, Context, UStellarFederationInitializeContentContractsRequest*, Request, FBeamErrorResponse, Error);
+
+UDELEGATE(BlueprintAuthorityOnly)
+DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnStellarFederationInitializeContentContractsComplete, FBeamRequestContext, Context, UStellarFederationInitializeContentContractsRequest*, Request);
+
+using FStellarFederationInitializeContentContractsFullResponse = FBeamFullResponse<UStellarFederationInitializeContentContractsRequest*, UBeamPlainTextResponseBody*>;
+DECLARE_DELEGATE_OneParam(FOnStellarFederationInitializeContentContractsFullResponse, FStellarFederationInitializeContentContractsFullResponse);

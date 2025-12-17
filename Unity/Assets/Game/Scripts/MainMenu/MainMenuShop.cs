@@ -140,7 +140,7 @@ namespace Farm.Game.Scripts.MainMenu
             foreach (var plantInfo in PlayerCrops)
             {
                 var card = Instantiate(plantUiCard, inventoryContainer);
-                card.Init(false, false, null, plantInfo, 0);
+                card.Init(false, false, null, plantInfo, plantInfo.yieldAmount);
                 card.transform.SetParent(inventoryContainer);
                 card.SetSelectedImage(false);
                 card.IsSelectable(false);

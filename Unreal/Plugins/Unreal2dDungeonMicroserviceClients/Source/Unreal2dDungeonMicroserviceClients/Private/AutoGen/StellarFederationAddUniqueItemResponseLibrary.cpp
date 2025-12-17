@@ -1,11 +1,11 @@
 
-#include "Unreal2dDungeonMicroserviceClients/Public/AutoGen/StellarFederationAddItemResponseLibrary.h"
+#include "Unreal2dDungeonMicroserviceClients/Public/AutoGen/StellarFederationAddUniqueItemResponseLibrary.h"
 
 #include "CoreMinimal.h"
 #include "BeamCoreSettings.h"
 
 
-FString UStellarFederationAddItemResponseLibrary::StellarFederationAddItemResponseToJsonString(const UStellarFederationAddItemResponse* Serializable, const bool Pretty)
+FString UStellarFederationAddUniqueItemResponseLibrary::StellarFederationAddUniqueItemResponseToJsonString(const UStellarFederationAddUniqueItemResponse* Serializable, const bool Pretty)
 {
 	FString Result = FString{};
 	if(Pretty)
@@ -23,15 +23,15 @@ FString UStellarFederationAddItemResponseLibrary::StellarFederationAddItemRespon
 	return Result;
 }	
 
-UStellarFederationAddItemResponse* UStellarFederationAddItemResponseLibrary::Make(bool bValue, UObject* Outer)
+UStellarFederationAddUniqueItemResponse* UStellarFederationAddUniqueItemResponseLibrary::Make(bool bValue, UObject* Outer)
 {
-	auto Serializable = NewObject<UStellarFederationAddItemResponse>(Outer);
+	auto Serializable = NewObject<UStellarFederationAddUniqueItemResponse>(Outer);
 	Serializable->bValue = bValue;
 	
 	return Serializable;
 }
 
-void UStellarFederationAddItemResponseLibrary::Break(const UStellarFederationAddItemResponse* Serializable, bool& bValue)
+void UStellarFederationAddUniqueItemResponseLibrary::Break(const UStellarFederationAddUniqueItemResponse* Serializable, bool& bValue)
 {
 	if(GetDefault<UBeamCoreSettings>()->BreakGuard(Serializable))
 	{

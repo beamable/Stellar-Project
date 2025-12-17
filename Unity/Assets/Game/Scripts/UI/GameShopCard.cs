@@ -20,8 +20,10 @@ namespace Farm.UI
         
         [Header("Buttons")]
         [SerializeField] private Button buySeedButton;
+        [SerializeField] private Button buyTenSeedsButton;
         [SerializeField] private Button sellOneYieldButton;
         [SerializeField] private Button sellAllYieldButton;
+        [SerializeField] private Transform buySeedButtonTransform;
         [SerializeField] private Transform sellYieldButtonTransform;
         
         [Header("References")]
@@ -77,7 +79,7 @@ namespace Farm.UI
 
         private void SetButtonsStatus()
         {
-            buySeedButton.gameObject.SetActive( !_isCrop );
+            buySeedButtonTransform.gameObject.SetActive( !_isCrop );
             sellYieldButtonTransform.gameObject.SetActive( _isCrop );
 
             if (!_isCrop || CurrentPlant.yieldAmount < 1) return;
@@ -98,12 +100,36 @@ namespace Farm.UI
 
         public async void OnBuySeedButtonClicked()
         {
+            var price = CurrentPlant.seedBuyPrice;
+            if (!CanBuy(price)) return;
             try
             {
                 _inventory.SetLoadingBlocker(true);
                 _inventory.SetWaitTillCurrencyUpdate(true);
-                await BeamManager.Instance.CommerceManager.UpdateInventory(-CurrentPlant.seedBuyPrice);
                 CropManager.Instance.AddSeeds(CurrentPlant.cropData.cropType, 1);
+                await UniTask.Yield();
+                await BeamManager.Instance.CommerceManager.UpdateInventory(-price);
+                await UniTask.WaitUntil(()=> !_inventory.WaitTillCurrencyUpdate);
+                AudioManager.Instance.PlaySfx(8);
+            }
+            catch (Exception e)
+            {
+                _inventory.SetLoadingBlocker(true, true, "You do not have enough coins to buy seeds.");
+                Debug.LogError($"Failed to buy seeds for {CurrentPlant.cropData.cropName}: {e.Message}");
+            }
+        }
+        
+        public async void OnBuyTenSeedsButtonClicked()
+        {
+            var price = CurrentPlant.seedBuyPrice * 10;
+            if (!CanBuy(price)) return;
+            try
+            {
+                _inventory.SetLoadingBlocker(true);
+                _inventory.SetWaitTillCurrencyUpdate(true);
+                CropManager.Instance.AddSeeds(CurrentPlant.cropData.cropType, 10);
+                await UniTask.Yield();
+                await BeamManager.Instance.CommerceManager.UpdateInventory(-price);
                 await UniTask.WaitUntil(()=> !_inventory.WaitTillCurrencyUpdate);
                 AudioManager.Instance.PlaySfx(8);
             }
@@ -120,8 +146,9 @@ namespace Farm.UI
             {
                 _inventory.SetLoadingBlocker(true);
                 _inventory.SetWaitTillCurrencyUpdate(true);
-                await BeamManager.Instance.CommerceManager.UpdateInventory(CurrentPlant.yieldSellPrice);
                 CropManager.Instance.UseYield(CurrentPlant.cropData.cropType, 1);
+                await UniTask.Yield();
+                await BeamManager.Instance.CommerceManager.UpdateInventory(CurrentPlant.yieldSellPrice);
                 await UniTask.WaitUntil(()=> !_inventory.WaitTillCurrencyUpdate);
                 SetButtonsStatus();
                 AudioManager.Instance.PlaySfx(9);
@@ -140,8 +167,9 @@ namespace Farm.UI
                 _inventory.SetLoadingBlocker(true);
                 _inventory.SetWaitTillCurrencyUpdate(true);
                 var totalSellPrice = CurrentPlant.yieldAmount * CurrentPlant.yieldSellPrice;
-                await BeamManager.Instance.CommerceManager.UpdateInventory(totalSellPrice);
+                await UniTask.Yield();
                 CropManager.Instance.UseYield(CurrentPlant.cropData.cropType, CurrentPlant.yieldAmount);
+                await BeamManager.Instance.CommerceManager.UpdateInventory(totalSellPrice);
                 await UniTask.WaitUntil(()=> !_inventory.WaitTillCurrencyUpdate);
                 SetButtonsStatus();
                 AudioManager.Instance.PlaySfx(9);
@@ -151,6 +179,13 @@ namespace Farm.UI
                 _inventory.SetLoadingBlocker(true, true, $"Selling failed: {e.Message}");
                 Debug.LogError($"Failed to sell all yield for {CurrentPlant.cropData.cropName}: {e.Message}");
             }
+        }
+
+        private bool CanBuy(int price)
+        {
+            if (price <= BeamManager.Instance.CommerceManager.CurrentCoinCount) return true;
+            _inventory.SetLoadingBlocker(true, true, $"You do not have enough coins to buy seeds.");
+            return false;
         }
 
         #endregion
