@@ -163,7 +163,7 @@ Custom REST endpoints for client integration:
 - Beamable CLI (`dotnet tool install --global beamable`)
 - Stellar account for testnet/mainnet access
 - MongoDB instance (provided by Beamable)
-- **Wallet Integration Bridge** (required for `StellarWeb3ExternalIdentity`): A web application that enables players to connect self-custody wallets. Must be deployed to an HTTPS domain and configured via the `WalletConnectBridgeUrl` setting. See the [Wallet Integration README](../../Wallet%20Integration/README.md) for deployment instructions
+- **Wallet Integration Bridge** (required for `StellarWeb3ExternalIdentity`): A web application that enables players to connect self-custody wallets. Must be deployed to an HTTPS domain and configured via the `WalletConnectBridgeUrl` setting. See the [Wallet Integration README](../../Wallet%20Integration/Readme.md) for deployment instructions
 
 ### Content Items: Blockchain Asset Blueprints
 
