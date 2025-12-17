@@ -15,6 +15,7 @@ Use this quest log to navigate the Unreal client and its Beamable + Stellar inte
 - 🪙 Inventory & Currency: `UpdateCurrency`, `AddItem`, `RemoveItem` endpoints mutate Beam inventory; `UBeamStellarFederationApi` exposes these to Blueprints/C++ for pickups, rewards, and starter grants.
 - 🔔 External wallet attach: subscribe to `external-auth-address` / `external-auth-signature` via `UBeamOAuthNotifications` to drive the wallet-connect handshake and attach external identities.
 - 🔄 Persistence: inventory/currencies live in Beam + StellarFederation; state survives sessions and syncs across devices.
+- &#x23F3; **Minting delay**: Stellar mints settle on a fixed cadence; after purchases/grants/coin sync it can take ~10–15 seconds before inventory reflects the change. The UI keeps the loading/refresh state up during this window; if something looks “stuck”, wait a moment and then tap **Refresh** in the shop.
 
 ## ⚔️ Warrior Dungeon Loop
 - 🧭 Enter: player selects a `UWarriorItem` they own (`DoOwnWarrior` gate) and enters a dungeon run.

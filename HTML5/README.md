@@ -7,6 +7,7 @@ This repository showcases how to integrate the Stellar SDK within the Beamable e
 - &#x1F5FA;&#xFE0F; Progression: advance through campaign stages, repeat loops for higher difficulty, and unlock mechanics as you go.
 - &#x1F9F0; Loadouts: collect different ball types (normal, multishot, fire, laser) with varying speed/power; a default ball is granted automatically.
 - &#x1F4B0; Economy: earn coins from wins, sync them to Beam/Stellar, and purchase ball listings from the in-game shop.
+- &#x23F3; **Minting delay**: Stellar mints settle on a fixed cadence; after purchases/grants/coin sync it can take ~10–15 seconds before inventory reflects the change. The UI keeps the loading/refresh state up during this window; if something looks “stuck”, wait a moment and then tap **Refresh** in the shop.
 - &#x1F6E1;&#xFE0F; Identity flow: set an alias, auto-attach a custodial wallet, and optionally attach an external Stellar wallet via WalletConnect-style popups.
 
 ## Quick Start
