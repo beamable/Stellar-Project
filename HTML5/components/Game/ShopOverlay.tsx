@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { ListingContent, StoreContent } from "beamable-sdk"
 import type { BallType, BallTypeConfig } from "@/components/Game/types"
+import { waitForMintingDelayOffset } from "@/lib/mintingDelay"
 
 type ShopOverlayProps = {
   store: StoreContent | null
@@ -66,7 +67,9 @@ export default function ShopOverlay({
   onPurchase,
 }: ShopOverlayProps) {
   const [purchasingId, setPurchasingId] = useState<string | null>(null)
+  const [refreshDelayActive, setRefreshDelayActive] = useState(false)
   const title = store?.properties?.title?.data ?? "Command Deck Shop"
+  const effectiveLoading = loading || refreshDelayActive
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur px-4 py-8">
       <div className="w-full max-w-6xl rounded-[32px] border border-white/10 bg-gradient-to-br from-slate-950 via-indigo-950/95 to-slate-900/95 p-8 text-white shadow-[0_40px_160px_rgba(2,6,23,0.85)]">
@@ -90,9 +93,19 @@ export default function ShopOverlay({
               <Button
                 size="sm"
                 className="rounded-full bg-white/10 text-white hover:bg-white/20 border border-white/10 text-xs"
-                onClick={onRefresh}
+                disabled={refreshDelayActive}
+                onClick={async () => {
+                  if (refreshDelayActive) return
+                  setRefreshDelayActive(true)
+                  try {
+                    onRefresh()
+                    await waitForMintingDelayOffset()
+                  } finally {
+                    setRefreshDelayActive(false)
+                  }
+                }}
               >
-                Refresh
+                {refreshDelayActive ? "Refreshing..." : "Refresh"}
               </Button>
             )}
             <Button
@@ -106,7 +119,7 @@ export default function ShopOverlay({
         </div>
 
         <div className="mt-6">
-          {loading ? (
+          {effectiveLoading ? (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/70 text-sm">
               Syncing store listings from server...
             </div>
@@ -118,7 +131,7 @@ export default function ShopOverlay({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {listings.map((listing) => {
                 const price = getPrice(listing) ?? NaN
-                const symbol = getSymbol(listing) ?? "currency.coins"
+                const symbol = getSymbol(listing) ?? "currency.coin.beam_coin"
                 const obtainItems = ((listing as any)?.properties?.offer?.data?.obtainItems ?? []) as any[]
                 const firstItemId = obtainItems[0]?.contentId as string | undefined
                 const ballType = deriveBallType(firstItemId)

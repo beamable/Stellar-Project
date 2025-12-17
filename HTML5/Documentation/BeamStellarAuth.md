@@ -13,7 +13,7 @@ Focused guide on identity bootstrap, custodial wallet attach, and external Stell
 - `hooks/useExternalIdentityFlow.ts`: Orchestrates wallet connect, challenge request, signature completion, popup handling.
 - `hooks/useWalletBridge.ts`: Manages popup windows (prime, open, blocked-state recovery).
 - `lib/beam/player.ts`: Core helpers for attach/login, challenge handling, WalletConnect URL builder.
-- `beamable/clients/StellarFederationClient.ts`: Generated microservice client with `addItem`, `purchaseBall`, `updateCurrency`, `sendTestNotification`, `stellarConfiguration`, etc.
+- `beamable/clients/StellarFederationClient.ts`: Generated microservice client with `addItem`, `purchaseBall`, `updateCurrency`, `stellarConfiguration`, plus callback endpoints `externalAddress` / `externalSignature` used by the wallet bridge.
 
 ## External Wallet Connect (Challenge/Sign)
 1) **Request connect URL**: `buildWalletConnectUrl(playerId)` builds the wallet URL from `stellarFederationClient.stellarConfiguration()` (network + bridge).

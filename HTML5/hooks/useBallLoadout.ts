@@ -9,6 +9,7 @@ import { resolveBallContent } from "@/lib/beamContent"
 import getBeam from "@/lib/beam"
 import { fetchInventory } from "@/lib/beamInventory"
 import { debugLog } from "@/lib/debugLog"
+import { waitForMintingDelayOffset } from "@/lib/mintingDelay"
 
 type UseBallLoadoutResult = {
   ballTypes: BallTypeConfig[]
@@ -224,11 +225,12 @@ const ensureDefaultBallIfNeeded = async ({
   if (!target) return null
   const targetContentId = normalizeContentId(target)
   if ((beam as any)?.stellarFederationClient?.addItem) {
-    const payload = { itemContentId: targetContentId }
+    const payload = { itemContentId: targetContentId, properties: {} as Record<string, string> }
     debugLog("[BallLoadout] Granting default ball content with payload:", payload)
     addInFlightRef.current = true
     try {
       await (beam as any).stellarFederationClient.addItem(payload)
+      await waitForMintingDelayOffset()
       return [targetContentId]
     } finally {
       addInFlightRef.current = false

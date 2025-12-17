@@ -54,6 +54,7 @@ export default function GameHud({
   const identityLabel = alias ?? playerId ?? "Guest"
   const powerPercent = Math.min(100, Math.max(0, powerSnapshot))
   const powerFillRef = useRef<HTMLDivElement>(null)
+  const lowBallsWarning = ballsLeft < 4
 
   useEffect(() => {
     const el = powerFillRef.current
@@ -64,7 +65,13 @@ export default function GameHud({
   const stats = [
     { label: "Stage", value: stageLabel, detail: stageName, accent: "text-indigo-100", icon: "ST" },
     { label: "Score", value: score.toLocaleString(), accent: "text-cyan-100", icon: "SC" },
-    { label: "Balls", value: ballsLeft.toString(), accent: "text-emerald-100", icon: selectedBallInfo?.icon ?? "BL" },
+    {
+      label: "Balls",
+      value: ballsLeft.toString(),
+      accent: lowBallsWarning ? "text-red-500" : "text-emerald-100",
+      valueClass: lowBallsWarning ? "text-[1.375rem]" : "text-xl",
+      icon: selectedBallInfo?.icon ?? "BL",
+    },
     { label: "Towers", value: `${remainingTowers}/${towerCount}`, accent: "text-amber-100", icon: "TW" },
     { label: "Identity", value: identityLabel, detail: loopLabel, accent: "text-pink-100", icon: "ID" },
   ]
@@ -144,7 +151,7 @@ export default function GameHud({
                 <span>{stat.icon}</span>
                 {stat.label}
               </div>
-              <p className={`text-xl font-semibold ${stat.accent}`}>{stat.value}</p>
+              <p className={`${stat.valueClass ?? "text-xl"} font-semibold ${stat.accent}`}>{stat.value}</p>
               {stat.detail && <p className="text-xs text-white/60">{stat.detail}</p>}
             </div>
           ))}

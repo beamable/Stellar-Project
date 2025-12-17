@@ -1,0 +1,39 @@
+{
+  "properties": {
+    "clientPermission": {
+      "data": {
+        "write_self": false
+      }
+    },
+    "customProperties": {
+      "data": {
+        "type": "multishot",
+        "color": "#FF6B35",
+        "SeedbaseSpeedMultiplierPrice": "1.15"
+      }
+    },
+    "description": {
+      "data": "Splits into 3 balls with different angles."
+    },
+    "external": {
+      "data": {
+        "namespace": "StellarIdentity",
+        "service": "StellarFederation"
+      }
+    },
+    "icon": {
+      "data": {
+        "referenceKey": "",
+        "subObjectName": ""
+      }
+    },
+    "image": {
+      "data": ""
+    },
+    "name": {
+      "data": "Multishot"
+    }
+  },
+  "tags": [],
+  "referenceManifestId": "69269d704b3eda11623f273d"
+}

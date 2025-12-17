@@ -1,0 +1,39 @@
+{
+  "properties": {
+    "clientPermission": {
+      "data": {
+        "write_self": false
+      }
+    },
+    "customProperties": {
+      "data": {
+        "type": "laser",
+        "color": "#8A2BE2",
+        "SeedbaseSpeedMultiplierPrice": "0.85"
+      }
+    },
+    "description": {
+      "data": "Shoots 2 lasers that can destroy 3 towers each."
+    },
+    "external": {
+      "data": {
+        "namespace": "StellarIdentity",
+        "service": "StellarFederation"
+      }
+    },
+    "icon": {
+      "data": {
+        "referenceKey": "",
+        "subObjectName": ""
+      }
+    },
+    "image": {
+      "data": ""
+    },
+    "name": {
+      "data": "Laser Ball"
+    }
+  },
+  "tags": [],
+  "referenceManifestId": "69269d704b3eda11623f273d"
+}

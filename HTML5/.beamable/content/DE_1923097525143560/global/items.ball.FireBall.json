@@ -1,0 +1,39 @@
+{
+  "properties": {
+    "clientPermission": {
+      "data": {
+        "write_self": false
+      }
+    },
+    "customProperties": {
+      "data": {
+        "type": "fire",
+        "color": "#FF4500",
+        "SeedbaseSpeedMultiplierPrice": "1.15"
+      }
+    },
+    "description": {
+      "data": "Passes through towers for 5 hits, then becomes normal."
+    },
+    "external": {
+      "data": {
+        "namespace": "StellarIdentity",
+        "service": "StellarFederation"
+      }
+    },
+    "icon": {
+      "data": {
+        "referenceKey": "",
+        "subObjectName": ""
+      }
+    },
+    "image": {
+      "data": ""
+    },
+    "name": {
+      "data": "Fire Ball"
+    }
+  },
+  "tags": [],
+  "referenceManifestId": "69269d704b3eda11623f273d"
+}

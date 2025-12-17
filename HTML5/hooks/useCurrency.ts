@@ -9,7 +9,7 @@ type UseCurrencyResult = {
   loading: boolean
 }
 
-const DEFAULT_CURRENCY_ID = "currency.coins"
+const DEFAULT_CURRENCY_ID = "currency.coin.beam_coin"
 
 export default function useCurrency(
   readyForGame: boolean,

@@ -1,0 +1,39 @@
+{
+  "properties": {
+    "clientPermission": {
+      "data": {
+        "write_self": false
+      }
+    },
+    "customProperties": {
+      "data": {
+        "type": "normal",
+        "color": "#8B4513",
+        "SeedbaseSpeedMultiplierPrice": "1.25"
+      }
+    },
+    "description": {
+      "data": "Standard ball with balanced physics and collision."
+    },
+    "external": {
+      "data": {
+        "namespace": "StellarIdentity",
+        "service": "StellarFederation"
+      }
+    },
+    "icon": {
+      "data": {
+        "referenceKey": "",
+        "subObjectName": ""
+      }
+    },
+    "image": {
+      "data": ""
+    },
+    "name": {
+      "data": "Normal Ball"
+    }
+  },
+  "tags": [],
+  "referenceManifestId": "69269d704b3eda11623f273d"
+}

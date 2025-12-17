@@ -8,15 +8,15 @@ Where the backend lives and how it aligns with the generated Stellar federation 
 
 ## Generated Client
 - `beamable/clients/StellarFederationClient.ts`: Auto-generated microservice client consumed by `lib/beam.ts` (`beam.use(StellarFederationClient)`).
-- Exposes endpoints: `stellarConfiguration`, `addItem`, `removeItem`, `purchaseBall`, `updateCurrency`, `sendTestNotification`, `getRealmAccount`, `generateRealmAccount`, `externalAddress`, `externalSignature`.
-- Types in `beamable/clients/types/index.ts` match the microservice contract.
+- Exposes endpoints: `stellarConfiguration`, `addItem`, `addUniqueItem`, `removeItem`, `purchaseBall`, `updateCurrency`, `getRealmAccount`, `generateRealmAccount`, `externalAddress`, `externalSignature`.
+- Types in `beamable/clients/types/index.ts` mirror the microservice contract (including the external wallet callback payloads).
 
 ## Usage in Frontend
 - Registered in `lib/beam.ts` after Beam init (`clientServices(beam)`), then accessed via `beam.stellarFederationClient`.
 - Called from:
-  - `lib/beam/player.ts`: wallet connect URLs, external identity handling, test notifications.
+  - `lib/beam/player.ts`: wallet connect URLs, external identity handling, wallet callback wiring.
   - `hooks/useBallLoadout.ts`: default ball grant via `addItem`.
-  - `hooks/useCoinSync.ts`: coin sync via `updateCurrency`.
+  - `hooks/useCoinSync.ts`: coin sync via `updateCurrency` (defaults to `currency.coin.beam_coin`).
   - `hooks/useShop.ts`: purchases via `purchaseBall`.
 
 ## Keeping Parity

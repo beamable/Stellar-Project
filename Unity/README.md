@@ -15,6 +15,7 @@ Use this quest log to navigate the Unity farming client and the Stellar-backed B
 - 🌾 `BeamInventoryManager` subscribes to inventory updates, ensures the default crop exists, syncs crop instance properties, and pushes updates via `_stellarClient.UpdateItems`.
 - 🛒 `BeamCommerceManager` resolves store listings, purchases via Beam commerce, and updates on-chain currency through `_stellarClient.UpdateCurrency`.
 - 🎛️ UI: `MainMenu/UiAccountController` blocks play until a Stellar ID exists; `StellarExternalWalletController` runs the external wallet link flow (address + signature callbacks).
+- &#x23F3; **Minting delay**: Stellar mints settle on a fixed cadence; after purchases/grants/coin sync it can take ~10–15 seconds before inventory reflects the change. The UI keeps the loading/refresh state up during this window; if something looks “stuck”, wait a moment and then tap **Refresh** in the shop.
 
 ## 🌾 Farming Gameplay Loop (Beamable-Powered)
 - 🪓 Plant: default crop is auto-granted if missing; new crop NFTs are minted/added via `_stellarClient.AddItem` with seeds/yield properties.

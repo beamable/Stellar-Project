@@ -1,0 +1,41 @@
+{
+  "properties": {
+    "_decimals": {
+      "data": 0
+    },
+    "_description": {
+      "data": "Beam in game currency"
+    },
+    "_image": {
+      "data": "https://cdn-icons-png.flaticon.com/128/15388/15388507.png"
+    },
+    "_name": {
+      "data": "Beam Coin"
+    },
+    "_symbol": {
+      "data": "BMK"
+    },
+    "clientPermission": {
+      "data": {
+        "write_self": false
+      }
+    },
+    "external": {
+      "data": {
+        "namespace": "StellarIdentity",
+        "service": "StellarFederation"
+      }
+    },
+    "icon": {
+      "data": {
+        "referenceKey": "",
+        "subObjectName": ""
+      }
+    },
+    "startingAmount": {
+      "data": 125
+    }
+  },
+  "tags": [],
+  "referenceManifestId": "69269d704b3eda11623f273d"
+}

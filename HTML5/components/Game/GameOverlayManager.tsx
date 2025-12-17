@@ -12,7 +12,6 @@ import ShopOverlay from "@/components/Game/ShopOverlay"
 import type { CampaignStage, MechanicTag } from "@/components/Game/campaign"
 import type { StageProgress } from "@/hooks/useCampaignProgress"
 import type { ListingContent, StoreContent } from "beamable-sdk"
-import type { BallTypeConfig, BallType } from "@/components/Game/types"
 
 type GameOverlayManagerProps = {
   beamReady: boolean
