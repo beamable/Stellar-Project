@@ -9,6 +9,7 @@ const NOTIFY_GET_PATH = '/basic/notification/'
 export const PlayerNotificationContexts = {
   ExternalAuthAddress: 'external-auth-address',
   ExternalAuthSignature: 'external-auth-signature',
+  CustodialAccountCreated: 'custodial-account-created',
 } as const
 
 type Subscription = {

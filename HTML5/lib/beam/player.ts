@@ -4,6 +4,8 @@ import { getNotificationBootstrap, PlayerNotificationContexts, subscribeToContex
 
 type StellarFederationClient = {
   attachCustodialWallet?: () => Promise<{ stellarId?: string; userId?: string } | void>
+  createAccount?: () => Promise<{ wallet?: string; created?: boolean }>
+  getAccount?: () => Promise<{ wallet?: string; created?: boolean }>
   stellarConfiguration: () => Promise<{
     walletConnectBridgeUrl?: string
     network?: string | number
@@ -89,6 +91,50 @@ function createDeferred<T>(): Deferred<T> {
 
 export const EXTERNAL_AUTH_CONTEXT = PlayerNotificationContexts.ExternalAuthAddress
 export const EXTERNAL_SIGN_CONTEXT = PlayerNotificationContexts.ExternalAuthSignature
+export const CUSTODIAL_ACCOUNT_CREATED_CONTEXT = PlayerNotificationContexts.CustodialAccountCreated
+
+async function waitForCustodialAccountCreated(options?: { timeoutMs?: number }) {
+  const timeoutMs = options?.timeoutMs ?? 60_000
+  return new Promise<any>(async (resolve, reject) => {
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let subscription: { stop: () => void } | null = null
+    let settled = false
+
+    const stop = () => {
+      if (subscription) {
+        try {
+          subscription.stop()
+        } catch {}
+      }
+      subscription = null
+      if (timer) {
+        clearTimeout(timer)
+        timer = null
+      }
+    }
+
+    timer = setTimeout(() => {
+      if (settled) return
+      settled = true
+      stop()
+      reject(new Error("[Stellar] Timed out waiting for custodial wallet creation."))
+    }, timeoutMs)
+
+    try {
+      subscription = await subscribeToContext(CUSTODIAL_ACCOUNT_CREATED_CONTEXT, (payload) => {
+        if (settled) return
+        settled = true
+        stop()
+        resolve(payload)
+      })
+    } catch (err) {
+      if (settled) return
+      settled = true
+      stop()
+      reject(err)
+    }
+  })
+}
 
 export async function initBeamPlayer() {
   const beam = (await getBeam()) as Beam & { stellarFederationClient?: StellarFederationClient }
@@ -147,6 +193,37 @@ export async function saveAliasAndAttachWallet(alias: string): Promise<{ stellar
   await beam.stats.set({ domainType: "client", accessType: "private", stats: { Alias: alias } })
 
   try {
+    const client = beam?.stellarFederationClient
+    if (client?.getAccount) {
+      const existing = await client.getAccount().catch(() => null)
+      if (existing?.created) {
+        const stellarId = await attachCustodialWallet(beam)
+        return { stellarId }
+      }
+    }
+
+    if (!client?.createAccount) {
+      throw new Error("[Stellar] StellarFederationClient.createAccount unavailable; cannot create custodial wallet.")
+    }
+
+    const waitForCreated = waitForCustodialAccountCreated({ timeoutMs: 60_000 })
+    const accountRes = await client.createAccount().catch(() => null)
+
+    if (!accountRes?.created) {
+      try {
+        await waitForCreated
+      } catch {
+        if (client?.getAccount) {
+          const after = await client.getAccount().catch(() => null)
+          if (!after?.created) {
+            throw new Error("[Stellar] Custodial wallet creation is still pending. Please try again shortly.")
+          }
+        } else {
+          throw new Error("[Stellar] Custodial wallet creation is still pending. Please try again shortly.")
+        }
+      }
+    }
+
     const stellarId = await attachCustodialWallet(beam)
     return { stellarId }
   } catch (err) {
