@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "clientPermission": {
+      "data": {
+        "write_self": false
+      }
+    },
+    "icon": {
+      "data": {
+        "referenceKey": "",
+        "subObjectName": ""
+      }
+    },
+    "startingAmount": {
+      "data": 250
+    }
+  },
+  "tags": [],
+  "referenceManifestId": "69269d704b3eda11623f273d"
+}

@@ -118,7 +118,7 @@ export default function ShopOverlay({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {listings.map((listing) => {
                 const price = getPrice(listing) ?? NaN
-                const symbol = getSymbol(listing) ?? "currency.coins"
+                const symbol = getSymbol(listing) ?? "currency.coin.beam_coin"
                 const obtainItems = ((listing as any)?.properties?.offer?.data?.obtainItems ?? []) as any[]
                 const firstItemId = obtainItems[0]?.contentId as string | undefined
                 const ballType = deriveBallType(firstItemId)

@@ -1,0 +1,44 @@
+{
+  "properties": {
+    "_decimals": {
+      "data": 0
+    },
+    "_description": {
+      "data": "Gold coin game currency"
+    },
+    "_image": {
+      "data": "https://www.svgrepo.com/show/366853/add.svg"
+    },
+    "_name": {
+      "data": "Gold coin"
+    },
+    "_symbol": {
+      "data": "GLD"
+    },
+    "_totalSupply": {
+      "data": 100000
+    },
+    "clientPermission": {
+      "data": {
+        "write_self": false
+      }
+    },
+    "external": {
+      "data": {
+        "namespace": "StellarIdentity",
+        "service": "StellarFederation"
+      }
+    },
+    "icon": {
+      "data": {
+        "referenceKey": "",
+        "subObjectName": ""
+      }
+    },
+    "startingAmount": {
+      "data": 0
+    }
+  },
+  "tags": [],
+  "referenceManifestId": "69269d704b3eda11623f273d"
+}

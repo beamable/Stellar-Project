@@ -18,7 +18,7 @@ export function useCoinSync({
   gameState,
   coinsEarned,
   onInventoryRefresh,
-  currencyContentId = "currency.coins",
+  currencyContentId = "currency.coin.beam_coin",
 }: UseCoinSyncOptions) {
   const coinsSyncedRef = useRef(false)
 

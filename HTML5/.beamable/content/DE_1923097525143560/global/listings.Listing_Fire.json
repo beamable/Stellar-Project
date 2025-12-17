@@ -1,0 +1,24 @@
+{
+  "properties": {
+    "offer": {
+      "data": {
+        "obtainCurrency": [],
+        "obtainItems": [
+          {
+            "contentId": "items.ball.FireBall",
+            "properties": []
+          }
+        ]
+      }
+    },
+    "price": {
+      "data": {
+        "amount": 500,
+        "symbol": "currency.coin.beam_coin",
+        "type": "currency"
+      }
+    }
+  },
+  "tags": [],
+  "referenceManifestId": "69269d704b3eda11623f273d"
+}

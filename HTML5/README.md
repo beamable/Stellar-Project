@@ -43,7 +43,7 @@ NEXT_PUBLIC_DEBUG_LOGS=true
 
 ## Architecture Overview
 - &#x2728; **Beam bootstrap (`lib/beam.ts`)**: Resolves config from `.beamable`, env vars, or `window.__BEAM__`; registers custom environments when a host override is present; initializes Beam with `clientServices` and the generated `StellarFederationClient`; auto-logs guests to ensure tokens.
-- &#x2B50; **Stellar federation (`lib/beam/player.ts`, `beamable/clients/StellarFederationClient.ts`)**: Custodial identity attach, external identity attach/login, WalletConnect URL builder, and microservice endpoints (`addItem`, `purchaseBall`, `updateCurrency`, test notifications).
+- &#x2B50; **Stellar federation (`lib/beam/player.ts`, `beamable/clients/StellarFederationClient.ts`)**: Custodial identity attach, external identity attach/login, WalletConnect URL builder, and microservice endpoints (`addItem`, `purchaseBall`, `updateCurrency`, plus the external wallet callback endpoints `externalAddress` / `externalSignature`).
 - &#x1F514; **Notifications (`lib/notifications.ts`)**: Raw websocket subscriptions for `external-auth-address` and `external-auth-signature`, with payload normalization for the wallet handshake.
 - &#x1F4E6; **Content / Inventory / Commerce (`lib/beamContent.ts`, `lib/beamInventory.ts`, `lib/commerceManager.ts`)**: Content fetch and caching, inventory helpers over the generated OpenAPI calls, store + listing resolution with cache keys by store/manifest.
 - &#x1F3D7;&#xFE0F; **Game loop and UX (`components/Game/*`, `hooks/*`)**: Canvas physics and state, campaign progression, ball loadouts, currency sync, shop purchases, identity bootstrap, wallet pop-up orchestration, and overlays for player info and campaign flow.

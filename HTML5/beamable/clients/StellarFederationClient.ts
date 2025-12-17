@@ -28,7 +28,7 @@ declare module 'beamable-sdk' {
 export class StellarFederationClient extends BeamMicroServiceClient {
   readonly federationIds = {
     StellarIdentity: "StellarIdentity",
-    StellarExternalIdentity: "StellarExternalIdentity",
+    StellarExternalIdentity: "StellarExternalIdentity"
   } as const;
   
   constructor(
@@ -55,6 +55,13 @@ export class StellarFederationClient extends BeamMicroServiceClient {
     });
   }
   
+  async initializeContentContracts(): Promise<void> {
+    return this.request({
+      endpoint: "InitializeContentContracts",
+      withAuth: true
+    });
+  }
+  
   async stellarConfiguration(): Promise<Types.ConfigurationResponse> {
     return this.request({
       endpoint: "StellarConfiguration",
@@ -62,9 +69,54 @@ export class StellarFederationClient extends BeamMicroServiceClient {
     });
   }
   
-  async sendTestNotification(params: Types.SendTestNotificationRequestArgs): Promise<void> {
+  async createAccount(): Promise<Types.AccountResponse> {
     return this.request({
-      endpoint: "SendTestNotification",
+      endpoint: "CreateAccount",
+      withAuth: true
+    });
+  }
+  
+  async getAccount(): Promise<Types.AccountResponse> {
+    return this.request({
+      endpoint: "GetAccount",
+      withAuth: true
+    });
+  }
+  
+  async externalAddress(params: Types.AuthAddressCallbackRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "ExternalAddress",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
+  async externalSignature(params: Types.AuthSignatureCallbackRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "ExternalSignature",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
+  async jobs(params: Types.JobsRequestArgs): Promise<Types.SchedulerJobResponse> {
+    return this.request({
+      endpoint: "Jobs",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
+  async blockProcessor(): Promise<void> {
+    return this.request({
+      endpoint: "BlockProcessor",
+      withAuth: true
+    });
+  }
+  
+  async getListings(params: Types.GetListingsRequestArgs): Promise<Types.GetListingsResponse> {
+    return this.request({
+      endpoint: "GetListings",
       payload: params,
       withAuth: true
     });
@@ -86,9 +138,33 @@ export class StellarFederationClient extends BeamMicroServiceClient {
     });
   }
   
+  async addUniqueItem(params: Types.AddUniqueItemRequestArgs): Promise<boolean> {
+    return this.request({
+      endpoint: "AddUniqueItem",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
   async removeItem(params: Types.RemoveItemRequestArgs): Promise<void> {
     return this.request({
       endpoint: "RemoveItem",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
+  async updateItems(params: Types.UpdateItemsRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "UpdateItems",
+      payload: params,
+      withAuth: true
+    });
+  }
+  
+  async updateInventory(params: Types.UpdateInventoryRequestArgs): Promise<void> {
+    return this.request({
+      endpoint: "UpdateInventory",
       payload: params,
       withAuth: true
     });
@@ -98,20 +174,6 @@ export class StellarFederationClient extends BeamMicroServiceClient {
     return this.request({
       endpoint: "PurchaseBall",
       payload: params,
-      withAuth: true
-    });
-  }
-  
-  async externalAddress(): Promise<void> {
-    return this.request({
-      endpoint: "ExternalAddress",
-      withAuth: true
-    });
-  }
-  
-  async externalSignature(): Promise<void> {
-    return this.request({
-      endpoint: "ExternalSignature",
       withAuth: true
     });
   }

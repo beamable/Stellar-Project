@@ -1,0 +1,19 @@
+{
+  "properties": {
+    "listings": {
+      "$links": [
+        "listings.Listing_Fire",
+        "listings.Listing_Laser",
+        "listings.Listing_Multiple"
+      ]
+    },
+    "showInactiveListings": {
+      "data": false
+    },
+    "title": {
+      "data": "NF-Store"
+    }
+  },
+  "tags": [],
+  "referenceManifestId": "69269d704b3eda11623f273d"
+}
