@@ -1,5 +1,5 @@
 {
-  "SnapshotTimestamp": 1765901249425,
+  "SnapshotTimestamp": 1766054734178,
   "ManifestId": "global",
   "ProjectData": {
     "PID": "DE_1925146714814465",
@@ -34,7 +34,7 @@
           "data": "https://cdn-icons-png.flaticon.com/128/15388/15388507.png"
         },
         "name": {
-          "data": "None"
+          "data": "Beam Coin"
         },
         "startingAmount": {
           "data": 125
@@ -44,7 +44,7 @@
         }
       },
       "tags": [],
-      "Checksum": "325014b9402ef14ab1b87f3cfc8fdec094e52cb7"
+      "Checksum": "974fcbf7f566de31f08b6d04c1f1676cc76f13aa"
     },
     "currency.gold.aurum": {
       "properties": {
