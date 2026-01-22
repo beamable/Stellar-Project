@@ -6,6 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "node scripts/run-lint.cjs",
+    "typecheck": "tsc --noEmit",
     "start": "next start",
     "test": "vitest run"
   },

@@ -65,7 +65,7 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
     setAlias,
     setAliasInput,
     setAliasModalOpen,
-    setShowPlayerInfo,
+    setShowPlayerInfo: setShowPlayerInfoState,
     setStellarExternalId,
     setStellarExternalIdentityId,
   })
