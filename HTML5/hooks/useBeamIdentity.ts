@@ -18,12 +18,14 @@ type UseBeamIdentityResult = {
   aliasError: string | null
   aliasCanSave: boolean
   showPlayerInfo: boolean
+  commandDeckSeen: boolean
   readyForGame: boolean
   stellarExternalId: string | null
   stellarExternalIdentityId: string | null
   handleAliasInputChange: (value: string) => void
   handleAliasSave: () => Promise<void>
   setShowPlayerInfo: (value: boolean) => void
+  setCommandDeckSeen: (value: boolean) => void
   refreshPlayerProfile: () => Promise<void>
   debugFakeLogin: () => void
 }
@@ -37,13 +39,21 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
   const [aliasModalOpen, setAliasModalOpen] = useState(false)
   const [aliasSaving, setAliasSaving] = useState(false)
   const [aliasError, setAliasError] = useState<string | null>(null)
-  const [showPlayerInfo, setShowPlayerInfo] = useState(false)
+  const [showPlayerInfo, setShowPlayerInfoState] = useState(false)
+  const [commandDeckSeen, setCommandDeckSeen] = useState(false)
   const [stellarExternalId, setStellarExternalId] = useState<string | null>(null)
   const [stellarExternalIdentityId, setStellarExternalIdentityId] = useState<string | null>(null)
 
   const handleAliasInputChange = useCallback((value: string) => {
     const filtered = value.replace(/[^A-Za-z]/g, "")
     setAliasInput(filtered)
+  }, [])
+
+  const setShowPlayerInfo = useCallback((value: boolean) => {
+    setShowPlayerInfoState(value)
+    if (value) {
+      setCommandDeckSeen(true)
+    }
   }, [])
 
   const aliasCanSave = /^[A-Za-z]{3,}$/.test(aliasInput)
@@ -80,7 +90,7 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
     } finally {
       setAliasSaving(false)
     }
-  }, [aliasCanSave, aliasInput])
+  }, [aliasCanSave, aliasInput, setShowPlayerInfo])
 
   useEffect(() => {
     let mounted = true
@@ -96,7 +106,7 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [setShowPlayerInfo])
 
   useEffect(() => {
     if (!beamReady) return
@@ -130,7 +140,7 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
     setShowPlayerInfo(true)
     setStellarExternalId("CUSTODIAL-DEV")
     setStellarExternalIdentityId("EXTERNAL-DEV")
-  }, [])
+  }, [setShowPlayerInfo])
 
   return {
     beamReady,
@@ -142,12 +152,14 @@ export default function useBeamIdentity(): UseBeamIdentityResult {
     aliasError,
     aliasCanSave,
     showPlayerInfo,
+    commandDeckSeen,
     readyForGame,
     stellarExternalId,
     stellarExternalIdentityId,
     handleAliasInputChange,
     handleAliasSave,
     setShowPlayerInfo,
+    setCommandDeckSeen,
     refreshPlayerProfile,
     debugFakeLogin,
   }

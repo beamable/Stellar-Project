@@ -476,7 +476,9 @@ function SidebarMenu({
   }, [widths])
 
   const widthIndexRef = React.useRef(0)
-  widthIndexRef.current = 0
+  React.useEffect(() => {
+    widthIndexRef.current = 0
+  })
 
   const nextWidthIndex = React.useCallback(() => {
     const current = widthIndexRef.current

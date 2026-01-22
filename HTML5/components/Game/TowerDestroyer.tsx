@@ -60,6 +60,8 @@ export default function TowerDestroyer() {
     aliasCanSave,
     showPlayerInfo,
     setShowPlayerInfo,
+    commandDeckSeen,
+    setCommandDeckSeen,
     readyForGame,
     stellarExternalId,
     stellarExternalIdentityId,
@@ -147,7 +149,6 @@ export default function TowerDestroyer() {
     : null
   const canAdvanceStage = Boolean(nextStage && nextStageProgress && nextStageProgress.status !== "locked")
   const walletBridge = useWalletBridge()
-  const campaignWinStageRef = useRef<string | null>(null)
   const {
     shouldShowCampaignOverlay,
     confirmCampaignStage,
@@ -160,6 +161,8 @@ export default function TowerDestroyer() {
     activeStage,
     showPlayerInfo,
     setShowPlayerInfo,
+    commandDeckSeen,
+    setCommandDeckSeen,
   })
   const {
     pendingSignUrl,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 import type { CampaignStage } from "@/components/Game/campaign"
 
 type CampaignOverlayOptions = {
@@ -8,6 +8,8 @@ type CampaignOverlayOptions = {
   activeStage: CampaignStage
   showPlayerInfo: boolean
   setShowPlayerInfo: (value: boolean) => void
+  commandDeckSeen: boolean
+  setCommandDeckSeen: (value: boolean) => void
 }
 
 export type CampaignOverlayState = {
@@ -26,14 +28,10 @@ export function useCampaignOverlay({
   activeStage,
   showPlayerInfo,
   setShowPlayerInfo,
+  commandDeckSeen,
+  setCommandDeckSeen,
 }: CampaignOverlayOptions): CampaignOverlayState {
   const [confirmedStageId, setConfirmedStageId] = useState<string | null>(null)
-  const [commandDeckSeenState, setCommandDeckSeenState] = useState(false)
-  useEffect(() => {
-    if (!showPlayerInfo) return
-    if (commandDeckSeenState) return
-    setCommandDeckSeenState(true)
-  }, [commandDeckSeenState, showPlayerInfo])
 
   const confirmCampaignStage = useCallback(() => {
     setConfirmedStageId(activeStage.id)
@@ -41,22 +39,23 @@ export function useCampaignOverlay({
 
   const showCommandDeck = useCallback(() => {
     setConfirmedStageId(null)
+    setCommandDeckSeen(true)
     setShowPlayerInfo(true)
-  }, [setShowPlayerInfo])
+  }, [setCommandDeckSeen, setShowPlayerInfo])
 
   const markCommandDeckSeen = useCallback(() => {
-    setCommandDeckSeenState(true)
-  }, [])
+    setCommandDeckSeen(true)
+  }, [setCommandDeckSeen])
 
-  const commandDeckSeen = commandDeckSeenState || showPlayerInfo
-  const campaignUnlocked = commandDeckSeen && readyForGame
+  const hasSeenCommandDeck = commandDeckSeen || showPlayerInfo
+  const campaignUnlocked = hasSeenCommandDeck && readyForGame
   const campaignConfirmed = confirmedStageId === activeStage.id
   const shouldShowCampaignOverlay = campaignUnlocked && !showPlayerInfo && !campaignConfirmed
 
   const resetCampaignOverlay = useCallback(() => {
     setConfirmedStageId(null)
-    setCommandDeckSeenState(false)
-  }, [])
+    setCommandDeckSeen(false)
+  }, [setCommandDeckSeen])
 
   const setCampaignConfirmed = useCallback(
     (value: boolean) => {
