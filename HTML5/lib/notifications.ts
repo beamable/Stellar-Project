@@ -1,3 +1,8 @@
+// Notifications helpers for Beam: fetches bootstrap data, subscribes to websocket
+// messages by context, normalizes/unwraps payloads, and routes them to handlers.
+// Provides context constants and a convenience subscription for external auth
+// address/signature notifications.
+
 import type { HttpRequester } from 'beamable-sdk'
 import getBeam from '@/lib/beam'
 import { debugLog } from '@/lib/debugLog'
